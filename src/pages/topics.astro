@@ -143,7 +143,7 @@ const availableCategories = [...new Set(topics.map(t => t.data.category))].sort(
                     {topic.data.category}
                   </span>
                 </div>
-                <CardTitle class="mb-2">{topic.data.title}</CardTitle>
+                <CardTitle class="mb-3 line-clamp-2 break-words leading-snug">{topic.data.title}</CardTitle>
                 <CardDescription class="line-clamp-3">{topic.data.description}</CardDescription>
               </CardHeader>
             </Card>
