@@ -1,8 +1,8 @@
 ---
-title: Disabling Auto-Mounted Service Account Tokens
+title: Disable Automatic Mounting of Default Service Account Tokens
 description: Preventing token theft by controlling service account token mounting
 category: defensive
-impact: High - Custom service accounts with elevated permissions become attack vectors when tokens are auto-mounted
+impact: The default service account is not inherently privileged and only becomes a risk when associated with elevated roles or role bindings.
 mitigation: 
   - Disable automounting for service accounts that don't need API access
   - Create dedicated accounts with minimal permissions
@@ -12,7 +12,7 @@ references: |
 
 By default, Kubernetes automatically mounts a service account token into every pod. While the default service account has minimal permissions, custom service accounts with elevated RBAC roles become dangerous attack vectors when their tokens are auto-mounted.
 
-The `default` service account in the cluster has **no special permissions** by default. An attacker stealing a default SA token can only:
+The **default** service account in the cluster has **no special permissions** by default. An attacker stealing a default SA token can only:
 
 - Authenticate to the API server
 - Get denied on most operations since it's not bound to any role with elevated permissions
@@ -65,14 +65,3 @@ Disable auto-mounting when the application:
 - Does not need to communicate with the Kubernetes API
 - Only needs external service access
 - Uses external identity providers
-
-## Detecting Misconfigured Service Accounts
-
-Find service accounts with dangerous permissions:
-
-```bash
-# List service accounts with cluster-wide permissions
-kubectl get clusterrolebindings -o json | \
-  jq '.items[] | select(.subjects[]?.kind=="ServiceAccount") | 
-      {name: .metadata.name, role: .roleRef.name, sa: .subjects[].name}'
-```
