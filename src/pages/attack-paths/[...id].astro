@@ -1,0 +1,242 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import { getCollection } from 'astro:content';
+import { generateCytoscapeData } from '../../components/AttackPathVisualization';
+import CytoscapeDiagram from '../../components/CytoscapeDiagram.astro';
+import MitreTechniquesList from '../../components/MitreTechniquesList.astro';
+import MitreTechnique from '../../components/MitreTechnique.astro';
+import Card from '../../components/ui/Card.astro';
+import CardContent from '../../components/ui/CardContent.astro';
+import CategoryIcon from '../../components/CategoryIcon.astro';
+import { getCategoryColors } from '../../components/CategoryColors.astro';
+import { features } from '../../config/features';
+
+export async function getStaticPaths() {
+  const attackPaths = await getCollection('attack-paths');
+  return attackPaths.map((path) => ({
+    params: { id: path.id },
+    props: { path },
+  }));
+}
+
+// Redirect to glossary if feature is disabled
+if (!features.attackPaths) {
+  return Astro.redirect('/glossary');
+}
+
+const { path } = Astro.props;
+const cytoscapeData = generateCytoscapeData(path.data);
+---
+
+<BaseLayout title={`${path.data.title} - Attack Paths`}>
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+    <div class="mb-8">
+      <a href="/attack-paths" class="text-gray-600 hover:text-gray-900 mb-4 inline-block font-medium">
+        ← Back to Attack Paths
+      </a>
+      <div class="flex gap-2 mb-4 flex-wrap">
+        <span class="inline-block px-3 py-1 text-sm font-medium rounded bg-gray-50 text-gray-700 border border-gray-300">
+          {path.data.category}
+        </span>
+        {typeof path.data.kubernetesVersion === 'string' ? (
+          <span class="inline-block px-3 py-1 text-sm font-medium rounded bg-gray-50 text-gray-700 border border-gray-300">
+            {path.data.kubernetesVersion}
+          </span>
+        ) : path.data.kubernetesVersion && path.data.kubernetesVersion.length > 0 ? (
+          path.data.kubernetesVersion.map((version: string) => (
+            <span class="inline-block px-3 py-1 text-sm font-medium rounded bg-gray-50 text-gray-700 border border-gray-300">
+              {version}
+            </span>
+          ))
+        ) : null}
+      </div>
+      <h1 class="text-4xl font-bold text-gray-900 mb-4">{path.data.title}</h1>
+      <p class="text-xl text-gray-600">{path.data.description}</p>
+    </div>
+
+    <Card class="mb-8">
+      <CardContent class="p-6 md:p-8 lg:p-10">
+        <h2 class="text-2xl font-bold text-gray-900 mb-6">Attack Path Visualization</h2>
+        <p class="text-sm md:text-base text-gray-600 mb-4">Interactive diagram showing the attack path. Click on nodes to see details. Use mouse wheel to zoom, drag to pan.</p>
+        <CytoscapeDiagram data={cytoscapeData} id={path.id} />
+      </CardContent>
+    </Card>
+
+    <Card>
+      <CardContent class="p-6 md:p-8 lg:p-10">
+        <h2 class="text-2xl font-bold text-gray-900 mb-8">Step-by-Step Breakdown</h2>
+        <div class="space-y-4">
+          {path.data.steps.map((step, index) => {
+            const isLast = index === path.data.steps.length - 1;
+            const borderColor = 'border-gray-300';
+            const bgColor = 'bg-white hover:bg-gray-50';
+            const stepNumberBg = 'bg-gray-100 text-gray-700 border-gray-200 group-hover:bg-gray-200';
+            return (
+            <div id={`step-${step.id}`} class="relative group step-breakdown-item" data-step-id={step.id}>
+              <div class={`relative border-l-4 ${borderColor} ${bgColor} rounded-r p-6 md:p-8 transition-colors duration-200 ease-in-out hover:border-gray-400`}>
+                {/* Step number and header */}
+                <div class="flex items-start gap-4 mb-4">
+                  <div class="flex-shrink-0">
+                    <span class={`flex items-center justify-center w-10 h-10 rounded-full font-semibold text-sm border transition-all duration-200 ${stepNumberBg}`}>
+                      {index + 1}
+                    </span>
+                  </div>
+                  <div class="flex-1 min-w-0">
+                    <div class="flex items-center gap-3 flex-wrap mb-2">
+                      <h3 class="text-xl font-semibold text-gray-900">{step.title}</h3>
+                      {(() => {
+                        const stepColors = getCategoryColors(step.type);
+                        return (
+                          <span class={`inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium rounded border ${stepColors.bg} ${stepColors.text} ${stepColors.border}`}>
+                            <CategoryIcon category={step.type} class={`w-3.5 h-3.5 ${stepColors.icon}`} />
+                            {step.type}
+                          </span>
+                        );
+                      })()}
+                    </div>
+                    <p class="text-gray-600 text-base md:text-lg leading-relaxed">{step.description}</p>
+                  </div>
+                </div>
+
+                {/* Command section */}
+                {step.command && (
+                  <div class="mt-4 ml-14">
+                    <div class="mb-2">
+                      <span class="text-xs font-semibold text-gray-500 uppercase tracking-wider">Command</span>
+                    </div>
+                    <div class="relative bg-gray-900 rounded-lg p-4 overflow-x-auto border border-gray-800 group/command">
+                      <button
+                        type="button"
+                        class="copy-command-btn absolute top-3 right-3 px-2.5 py-1.5 text-xs text-gray-300 bg-gray-800 hover:bg-gray-700 hover:text-white font-medium rounded border border-gray-700 transition-all duration-200 active:scale-95 opacity-0 group-hover/command:opacity-100"
+                        data-command={typeof step.command === 'string' ? step.command : step.command.join('\n')}
+                      >
+                        Copy
+                      </button>
+                      <pre class="text-sm text-gray-100 font-mono leading-relaxed"><code>{typeof step.command === 'string' ? step.command : step.command.map((cmd: string) => cmd).join('\n')}</code></pre>
+                    </div>
+                  </div>
+                )}
+
+                {/* MITRE technique badge if present */}
+                {step.mitreTechnique && (
+                  <div class="mt-4 ml-14">
+                    <div class="flex items-center gap-2">
+                      <span class="text-xs font-semibold text-gray-500 uppercase tracking-wider">MITRE ATT&CK:</span>
+                      <MitreTechnique techniqueId={step.mitreTechnique} />
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Connector line to next step */}
+              {!isLast && (
+                <div class="flex justify-center my-2">
+                  <div class="w-0.5 h-6 bg-gray-200"></div>
+                </div>
+              )}
+            </div>
+            );
+          })}
+        </div>
+      </CardContent>
+    </Card>
+
+    {path.data.mitreTechniques && path.data.mitreTechniques.length > 0 && (
+      <Card class="mt-8">
+        <CardContent class="p-6 md:p-8 lg:p-10">
+          <MitreTechniquesList techniqueIds={path.data.mitreTechniques} />
+        </CardContent>
+      </Card>
+    )}
+  </div>
+
+  <script>
+    // Handle copy command buttons
+    document.querySelectorAll('.copy-command-btn').forEach(button => {
+      button.addEventListener('click', async () => {
+        const command = button.getAttribute('data-command');
+        if (command) {
+          try {
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+              await navigator.clipboard.writeText(command);
+              const originalText = button.textContent || 'Copy';
+              button.textContent = 'Copied!';
+              setTimeout(() => {
+                button.textContent = originalText;
+              }, 2000);
+            } else {
+              // Fallback for browsers without clipboard API
+              const textArea = document.createElement('textarea');
+              textArea.value = command;
+              textArea.style.position = 'fixed';
+              textArea.style.opacity = '0';
+              document.body.appendChild(textArea);
+              textArea.select();
+              try {
+                document.execCommand('copy');
+                const originalText = button.textContent || 'Copy';
+                button.textContent = 'Copied!';
+                setTimeout(() => {
+                  button.textContent = originalText;
+                }, 2000);
+              } catch (err) {
+                console.warn('Fallback copy failed:', err);
+              }
+              document.body.removeChild(textArea);
+            }
+          } catch (err) {
+            console.warn('Failed to copy command:', err);
+          }
+        }
+      });
+    });
+
+    // Handle scroll to step when clicked in diagram
+    document.addEventListener('scrollToStep', (event) => {
+      const stepId = event.detail.stepId;
+      const stepElement = document.getElementById(`step-${stepId}`);
+      
+      if (stepElement) {
+        // Remove highlight from all steps
+        document.querySelectorAll('.step-breakdown-item').forEach(item => {
+          item.classList.remove('highlighted-step');
+        });
+        
+        // Add highlight to target step
+        stepElement.classList.add('highlighted-step');
+        
+        // Scroll to step with smooth behavior
+        stepElement.scrollIntoView({ 
+          behavior: 'smooth', 
+          block: 'center' 
+        });
+        
+        // Remove highlight after animation
+        setTimeout(() => {
+          stepElement.classList.remove('highlighted-step');
+        }, 2000);
+      }
+    });
+  </script>
+
+  <style>
+    .step-breakdown-item.highlighted-step {
+      animation: highlightStep 2s ease-in-out;
+    }
+
+    @keyframes highlightStep {
+      0% {
+        background-color: rgba(59, 130, 246, 0.1);
+        box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.4);
+      }
+      50% {
+        background-color: rgba(59, 130, 246, 0.15);
+        box-shadow: 0 0 0 8px rgba(59, 130, 246, 0);
+      }
+      100% {
+        background-color: transparent;
+        box-shadow: 0 0 0 0 rgba(59, 130, 246, 0);
+      }
+    }
+  </style>
+</BaseLayout>

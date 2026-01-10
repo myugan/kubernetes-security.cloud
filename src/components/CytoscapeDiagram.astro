@@ -1,0 +1,220 @@
+---
+import type { CytoscapeData } from './AttackPathVisualization';
+
+interface Props {
+  data: CytoscapeData;
+  id: string;
+}
+
+const { data, id } = Astro.props;
+const containerId = `cytoscape-${id}`;
+const jsonData = JSON.stringify(data);
+---
+
+<div id={containerId} class="w-full h-[500px] border border-gray-200 rounded-lg bg-white"></div>
+
+<script define:vars={{ jsonData, containerId }}>
+  async function initializeCytoscape() {
+    try {
+      // Load Cytoscape and extensions from CDN
+      if (typeof cytoscape === 'undefined') {
+        await Promise.all([
+          loadScript('https://cdn.jsdelivr.net/npm/cytoscape@3.27.0/dist/cytoscape.min.js'),
+          loadScript('https://cdn.jsdelivr.net/npm/dagre@0.8.5/dist/dagre.min.js'),
+          loadScript('https://cdn.jsdelivr.net/npm/cytoscape-dagre@2.5.0/cytoscape-dagre.min.js')
+        ]);
+      }
+      
+      // Register cytoscape-dagre extension
+      if (typeof cytoscape !== 'undefined' && typeof cytoscapeDagre !== 'undefined') {
+        cytoscape.use(cytoscapeDagre);
+      }
+
+      const data = JSON.parse(jsonData);
+      const container = document.getElementById(containerId);
+      
+      if (!container) {
+        console.warn(`Cytoscape container ${containerId} not found`);
+        return;
+      }
+      
+      if (!data || !data.nodes || !Array.isArray(data.nodes)) {
+        console.error('Invalid Cytoscape data structure');
+        return;
+      }
+
+    const cy = cytoscape({
+      container: container,
+      elements: {
+        nodes: data.nodes,
+        edges: data.edges
+      },
+      style: [
+        {
+          selector: 'node',
+          style: {
+            'label': 'data(label)',
+            'width': 'label',
+            'height': 'label',
+            'shape': 'roundrectangle',
+            'background-color': '#f3f4f6',
+            'border-width': 2,
+            'border-color': '#9ca3af',
+            'color': '#1f2937',
+            'text-valign': 'center',
+            'text-halign': 'center',
+            'text-wrap': 'wrap',
+            'text-max-width': '200px',
+            'font-size': '14px',
+            'font-weight': '600',
+            'padding': '12px',
+            'text-outline-width': 0,
+            'text-outline-color': '#fff',
+            'text-outline-opacity': 1
+          }
+        },
+        {
+          selector: 'node[type = "initial"]',
+          style: {
+            'background-color': '#fee2e2',
+            'border-color': '#dc2626'
+          }
+        },
+        {
+          selector: 'node[type = "lateral"]',
+          style: {
+            'background-color': '#fef3c7',
+            'border-color': '#d97706'
+          }
+        },
+        {
+          selector: 'node[type = "privilege"]',
+          style: {
+            'background-color': '#ede9fe',
+            'border-color': '#7c3aed'
+          }
+        },
+        {
+          selector: 'node[type = "persistence"]',
+          style: {
+            'background-color': '#cffafe',
+            'border-color': '#0891b2'
+          }
+        },
+        {
+          selector: 'node[type = "exfiltration"]',
+          style: {
+            'background-color': '#d1fae5',
+            'border-color': '#059669'
+          }
+        },
+        {
+          selector: 'edge',
+          style: {
+            'width': 2,
+            'line-color': '#9ca3af',
+            'target-arrow-color': '#9ca3af',
+            'target-arrow-shape': 'triangle',
+            'curve-style': 'bezier',
+            'arrow-scale': 1.2
+          }
+        },
+        {
+          selector: 'node:selected',
+          style: {
+            'border-width': 3,
+            'border-color': '#3b82f6',
+            'background-color': '#dbeafe'
+          }
+        },
+        {
+          selector: 'node.highlighted',
+          style: {
+            'border-width': 4,
+            'border-color': '#3b82f6',
+            'background-color': '#dbeafe',
+            'transition-property': 'border-width, border-color, background-color',
+            'transition-duration': '0.3s'
+          }
+        }
+      ],
+      layout: {
+        name: 'dagre',
+        rankDir: 'TB',
+        spacingFactor: 1.2,
+        nodeSep: 50,
+        edgeSep: 20,
+        rankSep: 80
+      },
+      minZoom: 0.2,
+      maxZoom: 2,
+      wheelSensitivity: 0.2
+    });
+
+    // Add hover effects
+    cy.on('mouseover', 'node', function(evt) {
+      evt.target.style('border-width', 3);
+      evt.target.style('border-color', '#3b82f6');
+    });
+
+    cy.on('mouseout', 'node', function(evt) {
+      if (!evt.target.selected()) {
+        evt.target.style('border-width', 2);
+        const type = evt.target.data('type');
+        const borderColors = {
+          'initial': '#dc2626',
+          'lateral': '#d97706',
+          'privilege': '#7c3aed',
+          'persistence': '#0891b2',
+          'exfiltration': '#059669'
+        };
+        evt.target.style('border-color', borderColors[type] || '#9ca3af');
+      }
+    });
+
+    // Handle node click - scroll to corresponding step in breakdown
+    cy.on('tap', 'node', function(evt) {
+      const node = evt.target;
+      const stepId = node.data('id');
+      
+      // Dispatch custom event to scroll to step
+      const event = new CustomEvent('scrollToStep', { 
+        detail: { stepId: stepId } 
+      });
+      document.dispatchEvent(event);
+      
+      // Visual feedback on the clicked node
+      cy.elements().removeClass('highlighted');
+      node.addClass('highlighted');
+      setTimeout(() => {
+        node.removeClass('highlighted');
+      }, 2000);
+    });
+
+      // Fit the graph to the container
+      cy.fit(undefined, 50);
+    } catch (error) {
+      console.error('Failed to initialize Cytoscape diagram:', error);
+      const container = document.getElementById(containerId);
+      if (container) {
+        container.innerHTML = '<div class="p-4 text-center text-gray-500">Failed to load diagram. Please refresh the page.</div>';
+      }
+    }
+  }
+
+  function loadScript(src) {
+    return new Promise((resolve, reject) => {
+      const script = document.createElement('script');
+      script.src = src;
+      script.onload = resolve;
+      script.onerror = reject;
+      document.head.appendChild(script);
+    });
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initializeCytoscape);
+  } else {
+    initializeCytoscape();
+  }
+</script>

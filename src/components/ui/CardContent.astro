@@ -1,0 +1,14 @@
+---
+interface Props {
+  class?: string;
+}
+
+const { class: className = '' } = Astro.props;
+
+// Default padding if no class is provided
+const defaultPadding = className.includes('p-') ? '' : 'p-6 pt-0';
+---
+
+<div class={`${defaultPadding} ${className}`}>
+  <slot />
+</div>

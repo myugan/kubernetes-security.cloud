@@ -1,0 +1,122 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import { getAllTools, getToolTypes } from '../data/tools';
+import type { ToolType } from '../types';
+import type { ToolDefinition } from '../data/tools';
+
+// Get all tools from central config
+const allTools = getAllTools().sort((a, b) => a.name.localeCompare(b.name));
+
+// Group tools by type
+const toolsByType: Record<string, ToolDefinition[]> = {
+  offensive: [],
+  defensive: [],
+  audit: [],
+  compliance: [],
+};
+
+// Populate the groups
+allTools.forEach(tool => {
+  const types = getToolTypes(tool);
+  types.forEach(type => {
+    if (toolsByType[type]) {
+      // Avoid duplicates in the same category
+      if (!toolsByType[type].some(t => t.name === tool.name)) {
+        toolsByType[type].push(tool);
+      }
+    }
+  });
+});
+
+// Category labels and order
+const categories: { key: ToolType; label: string; description: string }[] = [
+  { key: 'offensive', label: 'Offensive', description: 'Tools for penetration testing and security assessments' },
+  { key: 'defensive', label: 'Defensive', description: 'Tools for protecting and securing Kubernetes clusters' },
+  { key: 'audit', label: 'Audit', description: 'Tools for security auditing and vulnerability scanning' },
+  { key: 'compliance', label: 'Compliance', description: 'Tools for policy enforcement and best practices validation' },
+];
+---
+
+<BaseLayout title="Tools - Kubernetes Security">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+    <div class="mb-10">
+      <div class="flex items-center gap-3 mb-4">
+        <div class="text-primary-600">
+          <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+          </svg>
+        </div>
+        <h1 class="text-3xl sm:text-4xl font-bold text-gray-900">Tools</h1>
+      </div>
+      <p class="text-lg sm:text-xl text-gray-600">
+        A collection of security tools for Kubernetes
+      </p>
+    </div>
+
+    <!-- Quick Navigation -->
+    <div class="flex flex-wrap gap-2 mb-8">
+      {categories.map((cat) => {
+        const count = toolsByType[cat.key]?.length || 0;
+        return (
+          <a
+            href={`#${cat.key}`}
+            class="inline-flex items-center gap-2 px-3 py-1.5 text-sm font-medium rounded-lg border border-gray-300 bg-white text-gray-700 hover:bg-gray-50 transition-colors"
+          >
+            {cat.label}
+            <span class="text-xs text-gray-500">({count})</span>
+          </a>
+        );
+      })}
+    </div>
+
+    <!-- Tool Sections by Type -->
+    <div class="space-y-12">
+      {categories.map((cat) => {
+        const tools = toolsByType[cat.key] || [];
+        
+        if (tools.length === 0) return null;
+        
+        return (
+          <section id={cat.key}>
+            <div class="mb-6">
+              <h2 class="text-xl sm:text-2xl font-bold text-gray-900 mb-1">{cat.label}</h2>
+              <p class="text-sm sm:text-base text-gray-600">{cat.description}</p>
+            </div>
+            
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              {tools.map((tool) => (
+                <a 
+                  href={tool.url} 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  class="block group"
+                >
+                  <div class="h-full rounded-lg border border-gray-200 bg-white shadow-sm p-5 hover:border-gray-300 transition-colors">
+                    <div class="flex items-start justify-between gap-3 mb-2">
+                      <h3 class="text-base font-semibold text-gray-900 group-hover:text-primary-600 transition-colors">
+                        {tool.name}
+                      </h3>
+                      <svg class="w-4 h-4 text-gray-400 group-hover:text-primary-600 transition-colors flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                      </svg>
+                    </div>
+                    {tool.description && (
+                      <p class="text-sm text-gray-600 line-clamp-2">{tool.description}</p>
+                    )}
+                  </div>
+                </a>
+              ))}
+            </div>
+          </section>
+        );
+      })}
+    </div>
+
+    {allTools.length === 0 && (
+      <div class="rounded-lg border border-gray-200 bg-white shadow-sm p-12 text-center">
+        <p class="text-gray-500 text-lg">No tools have been added yet.</p>
+      </div>
+    )}
+  </div>
+</BaseLayout>

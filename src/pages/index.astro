@@ -1,0 +1,79 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import Card from '../components/ui/Card.astro';
+import CardHeader from '../components/ui/CardHeader.astro';
+import CardTitle from '../components/ui/CardTitle.astro';
+import CardContent from '../components/ui/CardContent.astro';
+---
+
+<BaseLayout title="About - Kubernetes Security Encyclopedia" description="An encyclopedia of Kubernetes security — terminology, attack patterns, defensive strategies, and tools.">
+  <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+    <div class="mb-12">
+      <h1 class="text-3xl sm:text-4xl md:text-5xl font-bold text-gray-900 mb-4">
+        About
+      </h1>
+      <p class="text-xl text-gray-600 leading-relaxed">
+        An encyclopedia of Kubernetes security — terminology, attack patterns, defensive strategies, and tools.
+      </p>
+    </div>
+
+    <Card class="mb-8">
+      <CardContent class="p-8 md:p-10 lg:p-12">
+        <div class="prose prose-lg prose-slate max-w-none 
+          prose-headings:font-bold prose-headings:text-gray-900
+          prose-h2:text-2xl prose-h2:mt-8 prose-h2:mb-4 prose-h2:font-semibold
+          prose-h3:text-xl prose-h3:mt-6 prose-h3:mb-3 prose-h3:font-semibold
+          prose-p:text-gray-700 prose-p:leading-relaxed prose-p:mb-4
+          prose-ul:list-disc prose-ul:ml-6 prose-ul:space-y-2
+          prose-ol:list-decimal prose-ol:ml-6 prose-ol:space-y-2
+          prose-li:text-gray-700 prose-li:leading-relaxed
+          prose-strong:text-gray-900 prose-strong:font-semibold
+          prose-code:text-sm prose-code:bg-gray-100 prose-code:text-gray-900 prose-code:px-1.5 prose-code:py-0.5 prose-code:rounded prose-code:font-mono
+          prose-pre:bg-gray-900 prose-pre:text-gray-100 prose-pre:rounded-lg prose-pre:p-4
+          prose-blockquote:border-l-4 prose-blockquote:border-gray-300 prose-blockquote:pl-4 prose-blockquote:italic prose-blockquote:text-gray-600
+          prose-a:text-primary-600 prose-a:no-underline hover:prose-a:underline hover:prose-a:text-primary-700
+          prose-hr:border-gray-200">
+          <h2>What is This Reference?</h2>
+          <p>
+            This reference provides a comprehensive collection of Kubernetes security knowledge, organized into three main sections:
+          </p>
+          
+          <h3 class="flex items-center gap-2">
+            <svg class="w-5 h-5 text-primary-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+            </svg>
+            Glossary
+          </h3>
+          <p>
+            Browse the <a href="/glossary">Glossary</a> for definitions of Kubernetes security terms, concepts, and components. Each entry includes detailed explanations and related terms to help you understand the security landscape.
+          </p>
+          
+          <h3 class="flex items-center gap-2">
+            <svg class="w-5 h-5 text-primary-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+            </svg>
+            Topics
+          </h3>
+          <p>
+            Reference <a href="/topics">Topics</a> for detailed information on security concepts with impact and mitigation strategies. Topics cover both offensive and defensive security techniques, from fundamental concepts to advanced practices.
+          </p>
+          
+          <h3 class="flex items-center gap-2">
+            <svg class="w-5 h-5 text-primary-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
+            </svg>
+            Attack Paths
+          </h3>
+          <p>
+            Review <a href="/attack-paths">Attack Paths</a> to understand how security breaches occur step-by-step. Each attack path includes visual diagrams and detailed explanations of the techniques used by attackers.
+          </p>
+          
+          <h2>Purpose</h2>
+          <p>
+            This reference is designed to help security professionals, developers, and DevOps engineers understand Kubernetes security concepts, identify potential vulnerabilities, and implement effective defensive strategies.
+          </p>
+        </div>
+      </CardContent>
+    </Card>
+  </div>
+</BaseLayout>

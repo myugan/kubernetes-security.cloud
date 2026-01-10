@@ -1,0 +1,236 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import { getCollection } from 'astro:content';
+import MitreTechniquesList from '../../components/MitreTechniquesList.astro';
+import Card from '../../components/ui/Card.astro';
+import CardContent from '../../components/ui/CardContent.astro';
+import CategoryIcon from '../../components/CategoryIcon.astro';
+import { getCategoryColors } from '../../components/CategoryColors.astro';
+import { getTools, getToolTypes } from '../../data/tools';
+import { getToolTypeColors } from '../../utils/colors';
+
+export async function getStaticPaths() {
+  const topics = await getCollection('topics');
+  return topics.map((topic) => ({
+    params: { slug: topic.slug },
+    props: { topic },
+  }));
+}
+
+const { topic } = Astro.props;
+const { Content } = await topic.render();
+
+// Get tool details from central config
+const toolsList = topic.data.tools ? getTools(topic.data.tools) : [];
+
+// Render references markdown if it exists
+// Simple markdown to HTML conversion
+let referencesHtml = '';
+if (topic.data.references) {
+  let html = topic.data.references;
+  
+  // Convert markdown links [text](url) to HTML (handle links with descriptions)
+  html = html.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" class="text-primary-600 hover:text-primary-700 hover:underline inline-flex items-center gap-1" target="_blank" rel="noopener noreferrer">$1<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" /></svg></a>');
+  
+  // Convert markdown lists (- item) to HTML
+  const lines = html.split('\n');
+  const processedLines: string[] = [];
+  let inList = false;
+  
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i].trim();
+    const listMatch = line.match(/^[-*+]\s+(.+)$/);
+    
+    if (listMatch) {
+      if (!inList) {
+        processedLines.push('<ul class="list-disc ml-6 space-y-2">');
+        inList = true;
+      }
+        processedLines.push(`<li class="text-gray-700">${listMatch[1]}</li>`);
+    } else {
+      if (inList) {
+        processedLines.push('</ul>');
+        inList = false;
+      }
+      if (line) {
+        processedLines.push(`<p class="text-gray-700 mb-2">${line}</p>`);
+      }
+    }
+  }
+  
+  if (inList) {
+    processedLines.push('</ul>');
+  }
+  
+  html = processedLines.join('\n');
+  
+  // Convert markdown bold **text** to HTML
+  html = html.replace(/\*\*([^*]+)\*\*/g, '<strong class="font-semibold text-gray-900">$1</strong>');
+  
+  // Convert markdown italic *text* to HTML (but not if it's part of bold)
+  html = html.replace(/(?<!\*)\*([^*]+)\*(?!\*)/g, '<em>$1</em>');
+  
+  // Convert code blocks `code` to HTML
+  html = html.replace(/`([^`]+)`/g, '<code class="text-sm bg-gray-100 px-1.5 py-0.5 rounded font-mono text-gray-900">$1</code>');
+  
+  referencesHtml = html;
+}
+---
+
+<BaseLayout title={`${topic.data.title} - Topics`}>
+  <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+    <div class="mb-10">
+      <a href="/topics" class="text-gray-600 hover:text-gray-900 mb-6 inline-block font-medium">
+        ← Back to Topics
+      </a>
+      <div class="flex gap-2 mb-6 flex-wrap">
+        {(() => {
+          const categoryColors = getCategoryColors(topic.data.category);
+          return (
+            <span class={`inline-flex items-center gap-1.5 px-3 py-1 text-sm font-medium rounded ${categoryColors.bg} ${categoryColors.text} border ${categoryColors.border}`}>
+              <CategoryIcon category={topic.data.category} class={`w-4 h-4 ${categoryColors.icon}`} />
+              {topic.data.category}
+            </span>
+          );
+        })()}
+      </div>
+      <h1 class="text-4xl md:text-5xl font-bold text-gray-900 mb-6">{topic.data.title}</h1>
+      <p class="text-xl md:text-2xl text-gray-600 leading-relaxed max-w-4xl">{topic.data.description}</p>
+    </div>
+
+    <Card class="mb-8">
+      <CardContent class="p-8 md:p-12 lg:p-16 prose prose-lg prose-slate max-w-none prose-headings:font-bold prose-headings:text-gray-900 prose-h1:hidden prose-h2:text-2xl prose-h2:mt-8 prose-h2:mb-4 prose-h3:text-xl prose-h3:mt-6 prose-h3:mb-3 prose-p:text-gray-700 prose-p:leading-relaxed prose-p:text-base md:prose-p:text-lg prose-ul:list-disc prose-ol:list-decimal prose-li:text-gray-700 prose-strong:text-gray-900 prose-strong:font-semibold prose-code:text-sm prose-code:bg-gray-100 prose-code:text-gray-900 prose-code:px-1.5 prose-code:py-0.5 prose-code:rounded prose-pre:bg-gray-900 prose-pre:text-gray-100 prose-blockquote:border-l-4 prose-blockquote:border-primary-500 prose-blockquote:pl-4 prose-blockquote:italic prose-blockquote:text-gray-600 prose-a:text-primary-600 hover:prose-a:underline">
+        <Content />
+      </CardContent>
+    </Card>
+
+    <div class="space-y-6 mb-8">
+      <Card>
+        <CardContent class="p-6 md:p-8 lg:p-10">
+          <h2 class="text-xl font-semibold text-gray-900 mb-4 flex items-center gap-2">
+            <svg class="w-6 h-6 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+            </svg>
+            Impact
+          </h2>
+          {Array.isArray(topic.data.impact) ? (
+            <ul class="list-disc ml-6 space-y-2">
+              {topic.data.impact.map((item: string) => (
+                <li class="text-gray-700 text-base md:text-lg leading-relaxed">{item}</li>
+              ))}
+            </ul>
+          ) : (
+            <p class="text-gray-700 text-base md:text-lg leading-relaxed">{topic.data.impact}</p>
+          )}
+        </CardContent>
+      </Card>
+      <Card>
+        <CardContent class="p-6 md:p-8 lg:p-10">
+          <h2 class="text-xl font-semibold text-gray-900 mb-4 flex items-center gap-2">
+            <svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+            </svg>
+            Mitigation
+          </h2>
+          {Array.isArray(topic.data.mitigation) ? (
+            <ul class="list-disc ml-6 space-y-2">
+              {topic.data.mitigation.map((item: string) => (
+                <li class="text-gray-700 text-base md:text-lg leading-relaxed">{item}</li>
+              ))}
+            </ul>
+          ) : (
+            <p class="text-gray-700 text-base md:text-lg leading-relaxed">{topic.data.mitigation}</p>
+          )}
+        </CardContent>
+      </Card>
+      {toolsList.length > 0 && (
+        <Card>
+          <CardContent class="p-6 md:p-8 lg:p-10">
+            <div class="flex items-center justify-between mb-4">
+              <h2 class="text-xl font-semibold text-gray-900 flex items-center gap-2">
+                <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                </svg>
+                Tools
+              </h2>
+              <a href="/tools" class="text-sm text-primary-600 hover:text-primary-700 hover:underline inline-flex items-center gap-1">
+                View all tools
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                </svg>
+              </a>
+            </div>
+            <ul class="space-y-2">
+              {toolsList.map((tool) => {
+                const types = getToolTypes(tool);
+                return (
+                  <li class="flex items-center gap-3 flex-wrap">
+                    <span class="text-gray-400">•</span>
+                    <a 
+                      href={tool.url} 
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      class="text-primary-600 hover:text-primary-700 hover:underline inline-flex items-center gap-1"
+                    >
+                      {tool.name}
+                      <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                      </svg>
+                    </a>
+                    <div class="flex gap-1">
+                      {types.map((type) => {
+                        const colors = getToolTypeColors(type);
+                        return (
+                          <span class={`inline-flex items-center px-2 py-0.5 text-xs font-medium rounded border ${colors.bg} ${colors.text} ${colors.border}`}>
+                            {type}
+                          </span>
+                        );
+                      })}
+                    </div>
+                  </li>
+                );
+              })}
+            </ul>
+          </CardContent>
+        </Card>
+      )}
+      {topic.data.references && (
+        <Card>
+          <CardContent class="p-6 md:p-8 lg:p-10">
+            <h2 class="text-xl font-semibold text-gray-900 mb-4 flex items-center gap-2">
+              <svg class="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+              </svg>
+              References
+            </h2>
+            <div class="prose prose-slate max-w-none 
+              prose-headings:font-bold prose-headings:text-gray-900
+              prose-h2:text-xl prose-h2:mt-6 prose-h2:mb-4 prose-h2:font-semibold
+              prose-h3:text-lg prose-h3:mt-4 prose-h3:mb-3 prose-h3:font-semibold
+              prose-p:text-gray-700 prose-p:leading-relaxed prose-p:mb-4
+              prose-ul:list-disc prose-ul:ml-6 prose-ul:space-y-2
+              prose-ol:list-decimal prose-ol:ml-6 prose-ol:space-y-2
+              prose-li:text-gray-700 prose-li:leading-relaxed
+              prose-strong:text-gray-900 prose-strong:font-semibold
+              prose-code:text-sm prose-code:bg-gray-100 prose-code:text-gray-900 prose-code:px-1.5 prose-code:py-0.5 prose-code:rounded prose-code:font-mono
+              prose-pre:bg-gray-900 prose-pre:text-gray-100 prose-pre:rounded-lg prose-pre:p-4
+              prose-blockquote:border-l-4 prose-blockquote:border-gray-300 prose-blockquote:pl-4 prose-blockquote:italic prose-blockquote:text-gray-600
+              prose-a:text-primary-600 prose-a:no-underline hover:prose-a:text-primary-700 hover:prose-a:underline
+              prose-hr:border-gray-200">
+              <Fragment set:html={referencesHtml} />
+            </div>
+          </CardContent>
+        </Card>
+      )}
+    </div>
+
+    {topic.data.mitreTechniques && topic.data.mitreTechniques.length > 0 && (
+      <Card>
+        <CardContent class="p-6 md:p-8 lg:p-10">
+          <MitreTechniquesList techniqueIds={topic.data.mitreTechniques} />
+        </CardContent>
+      </Card>
+    )}
+  </div>
+</BaseLayout>

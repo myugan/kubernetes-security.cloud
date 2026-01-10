@@ -1,0 +1,137 @@
+# =============================================================================
+# Kubernetes Security Tools Configuration
+# =============================================================================
+# Add new tools here. Each tool requires:
+#   - name: Display name of the tool
+#   - url: Link to the tool's website/repository
+#   - type: One or more of: offensive, defensive, audit, compliance
+#           Single type:   type: audit
+#           Multiple types: type: [audit, compliance]
+#   - description: (optional) Short description of the tool
+#
+# Tool keys should be lowercase with hyphens (e.g., kube-bench, opa-gatekeeper)
+# Content files reference tools by their key name
+# =============================================================================
+
+# -----------------------------------------------------------------------------
+# Defensive Tools
+# -----------------------------------------------------------------------------
+calico:
+  name: Calico
+  url: https://www.tigera.io/project-calico/
+  type: defensive
+  description: Network policy engine for Kubernetes
+
+opa-gatekeeper:
+  name: OPA Gatekeeper
+  url: https://open-policy-agent.github.io/gatekeeper/
+  type: defensive
+  description: Policy controller for Kubernetes
+
+cilium:
+  name: Cilium
+  url: https://cilium.io/
+  type: defensive
+  description: eBPF-based networking, security, and observability
+
+tetragon:
+  name: Tetragon
+  url: https://tetragon.io/
+  type: defensive
+  description: Tetragon is a runtime security and observability platform for Kubernetes.
+
+kyverno:
+  name: Kyverno
+  url: https://kyverno.io/
+  type: defensive
+  description: Policy engine for Kubernetes
+
+kubewarden:
+  name: Kubewarden
+  url: https://github.com/kubewarden/kubewarden
+  type: defensive
+  description: Policy engine for Kubernetes
+
+falco:
+  name: Falco
+  url: https://falco.org/
+  type: defensive
+  description: Runtime security for Kubernetes
+
+# -----------------------------------------------------------------------------
+# Audit Tools
+# -----------------------------------------------------------------------------
+trivy:
+  name: Trivy
+  url: https://github.com/aquasecurity/trivy
+  type: audit
+  description: Comprehensive security scanner for containers and Kubernetes
+
+kubeaudit:
+  name: kubeaudit
+  url: https://github.com/Shopify/kubeaudit
+  type: audit
+  description: Kubernetes security auditing tool
+
+kube-score:
+  name: kube-score
+  url: https://github.com/zegl/kube-score
+  type: compliance
+  description: Kubernetes object analysis with recommendations
+
+# -----------------------------------------------------------------------------
+# Offensive Tools
+# -----------------------------------------------------------------------------
+CDK:
+  name: CDK
+  url: https://github.com/cdk-team/CDK
+  type: offensive
+  description: An open-sourced container penetration toolkit
+
+peirates:
+  name: Peirates
+  url: https://github.com/inguardians/peirates
+  type: offensive
+  description: Kubernetes penetration testing tool
+
+kdigger:
+  name: kdigger
+  url: https://github.com/quarkslab/kdigger
+  type: offensive
+  description: A context discovery tool for Kubernetes penetration testing
+
+kube-hunter:
+  name: kube-hunter
+  url: https://github.com/aquasecurity/kube-hunter
+  type: offensive
+  description: Hunt for security weaknesses in Kubernetes clusters
+
+kubeletctl:
+  name: kubeletctl
+  url: https://github.com/cyberark/kubeletctl
+  type: offensive
+  description: Command-line tool for Kubelet API
+
+# -----------------------------------------------------------------------------
+# Compliance Tools
+# -----------------------------------------------------------------------------
+polaris:
+  name: Polaris
+  url: https://github.com/FairwindsOps/polaris
+  type: compliance
+  description: Kubernetes best practices validation
+
+kube-bench:
+  name: kube-bench
+  url: https://github.com/aquasecurity/kube-bench
+  type: audit
+  description: CIS Kubernetes Benchmark checker
+
+# -----------------------------------------------------------------------------
+# General Tools
+# -----------------------------------------------------------------------------
+kubectl:
+  name: kubectl
+  url: https://kubernetes.io/docs/reference/kubectl/
+  type: audit
+  description: Kubernetes command-line tool for cluster management

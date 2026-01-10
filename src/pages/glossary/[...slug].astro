@@ -1,0 +1,174 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import { getCollection } from 'astro:content';
+import MitreTechniquesList from '../../components/MitreTechniquesList.astro';
+import Card from '../../components/ui/Card.astro';
+import CardContent from '../../components/ui/CardContent.astro';
+import CategoryIcon from '../../components/CategoryIcon.astro';
+import { getCategoryColors } from '../../components/CategoryColors.astro';
+import { getTools, getToolTypes } from '../../data/tools';
+import { getToolTypeColors } from '../../utils/colors';
+
+export async function getStaticPaths() {
+  const glossaryEntries = await getCollection('glossary');
+  return glossaryEntries.map((entry) => ({
+    params: { slug: entry.slug },
+    props: { entry },
+  }));
+}
+
+const { entry } = Astro.props;
+const { Content } = await entry.render();
+
+// Get tool details from central config
+const toolsList = entry.data.tools ? getTools(entry.data.tools) : [];
+
+// Get all glossary entries to check if related terms exist
+const allGlossaryEntries = await getCollection('glossary');
+const glossarySlugMap = new Map(
+  allGlossaryEntries.map((e) => [e.slug, e])
+);
+
+// Helper function to find glossary entry by title (case-insensitive)
+function findGlossaryEntryByTitle(title: string) {
+  const normalizedTitle = title.toLowerCase().trim();
+  return allGlossaryEntries.find(
+    (e) => e.data.title.toLowerCase().trim() === normalizedTitle
+  );
+}
+---
+
+<BaseLayout title={`${entry.data.title} - Glossary`}>
+  <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+    <div class="mb-8">
+      <a href="/glossary" class="text-gray-600 hover:text-gray-900 mb-6 inline-flex items-center gap-2 text-sm font-medium">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+        </svg>
+        Back to Glossary
+      </a>
+      
+      <div class="mb-6">
+        {(() => {
+          const colors = getCategoryColors(entry.data.category);
+          return (
+            <span class={`inline-flex items-center gap-2 px-3 py-1.5 text-xs font-medium rounded-full ${colors.bg} ${colors.text} border ${colors.border}`}>
+              <CategoryIcon category={entry.data.category} class={`w-4 h-4 ${colors.icon}`} />
+              {entry.data.category}
+            </span>
+          );
+        })()}
+      </div>
+      
+      <h1 class="text-4xl font-bold text-gray-900 mb-4">{entry.data.title}</h1>
+      <p class="text-xl text-gray-600 leading-relaxed">{entry.data.description}</p>
+    </div>
+
+    <div class="bg-white border border-gray-200 rounded-lg shadow-sm p-8 md:p-10 lg:p-12">
+      <div class="prose prose-lg prose-slate max-w-none 
+        prose-headings:font-bold prose-headings:text-gray-900
+        prose-h1:text-2xl prose-h1:mt-0 prose-h1:mb-6
+        prose-h2:text-xl prose-h2:mt-8 prose-h2:mb-4 prose-h2:font-semibold
+        prose-h3:text-lg prose-h3:mt-6 prose-h3:mb-3 prose-h3:font-semibold
+        prose-p:text-gray-700 prose-p:leading-relaxed prose-p:mb-4 prose-p:text-base md:prose-p:text-lg
+        prose-ul:list-disc prose-ul:ml-6 prose-ul:space-y-2
+        prose-ol:list-decimal prose-ol:ml-6 prose-ol:space-y-2
+        prose-li:text-gray-700 prose-li:leading-relaxed
+        prose-strong:text-gray-900 prose-strong:font-semibold
+        prose-code:text-sm prose-code:bg-gray-100 prose-code:text-gray-900 prose-code:px-1.5 prose-code:py-0.5 prose-code:rounded prose-code:font-mono
+        prose-pre:bg-gray-900 prose-pre:text-gray-100 prose-pre:rounded-lg prose-pre:p-4
+        prose-blockquote:border-l-4 prose-blockquote:border-gray-300 prose-blockquote:pl-4 prose-blockquote:italic prose-blockquote:text-gray-600
+        prose-a:text-primary-600 prose-a:no-underline hover:prose-a:text-primary-700 hover:prose-a:underline
+        prose-hr:border-gray-200">
+        <Content />
+      </div>
+        
+      {entry.data.relatedTerms && entry.data.relatedTerms.length > 0 && (
+        <div class="mt-10 pt-8 border-t border-gray-200">
+          <h2 class="text-xl font-semibold text-gray-900 mb-4">Related Terms</h2>
+          <div class="flex flex-wrap gap-2">
+            {entry.data.relatedTerms.map((term) => {
+              const relatedEntry = findGlossaryEntryByTitle(term);
+              if (relatedEntry) {
+                return (
+                  <a 
+                    href={`/glossary/${relatedEntry.slug}`} 
+                    class="inline-flex items-center px-3 py-1.5 text-sm font-medium text-gray-700 bg-gray-50 border border-gray-300 rounded-lg hover:bg-gray-100 transition-colors"
+                  >
+                    {term}
+                  </a>
+                );
+              } else {
+                return (
+                  <span 
+                    class="inline-flex items-center px-3 py-1.5 text-sm font-medium text-gray-500 bg-gray-50 border border-gray-200 rounded-lg"
+                    title="Glossary entry not yet available"
+                  >
+                    {term}
+                  </span>
+                );
+              }
+            })}
+          </div>
+        </div>
+      )}
+
+      {toolsList.length > 0 && (
+        <div class="mt-10 pt-8 border-t border-gray-200">
+          <div class="flex items-center justify-between mb-4">
+            <h2 class="text-xl font-semibold text-gray-900 flex items-center gap-2">
+              <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+              </svg>
+              Tools
+            </h2>
+            <a href="/tools" class="text-sm text-primary-600 hover:text-primary-700 hover:underline inline-flex items-center gap-1">
+              View all tools
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+              </svg>
+            </a>
+          </div>
+          <ul class="space-y-2">
+            {toolsList.map((tool) => {
+              const types = getToolTypes(tool);
+              return (
+                <li class="flex items-center gap-3 flex-wrap">
+                  <span class="text-gray-400">•</span>
+                  <a 
+                    href={tool.url} 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    class="text-primary-600 hover:text-primary-700 hover:underline inline-flex items-center gap-1"
+                  >
+                    {tool.name}
+                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                    </svg>
+                  </a>
+                  <div class="flex gap-1">
+                    {types.map((type) => {
+                      const colors = getToolTypeColors(type);
+                      return (
+                        <span class={`inline-flex items-center px-2 py-0.5 text-xs font-medium rounded border ${colors.bg} ${colors.text} ${colors.border}`}>
+                          {type}
+                        </span>
+                      );
+                    })}
+                  </div>
+                </li>
+              );
+            })}
+          </ul>
+        </div>
+      )}
+
+      {entry.data.mitreTechniques && entry.data.mitreTechniques.length > 0 && (
+        <div class="mt-10 pt-8 border-t border-gray-200">
+          <MitreTechniquesList techniqueIds={entry.data.mitreTechniques} />
+        </div>
+      )}
+    </div>
+  </div>
+</BaseLayout>

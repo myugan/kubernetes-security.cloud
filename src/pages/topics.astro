@@ -1,0 +1,392 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import { getCollection } from 'astro:content';
+import Card from '../components/ui/Card.astro';
+import CardHeader from '../components/ui/CardHeader.astro';
+import CardTitle from '../components/ui/CardTitle.astro';
+import CardDescription from '../components/ui/CardDescription.astro';
+import CategoryIcon from '../components/CategoryIcon.astro';
+import { getCategoryColors } from '../components/CategoryColors.astro';
+
+const topics = await getCollection('topics');
+const sortedTopics = topics.sort((a, b) => a.data.title.localeCompare(b.data.title));
+
+// Get unique categories from actual content
+const availableCategories = [...new Set(topics.map(t => t.data.category))].sort();
+---
+
+<BaseLayout title="Topics - Kubernetes Security">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+    <div class="mb-8">
+      <div class="flex items-center gap-3 mb-4">
+        <div class="text-primary-600">
+          <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+          </svg>
+        </div>
+        <h1 class="text-3xl sm:text-4xl font-bold text-gray-900">Topics</h1>
+      </div>
+      <p class="text-xl text-gray-600 mb-6">
+        Reference materials covering offensive and defensive Kubernetes security techniques
+      </p>
+
+      <!-- Search Bar with Tag Filters -->
+      <div class="mb-8">
+        <Card class="p-6">
+          <!-- Search Input -->
+          <div class="relative">
+            <input
+              type="text"
+              id="search-input"
+              placeholder="Search topics by keyword..."
+              class="w-full px-4 py-3 pl-12 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none text-sm bg-white text-gray-900"
+            />
+            <svg class="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+            </svg>
+          </div>
+
+          <!-- Filter by Tags (Collapsible) -->
+          <div class="mt-3">
+            <button
+              type="button"
+              id="filter-toggle-btn"
+              class="inline-flex items-center gap-1.5 text-sm text-gray-600 hover:text-gray-900 transition-colors"
+            >
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
+              </svg>
+              Filter by Category
+              <svg id="filter-toggle-icon" class="w-4 h-4 text-gray-400 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+              </svg>
+            </button>
+            <div id="filter-tags-content" class="hidden pt-3">
+              <div class="flex flex-wrap gap-2">
+                {availableCategories.map(category => {
+                  const categoryColors = getCategoryColors(category);
+                  return (
+                    <button
+                      type="button"
+                      class={`tag-filter-btn inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg border transition-colors ${categoryColors.bg} ${categoryColors.text} ${categoryColors.border} hover:opacity-80`}
+                      data-tag-type="category"
+                      data-tag-value={category}
+                      data-tag-label={category.charAt(0).toUpperCase() + category.slice(1)}
+                    >
+                      <CategoryIcon category={category} class={`w-3 h-3 ${categoryColors.icon}`} />
+                      {category.charAt(0).toUpperCase() + category.slice(1)}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          </div>
+
+          <!-- Active Filter Tags -->
+          <div id="active-filters" class="mt-3 hidden">
+            <div class="flex items-center gap-2 flex-wrap">
+              <span class="text-xs text-gray-500">Active:</span>
+              <div id="active-filter-tags" class="flex flex-wrap gap-2">
+              </div>
+              <button id="clear-all-filters" class="text-xs text-primary-600 hover:text-primary-700 font-medium ml-2">
+                Clear all
+              </button>
+            </div>
+          </div>
+        </Card>
+      </div>
+
+      <!-- View Toggle -->
+      <div class="flex items-center justify-end gap-2">
+        <span class="text-sm text-gray-500">View:</span>
+        <div class="flex border border-gray-300 rounded-lg overflow-hidden">
+          <button
+            type="button"
+            id="view-grid"
+            class="view-toggle-btn px-3 py-1.5 text-sm font-medium bg-gray-100 text-gray-900 border-r border-gray-300"
+            title="Grid view"
+          >
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
+            </svg>
+          </button>
+          <button
+            type="button"
+            id="view-list"
+            class="view-toggle-btn px-3 py-1.5 text-sm font-medium bg-white text-gray-600 hover:bg-gray-50"
+            title="List view"
+          >
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+            </svg>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div id="topics-container" class="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+      {sortedTopics.map((topic) => {
+        const categoryColors = getCategoryColors(topic.data.category);
+        return (
+          <a 
+            href={`/topics/${topic.slug}`} 
+            class="block topic-card" 
+            data-category={topic.data.category}
+            data-title={topic.data.title.toLowerCase()}
+            data-description={topic.data.description.toLowerCase()}
+          >
+            <Card class="hover:border-gray-300 transition-colors h-full">
+              <CardHeader>
+                <div class="flex gap-2 flex-wrap mb-2">
+                  <span class={`inline-flex items-center gap-1 px-2 py-0.5 text-xs font-medium rounded border ${categoryColors.bg} ${categoryColors.text} ${categoryColors.border}`}>
+                    <CategoryIcon category={topic.data.category} class={`w-3 h-3 ${categoryColors.icon}`} />
+                    {topic.data.category}
+                  </span>
+                </div>
+                <CardTitle class="mb-2">{topic.data.title}</CardTitle>
+                <CardDescription class="line-clamp-3">{topic.data.description}</CardDescription>
+              </CardHeader>
+            </Card>
+          </a>
+        );
+      })}
+    </div>
+
+    <div id="no-results" class="hidden text-center py-12">
+      <p class="text-gray-500 text-lg">No topics found matching your search.</p>
+    </div>
+
+    <script>
+      (function() {
+        let searchInput: HTMLInputElement | null = null;
+        let topicsContainer: HTMLElement | null = null;
+        let noResults: HTMLElement | null = null;
+        let topicCards: NodeListOf<Element> | null = null;
+        let activeFilters: HTMLElement | null = null;
+        let activeFilterTags: HTMLElement | null = null;
+        let clearAllBtn: HTMLButtonElement | null = null;
+        let tagFilterButtons: NodeListOf<Element> | null = null;
+        let viewGridBtn: HTMLButtonElement | null = null;
+        let viewListBtn: HTMLButtonElement | null = null;
+        let filterToggleBtn: HTMLButtonElement | null = null;
+        let filterTagsContent: HTMLElement | null = null;
+        let filterToggleIcon: HTMLElement | null = null;
+
+        const activeFiltersSet = new Set<string>();
+
+        function toggleFilterTags() {
+          if (!filterTagsContent || !filterToggleIcon) return;
+          
+          const isHidden = filterTagsContent.classList.contains('hidden');
+          if (isHidden) {
+            filterTagsContent.classList.remove('hidden');
+            filterToggleIcon.classList.add('rotate-180');
+          } else {
+            filterTagsContent.classList.add('hidden');
+            filterToggleIcon.classList.remove('rotate-180');
+          }
+        }
+
+        function setGridView() {
+          if (!topicsContainer) return;
+          topicsContainer.classList.remove('flex', 'flex-col', 'gap-3');
+          topicsContainer.classList.add('grid', 'sm:grid-cols-2', 'lg:grid-cols-3', 'gap-4');
+          
+          viewGridBtn?.classList.remove('bg-white', 'text-gray-600', 'hover:bg-gray-50');
+          viewGridBtn?.classList.add('bg-gray-100', 'text-gray-900');
+          viewListBtn?.classList.remove('bg-gray-100', 'text-gray-900');
+          viewListBtn?.classList.add('bg-white', 'text-gray-600', 'hover:bg-gray-50');
+          
+          localStorage.setItem('topics-view', 'grid');
+        }
+
+        function setListView() {
+          if (!topicsContainer) return;
+          topicsContainer.classList.remove('grid', 'sm:grid-cols-2', 'lg:grid-cols-3', 'gap-4');
+          topicsContainer.classList.add('flex', 'flex-col', 'gap-3');
+          
+          viewListBtn?.classList.remove('bg-white', 'text-gray-600', 'hover:bg-gray-50');
+          viewListBtn?.classList.add('bg-gray-100', 'text-gray-900');
+          viewGridBtn?.classList.remove('bg-gray-100', 'text-gray-900');
+          viewGridBtn?.classList.add('bg-white', 'text-gray-600', 'hover:bg-gray-50');
+          
+          localStorage.setItem('topics-view', 'list');
+        }
+
+        function updateActiveFiltersDisplay() {
+          if (!activeFilters || !activeFilterTags) return;
+
+          if (activeFiltersSet.size === 0) {
+            activeFilters.classList.add('hidden');
+          } else {
+            activeFilters.classList.remove('hidden');
+            activeFilterTags.innerHTML = '';
+
+            activeFiltersSet.forEach(tagKey => {
+              const [type, value, label] = tagKey.split(':');
+              const tag = document.createElement('button');
+              tag.type = 'button';
+              tag.className = 'inline-flex items-center gap-1.5 px-3 py-1.5 bg-primary-100 text-primary-900 rounded-lg text-xs font-medium border border-primary-300 hover:bg-primary-200 transition-colors';
+              tag.innerHTML = `
+                <span>${label}</span>
+                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              `;
+              tag.addEventListener('click', () => {
+                removeFilter(type, value);
+              });
+              activeFilterTags.appendChild(tag);
+            });
+          }
+        }
+
+        function addFilter(type: string, value: string, label: string) {
+          const tagKey = `${type}:${value}:${label}`;
+          activeFiltersSet.add(tagKey);
+          updateActiveFiltersDisplay();
+          updateTagButtons();
+          performFilter();
+        }
+
+        function removeFilter(type: string, value: string) {
+          const tagKey = Array.from(activeFiltersSet).find(key => key.startsWith(`${type}:${value}:`));
+          if (tagKey) {
+            activeFiltersSet.delete(tagKey);
+            updateActiveFiltersDisplay();
+            updateTagButtons();
+            performFilter();
+          }
+        }
+
+        function clearAllFilters() {
+          activeFiltersSet.clear();
+          updateActiveFiltersDisplay();
+          updateTagButtons();
+          performFilter();
+        }
+
+        function updateTagButtons() {
+          if (!tagFilterButtons) return;
+          tagFilterButtons.forEach(btn => {
+            const type = (btn as HTMLElement).dataset.tagType || '';
+            const value = (btn as HTMLElement).dataset.tagValue || '';
+            const tagKey = Array.from(activeFiltersSet).find(key => key.startsWith(`${type}:${value}:`));
+            
+            if (tagKey) {
+              btn.classList.add('ring-2', 'ring-primary-500', 'ring-offset-2');
+            } else {
+              btn.classList.remove('ring-2', 'ring-primary-500', 'ring-offset-2');
+            }
+          });
+        }
+
+        function performFilter() {
+          if (!topicsContainer || !noResults || !topicCards || topicCards.length === 0) {
+            return;
+          }
+
+          const searchQuery = searchInput?.value.toLowerCase().trim() || '';
+          const activeCategories = new Set<string>();
+
+          activeFiltersSet.forEach(tagKey => {
+            const [type, value] = tagKey.split(':');
+            if (type === 'category') {
+              activeCategories.add(value);
+            }
+          });
+
+          let visibleCount = 0;
+
+          topicCards.forEach(card => {
+            const cardElement = card as HTMLElement;
+            const category = cardElement.dataset.category || '';
+            const title = cardElement.dataset.title || '';
+            const description = cardElement.dataset.description || '';
+
+            const matchesSearch = !searchQuery || 
+              title.includes(searchQuery) || 
+              description.includes(searchQuery);
+
+            const matchesCategory = activeCategories.size === 0 || activeCategories.has(category);
+
+            if (matchesSearch && matchesCategory) {
+              cardElement.style.display = 'block';
+              visibleCount++;
+            } else {
+              cardElement.style.display = 'none';
+            }
+          });
+
+          if (visibleCount === 0) {
+            topicsContainer.classList.add('hidden');
+            noResults.classList.remove('hidden');
+          } else {
+            topicsContainer.classList.remove('hidden');
+            noResults.classList.add('hidden');
+          }
+        }
+
+        function initSearch() {
+          searchInput = document.getElementById('search-input') as HTMLInputElement;
+          topicsContainer = document.getElementById('topics-container');
+          noResults = document.getElementById('no-results');
+          topicCards = document.querySelectorAll('.topic-card');
+          activeFilters = document.getElementById('active-filters');
+          activeFilterTags = document.getElementById('active-filter-tags');
+          clearAllBtn = document.getElementById('clear-all-filters') as HTMLButtonElement;
+          tagFilterButtons = document.querySelectorAll('.tag-filter-btn');
+          viewGridBtn = document.getElementById('view-grid') as HTMLButtonElement;
+          viewListBtn = document.getElementById('view-list') as HTMLButtonElement;
+          filterToggleBtn = document.getElementById('filter-toggle-btn') as HTMLButtonElement;
+          filterTagsContent = document.getElementById('filter-tags-content');
+          filterToggleIcon = document.getElementById('filter-toggle-icon');
+
+          if (!searchInput || !topicsContainer || !noResults || !topicCards || topicCards.length === 0) {
+            setTimeout(initSearch, 100);
+            return;
+          }
+
+          searchInput.addEventListener('input', performFilter);
+
+          tagFilterButtons.forEach(btn => {
+            btn.addEventListener('click', () => {
+              const type = (btn as HTMLElement).dataset.tagType || '';
+              const value = (btn as HTMLElement).dataset.tagValue || '';
+              const label = (btn as HTMLElement).dataset.tagLabel || '';
+
+              const tagKey = Array.from(activeFiltersSet).find(key => key.startsWith(`${type}:${value}:`));
+              if (tagKey) {
+                removeFilter(type, value);
+              } else {
+                addFilter(type, value, label);
+              }
+            });
+          });
+
+          if (clearAllBtn) {
+            clearAllBtn.addEventListener('click', clearAllFilters);
+          }
+
+          filterToggleBtn?.addEventListener('click', toggleFilterTags);
+          viewGridBtn?.addEventListener('click', setGridView);
+          viewListBtn?.addEventListener('click', setListView);
+
+          const savedView = localStorage.getItem('topics-view');
+          if (savedView === 'list') {
+            setListView();
+          }
+
+          updateActiveFiltersDisplay();
+          performFilter();
+        }
+
+        if (document.readyState === 'loading') {
+          document.addEventListener('DOMContentLoaded', initSearch);
+        } else {
+          initSearch();
+        }
+      })();
+    </script>
+  </div>
+</BaseLayout>

@@ -1,0 +1,72 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import { getCollection } from 'astro:content';
+import Card from '../components/ui/Card.astro';
+import CardHeader from '../components/ui/CardHeader.astro';
+import CardTitle from '../components/ui/CardTitle.astro';
+import CardDescription from '../components/ui/CardDescription.astro';
+import CardContent from '../components/ui/CardContent.astro';
+import { features } from '../config/features';
+
+// Redirect to glossary if feature is disabled
+if (!features.attackPaths) {
+  return Astro.redirect('/glossary');
+}
+
+const attackPaths = await getCollection('attack-paths');
+const sortedPaths = attackPaths.sort((a, b) => {
+  return a.data.title.localeCompare(b.data.title);
+});
+---
+
+<BaseLayout title="Attack Paths - Kubernetes Security">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+    <div class="mb-8">
+      <div class="flex items-center gap-3 mb-4">
+        <div class="text-primary-600">
+          <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
+          </svg>
+        </div>
+        <h1 class="text-4xl font-bold text-gray-900">Attack Paths</h1>
+      </div>
+      <p class="text-xl text-gray-600">
+        Visual step-by-step attack path visualizations to understand how security breaches occur in Kubernetes
+      </p>
+    </div>
+
+    <div class="grid md:grid-cols-2 gap-4">
+      {sortedPaths.map((path) => (
+        <a href={`/attack-paths/${path.id}`} class="block">
+          <Card class="hover:border-gray-300 transition-colors h-full">
+            <CardHeader>
+              <div class="flex gap-2 flex-wrap mb-2">
+                <span class="inline-block px-2 py-0.5 text-xs font-medium rounded bg-gray-50 text-gray-700 border border-gray-300">
+                  {path.data.category}
+                </span>
+                {typeof path.data.kubernetesVersion === 'string' ? (
+                  <span class="inline-block px-2 py-0.5 text-xs font-medium rounded bg-gray-50 text-gray-700 border border-gray-300">
+                    {path.data.kubernetesVersion}
+                  </span>
+                ) : path.data.kubernetesVersion && path.data.kubernetesVersion.length > 0 ? (
+                  path.data.kubernetesVersion.map((version: string) => (
+                    <span class="inline-block px-2 py-0.5 text-xs font-medium rounded bg-gray-50 text-gray-700 border border-gray-300">
+                      {version}
+                    </span>
+                  ))
+                ) : null}
+              </div>
+              <CardTitle>{path.data.title}</CardTitle>
+              <CardDescription>{path.data.description}</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div class="text-sm text-gray-500">
+                {path.data.steps.length} steps
+              </div>
+            </CardContent>
+          </Card>
+        </a>
+      ))}
+    </div>
+  </div>
+</BaseLayout>

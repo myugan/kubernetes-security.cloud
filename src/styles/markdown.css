@@ -1,0 +1,308 @@
+/* Global Markdown/Prose Styles */
+/* Ensures markdown content renders properly across all pages */
+
+.prose {
+  color: inherit;
+  max-width: none;
+}
+
+/* Headings */
+.prose h1,
+.prose h2,
+.prose h3,
+.prose h4,
+.prose h5,
+.prose h6 {
+  font-weight: 700;
+  margin-top: 2em;
+  margin-bottom: 1em;
+  line-height: 1.25;
+  color: rgb(17 24 39);
+}
+
+.prose h1 {
+  font-size: 2em;
+  margin-top: 0;
+  margin-bottom: 0.5em;
+}
+
+.prose h2 {
+  font-size: 1.5em;
+  margin-top: 1.5em;
+  margin-bottom: 0.75em;
+}
+
+.prose h3 {
+  font-size: 1.25em;
+  margin-top: 1.25em;
+  margin-bottom: 0.5em;
+}
+
+.prose h4 {
+  font-size: 1.125em;
+  margin-top: 1em;
+  margin-bottom: 0.5em;
+}
+
+/* Paragraphs */
+.prose p {
+  margin-top: 1.25em;
+  margin-bottom: 1.25em;
+  line-height: 1.75;
+  color: rgb(55 65 81);
+}
+
+.prose p:first-child {
+  margin-top: 0;
+}
+
+/* Lists */
+.prose ul,
+.prose ol {
+  margin-top: 1.25em;
+  margin-bottom: 1.25em;
+  padding-left: 1.625em;
+}
+
+.prose li {
+  margin-top: 0.5em;
+  margin-bottom: 0.5em;
+  line-height: 1.75;
+  color: rgb(55 65 81);
+}
+
+.prose ul {
+  list-style-type: disc;
+}
+
+.prose ol {
+  list-style-type: decimal;
+}
+
+.prose ul ul,
+.prose ol ol,
+.prose ul ol,
+.prose ol ul {
+  margin-top: 0.5em;
+  margin-bottom: 0.5em;
+}
+
+/* Strong/Bold */
+.prose strong {
+  font-weight: 600;
+  color: rgb(17 24 39);
+}
+
+/* Code */
+.prose code {
+  font-size: 0.875em;
+  background-color: rgb(243 244 246);
+  padding: 0.125rem 0.375rem;
+  border-radius: 0.25rem;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+  color: rgb(17 24 39);
+  font-weight: 500;
+}
+
+.prose pre {
+  background-color: rgb(17 24 39);
+  color: rgb(243 244 246);
+  border-radius: 0.5rem;
+  padding: 1rem;
+  overflow-x: auto;
+  margin-top: 1.25em;
+  margin-bottom: 1.25em;
+  line-height: 1.625;
+}
+
+.prose pre code {
+  background-color: transparent;
+  padding: 0;
+  color: inherit;
+  font-size: 0.875em;
+  font-weight: 400;
+}
+
+/* Output code blocks - styled differently from commands (NOT copyable) */
+.prose pre[data-language="output"] {
+  background-color: rgb(30 41 59); /* slate-800 - slightly lighter than commands */
+  border-left: 4px solid rgb(100 116 139); /* slate-500 */
+  position: relative;
+  user-select: none; /* Prevent text selection to hint it's not for copying */
+}
+
+.prose pre[data-language="output"]::before {
+  content: "Output";
+  position: absolute;
+  top: 0;
+  right: 0;
+  padding: 0.25rem 0.75rem;
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: rgb(148 163 184); /* slate-400 */
+  background-color: rgb(51 65 85); /* slate-700 */
+  border-bottom-left-radius: 0.375rem;
+  font-family: ui-sans-serif, system-ui, sans-serif;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.prose pre[data-language="output"] code {
+  color: rgb(203 213 225); /* slate-300 - slightly muted for output */
+}
+
+/* Hide any copy button that might be on output blocks */
+.prose pre[data-language="output"] .copy-button {
+  display: none !important;
+}
+
+/* Bash/Shell command blocks - add visual indicator */
+.prose pre[data-language="bash"],
+.prose pre[data-language="shell"],
+.prose pre[data-language="sh"] {
+  position: relative;
+}
+
+.prose pre[data-language="bash"]::before,
+.prose pre[data-language="shell"]::before,
+.prose pre[data-language="sh"]::before {
+  content: "Terminal";
+  position: absolute;
+  top: 0;
+  right: 0;
+  padding: 0.25rem 0.75rem;
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: rgb(134 239 172); /* green-300 */
+  background-color: rgb(20 83 45); /* green-900 */
+  border-bottom-left-radius: 0.375rem;
+  font-family: ui-sans-serif, system-ui, sans-serif;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+/* Copy button for code blocks */
+.prose pre {
+  position: relative;
+}
+
+.copy-button {
+  position: absolute;
+  bottom: 0.5rem;
+  right: 0.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  padding: 0;
+  background-color: rgb(55 65 81); /* gray-700 */
+  border: 1px solid rgb(75 85 99); /* gray-600 */
+  border-radius: 0.375rem;
+  color: rgb(156 163 175); /* gray-400 */
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 0.2s, background-color 0.2s, color 0.2s;
+}
+
+.prose pre:hover .copy-button {
+  opacity: 1;
+}
+
+.copy-button:hover {
+  background-color: rgb(75 85 99); /* gray-600 */
+  color: rgb(229 231 235); /* gray-200 */
+}
+
+.copy-button.copied {
+  background-color: rgb(22 101 52); /* green-800 */
+  border-color: rgb(34 197 94); /* green-500 */
+  color: rgb(134 239 172); /* green-300 */
+}
+
+.copy-button .hidden {
+  display: none;
+}
+
+.copy-button svg {
+  flex-shrink: 0;
+}
+
+/* Blockquotes */
+.prose blockquote {
+  border-left-width: 4px;
+  border-left-color: rgb(209 213 219);
+  padding-left: 1rem;
+  font-style: italic;
+  margin-top: 1.6em;
+  margin-bottom: 1.6em;
+  color: rgb(75 85 99);
+}
+
+/* Links */
+.prose a {
+  color: rgb(2 132 199);
+  text-decoration: none;
+  font-weight: 500;
+}
+
+.prose a:hover {
+  text-decoration: underline;
+  color: rgb(3 105 161);
+}
+
+/* Horizontal Rules */
+.prose hr {
+  border-top-width: 1px;
+  border-color: rgb(229 231 235);
+  margin-top: 3em;
+  margin-bottom: 3em;
+}
+
+/* Images */
+.prose img {
+  margin-top: 2em;
+  margin-bottom: 2em;
+  border-radius: 0.5rem;
+  max-width: 100%;
+  height: auto;
+}
+
+/* Tables */
+.prose table {
+  width: 100%;
+  margin-top: 2em;
+  margin-bottom: 2em;
+  border-collapse: collapse;
+  font-size: 0.875em;
+}
+
+.prose th,
+.prose td {
+  border: 1px solid rgb(229 231 235);
+  padding: 0.5rem 0.75rem;
+  text-align: left;
+}
+
+.prose th {
+  font-weight: 600;
+  background-color: rgb(249 250 251);
+  color: rgb(17 24 39);
+}
+
+.prose td {
+  color: rgb(55 65 81);
+}
+
+.prose thead {
+  border-bottom: 2px solid rgb(229 231 235);
+}
+
+/* Nested content */
+.prose > *:first-child {
+  margin-top: 0;
+}
+
+.prose > *:last-child {
+  margin-bottom: 0;
+}
