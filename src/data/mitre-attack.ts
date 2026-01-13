@@ -105,6 +105,14 @@ export const mitreTechniques: Record<string, MitreTechnique> = {
       'Adversaries may scan for network services to identify potential targets or gather information.',
     url: 'https://attack.mitre.org/techniques/T1046',
   },
+  T1595: {
+    id: 'T1595',
+    name: 'Active Scanning',
+    tactic: 'Reconnaissance',
+    description:
+      'Adversaries may execute active reconnaissance scans to gather information that can be used during targeting.',
+    url: 'https://attack.mitre.org/techniques/T1595',
+  },
   T1105: {
     id: 'T1105',
     name: 'Ingress Tool Transfer',
@@ -200,6 +208,14 @@ export const mitreTechniques: Record<string, MitreTechnique> = {
     description:
       'Adversaries may sniff network traffic to capture information about an environment.',
     url: 'https://attack.mitre.org/techniques/T1040',
+  },
+  T1613: {
+    id: 'T1613',
+    name: 'Container and Resource Discovery',
+    tactic: 'Discovery',
+    description:
+      'Adversaries may attempt to discover containers and other resources that are available within a containers environment.',
+    url: 'https://attack.mitre.org/techniques/T1613',
   },
 };
 
