@@ -23,7 +23,6 @@ Anyone who has access to the pod will be able to fetch the default token using t
 
 ```bash
 TOKEN=$(cat /var/run/secrets/kubernetes.io/serviceaccount/token)
-
 curl -k -H "Authorization: Bearer $TOKEN" \
   https://kubernetes.default.svc/api/v1/namespaces/default/secrets
 ```
