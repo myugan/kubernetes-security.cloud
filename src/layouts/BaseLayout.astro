@@ -59,6 +59,20 @@ const ogImageUrl = new URL(image, site.url).href;
     <meta name="twitter:description" content={description} />
     <meta name="twitter:image" content={ogImageUrl} />
     
+    <!-- JSON-LD Structured Data -->
+    <script type="application/ld+json" set:html={JSON.stringify({
+      "@context": "https://schema.org",
+      "@type": "WebSite",
+      "name": site.name,
+      "url": site.url,
+      "description": description,
+      "publisher": {
+        "@type": "Organization",
+        "name": site.name,
+        "url": site.url
+      }
+    })} />
+    
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@100..900&display=swap" rel="stylesheet" />
