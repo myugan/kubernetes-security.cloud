@@ -28,7 +28,7 @@ const { path } = Astro.props;
 const cytoscapeData = generateCytoscapeData(path.data);
 ---
 
-<BaseLayout title={`${path.data.title} - Attack Paths`}>
+<BaseLayout title={`${path.data.title} - Attack Paths`} description={path.data.description}>
   <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
     <div class="mb-8">
       <a href="/attack-paths" class="text-gray-600 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-zinc-100 mb-4 inline-block font-medium">

@@ -15,7 +15,10 @@ const sortedTopics = topics.sort((a, b) => a.data.title.localeCompare(b.data.tit
 const availableCategories = [...new Set(topics.map(t => t.data.category))].sort();
 ---
 
-<BaseLayout title="Topics - Kubernetes Security">
+<BaseLayout
+  title="Topics - Kubernetes Security"
+  description="Reference materials covering offensive and defensive Kubernetes security techniques, with impact and mitigation for each topic."
+>
   <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
     <div class="mb-8">
       <div class="flex items-center gap-3 mb-4">

@@ -10,18 +10,32 @@ import '@fontsource/geist-mono/700.css';
 import '../styles/markdown.css';
 import { features } from '../config/features';
 import { site } from '../config/site';
+import { toMetaDescription } from '../utils/meta';
 
 interface Props {
   title: string;
   description?: string;
   image?: string;
+  /** Open Graph type — use `article` for topic/glossary entries */
+  ogType?: 'website' | 'article';
+  /** Shown as `article:section` when `ogType` is `article` */
+  section?: string;
+  /** Accessible label for the preview image */
+  imageAlt?: string;
 }
 
-const { 
-  title, 
-  description = "An encyclopedia of Kubernetes security - terminology, attack patterns, defensive strategies, and tools",
-  image = site.ogImage
+const {
+  title,
+  description: descriptionProp,
+  image = site.ogImage,
+  ogType = 'website',
+  section,
+  imageAlt,
 } = Astro.props;
+
+const metaDescription = toMetaDescription(descriptionProp ?? site.description);
+const resolvedImageAlt = (imageAlt ?? `${title} — ${site.name}`).slice(0, 200);
+
 const currentYear = new Date().getFullYear();
 const gaId = site.googleAnalyticsId;
 const canonicalUrl = new URL(Astro.url.pathname, site.url).href;
@@ -32,7 +46,7 @@ const ogImageUrl = new URL(image, site.url).href;
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <meta name="description" content={description} />
+    <meta name="description" content={metaDescription} />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="color-scheme" content="light dark" />
     <script is:inline>
@@ -73,20 +87,26 @@ const ogImageUrl = new URL(image, site.url).href;
     <!-- Canonical URL -->
     <link rel="canonical" href={canonicalUrl} />
     
-    <!-- Open Graph / Facebook -->
-    <meta property="og:type" content="website" />
+    <!-- Open Graph -->
+    <meta property="og:type" content={ogType} />
     <meta property="og:url" content={canonicalUrl} />
     <meta property="og:title" content={title} />
-    <meta property="og:description" content={description} />
+    <meta property="og:description" content={metaDescription} />
     <meta property="og:image" content={ogImageUrl} />
+    <meta property="og:image:alt" content={resolvedImageAlt} />
     <meta property="og:site_name" content={site.name} />
-    
+    <meta property="og:locale" content="en_US" />
+    {ogType === 'article' && section && (
+      <meta property="article:section" content={section} />
+    )}
+
     <!-- Twitter Card -->
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:url" content={canonicalUrl} />
     <meta name="twitter:title" content={title} />
-    <meta name="twitter:description" content={description} />
+    <meta name="twitter:description" content={metaDescription} />
     <meta name="twitter:image" content={ogImageUrl} />
+    <meta name="twitter:image:alt" content={resolvedImageAlt} />
     
     <!-- JSON-LD Structured Data -->
     <script type="application/ld+json" set:html={JSON.stringify({
@@ -94,7 +114,7 @@ const ogImageUrl = new URL(image, site.url).href;
       "@type": "WebSite",
       "name": site.name,
       "url": site.url,
-      "description": description,
+      "description": site.description,
       "publisher": {
         "@type": "Organization",
         "name": site.name,

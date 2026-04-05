@@ -38,7 +38,12 @@ function findGlossaryEntryByTitle(title: string) {
 }
 ---
 
-<BaseLayout title={`${entry.data.title} - Glossary`}>
+<BaseLayout
+  title={`${entry.data.title} - Glossary`}
+  description={entry.data.description}
+  ogType="article"
+  section={entry.data.category}
+>
   <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
     <div class="mb-8">
       <a href="/glossary" class="text-gray-600 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-zinc-100 mb-6 inline-flex items-center gap-2 text-sm font-medium">

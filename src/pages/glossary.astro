@@ -12,7 +12,10 @@ const glossaryEntries = await getCollection('glossary');
 const sortedEntries = glossaryEntries.sort((a, b) => a.data.title.localeCompare(b.data.title));
 ---
 
-<BaseLayout title="Glossary - Kubernetes Security">
+<BaseLayout
+  title="Glossary - Kubernetes Security"
+  description="Simple definitions and explanations of Kubernetes components, concepts, and security terms."
+>
   <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
     <div class="mb-10">
       <div class="flex items-center gap-3 mb-4">

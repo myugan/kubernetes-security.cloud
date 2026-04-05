@@ -77,7 +77,12 @@ if (topic.data.references) {
 }
 ---
 
-<BaseLayout title={`${topic.data.title} - Topics`}>
+<BaseLayout
+  title={`${topic.data.title} - Topics`}
+  description={topic.data.description}
+  ogType="article"
+  section={topic.data.category}
+>
   <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
     <div class="mb-10">
       <a href="/topics" class="text-gray-600 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-zinc-100 mb-6 inline-block font-medium">
