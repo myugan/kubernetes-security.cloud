@@ -46,14 +46,14 @@ if (topic.data.references) {
         processedLines.push('<ul class="list-disc ml-6 space-y-2">');
         inList = true;
       }
-        processedLines.push(`<li class="text-gray-700 dark:text-zinc-300">${listMatch[1]}</li>`);
+        processedLines.push(`<li class="text-gray-700 dark:text-zinc-300 break-words text-pretty hyphens-auto">${listMatch[1]}</li>`);
     } else {
       if (inList) {
         processedLines.push('</ul>');
         inList = false;
       }
       if (line) {
-        processedLines.push(`<p class="text-gray-700 dark:text-zinc-300 mb-2">${line}</p>`);
+        processedLines.push(`<p class="text-gray-700 dark:text-zinc-300 mb-2 break-words text-pretty hyphens-auto">${line}</p>`);
       }
     }
   }
@@ -71,7 +71,7 @@ if (topic.data.references) {
   html = html.replace(/(?<!\*)\*([^*]+)\*(?!\*)/g, '<em>$1</em>');
   
   // Convert code blocks `code` to HTML
-  html = html.replace(/`([^`]+)`/g, '<code class="text-xs bg-gray-100 border border-gray-200 text-gray-900 px-1.5 py-0.5 rounded font-mono dark:bg-zinc-950 dark:border-zinc-800 dark:text-emerald-400">$1</code>');
+  html = html.replace(/`([^`]+)`/g, '<code class="text-xs bg-gray-100 border border-gray-200 text-gray-900 px-1.5 py-0.5 rounded font-mono break-words dark:bg-zinc-950 dark:border-zinc-800 dark:text-emerald-400">$1</code>');
   
   referencesHtml = html;
 }
@@ -94,7 +94,7 @@ if (topic.data.references) {
           );
         })()}
       </div>
-      <h1 class="text-4xl md:text-5xl font-bold text-gray-900 dark:text-zinc-100 mb-6">{topic.data.title}</h1>
+      <h1 class="text-3xl md:text-4xl font-bold text-gray-900 dark:text-zinc-100 mb-6">{topic.data.title}</h1>
       <p class="text-xl md:text-2xl text-gray-600 dark:text-zinc-400 leading-relaxed max-w-4xl">{topic.data.description}</p>
     </div>
 
@@ -116,11 +116,11 @@ if (topic.data.references) {
           {Array.isArray(topic.data.impact) ? (
             <ul class="list-disc ml-6 space-y-2">
               {topic.data.impact.map((item: string) => (
-                <li class="text-gray-700 dark:text-zinc-300 text-[0.9375rem] leading-relaxed">{item}</li>
+                <li class="text-gray-700 dark:text-zinc-300 text-[0.9375rem] leading-relaxed break-words text-pretty hyphens-auto">{item}</li>
               ))}
             </ul>
           ) : (
-            <p class="text-gray-700 dark:text-zinc-300 text-[0.9375rem] leading-relaxed">{topic.data.impact}</p>
+            <p class="text-gray-700 dark:text-zinc-300 text-[0.9375rem] leading-relaxed break-words text-pretty hyphens-auto">{topic.data.impact}</p>
           )}
         </CardContent>
       </Card>
@@ -135,11 +135,11 @@ if (topic.data.references) {
           {Array.isArray(topic.data.mitigation) ? (
             <ul class="list-disc ml-6 space-y-2">
               {topic.data.mitigation.map((item: string) => (
-                <li class="text-gray-700 dark:text-zinc-300 text-[0.9375rem] leading-relaxed [&_a]:text-primary-600 [&_a]:no-underline [&_a]:hover:text-primary-700 [&_a]:hover:underline dark:[&_a]:hover:text-primary-400" set:html={item.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank" rel="noopener noreferrer">$1</a>').replace(/\*\*([^*]+)\*\*/g, '<strong class="font-semibold text-gray-900 dark:text-zinc-100">$1</strong>').replace(/`([^`]+)`/g, '<code class="bg-gray-100 border border-gray-200 text-gray-900 px-1 py-0.5 rounded text-xs font-mono dark:bg-zinc-950 dark:border-zinc-800 dark:text-emerald-400">$1</code>')} />
+                <li class="text-gray-700 dark:text-zinc-300 text-[0.9375rem] leading-relaxed break-words text-pretty hyphens-auto [&_a]:text-primary-600 [&_a]:no-underline [&_a]:hover:text-primary-700 [&_a]:hover:underline dark:[&_a]:hover:text-primary-400 [&_a]:break-words" set:html={item.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank" rel="noopener noreferrer">$1</a>').replace(/\*\*([^*]+)\*\*/g, '<strong class="font-semibold text-gray-900 dark:text-zinc-100">$1</strong>').replace(/`([^`]+)`/g, '<code class="bg-gray-100 border border-gray-200 text-gray-900 px-1 py-0.5 rounded text-xs font-mono break-words dark:bg-zinc-950 dark:border-zinc-800 dark:text-emerald-400">$1</code>')} />
               ))}
             </ul>
           ) : (
-            <p class="text-gray-700 dark:text-zinc-300 text-[0.9375rem] leading-relaxed [&_a]:text-primary-600 [&_a]:no-underline [&_a]:hover:text-primary-700 [&_a]:hover:underline dark:[&_a]:hover:text-primary-400" set:html={topic.data.mitigation.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank" rel="noopener noreferrer">$1</a>').replace(/\*\*([^*]+)\*\*/g, '<strong class="font-semibold text-gray-900 dark:text-zinc-100">$1</strong>').replace(/`([^`]+)`/g, '<code class="bg-gray-100 border border-gray-200 text-gray-900 px-1 py-0.5 rounded text-xs font-mono dark:bg-zinc-950 dark:border-zinc-800 dark:text-emerald-400">$1</code>')} />
+            <p class="text-gray-700 dark:text-zinc-300 text-[0.9375rem] leading-relaxed break-words text-pretty hyphens-auto [&_a]:text-primary-600 [&_a]:no-underline [&_a]:hover:text-primary-700 [&_a]:hover:underline dark:[&_a]:hover:text-primary-400 [&_a]:break-words" set:html={topic.data.mitigation.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank" rel="noopener noreferrer">$1</a>').replace(/\*\*([^*]+)\*\*/g, '<strong class="font-semibold text-gray-900 dark:text-zinc-100">$1</strong>').replace(/`([^`]+)`/g, '<code class="bg-gray-100 border border-gray-200 text-gray-900 px-1 py-0.5 rounded text-xs font-mono break-words dark:bg-zinc-950 dark:border-zinc-800 dark:text-emerald-400">$1</code>')} />
           )}
         </CardContent>
       </Card>
