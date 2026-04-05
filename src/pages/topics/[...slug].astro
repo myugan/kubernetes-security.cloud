@@ -75,6 +75,17 @@ if (topic.data.references) {
   
   referencesHtml = html;
 }
+
+/** Minimal markdown for topic cards: links, **bold**, `code` (same rules as mitigation). */
+function inlineMarkdownToHtml(text: string): string {
+  return text
+    .replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank" rel="noopener noreferrer">$1</a>')
+    .replace(/\*\*([^*]+)\*\*/g, '<strong class="font-semibold text-gray-900 dark:text-zinc-100">$1</strong>')
+    .replace(/`([^`]+)`/g, '<code class="bg-gray-100 border border-gray-200 text-gray-900 px-1 py-0.5 rounded text-xs font-mono break-words dark:bg-zinc-950 dark:border-zinc-800 dark:text-emerald-400">$1</code>');
+}
+
+const impactLinkParentClass =
+  'text-gray-700 dark:text-zinc-300 text-[0.9375rem] leading-relaxed break-words text-pretty hyphens-auto [&_a]:text-primary-600 [&_a]:no-underline [&_a]:hover:text-primary-700 [&_a]:hover:underline dark:[&_a]:hover:text-primary-400 [&_a]:break-words';
 ---
 
 <BaseLayout
@@ -121,11 +132,11 @@ if (topic.data.references) {
           {Array.isArray(topic.data.impact) ? (
             <ul class="list-disc ml-6 space-y-2">
               {topic.data.impact.map((item: string) => (
-                <li class="text-gray-700 dark:text-zinc-300 text-[0.9375rem] leading-relaxed break-words text-pretty hyphens-auto">{item}</li>
+                <li class={impactLinkParentClass} set:html={inlineMarkdownToHtml(item)} />
               ))}
             </ul>
           ) : (
-            <p class="text-gray-700 dark:text-zinc-300 text-[0.9375rem] leading-relaxed break-words text-pretty hyphens-auto">{topic.data.impact}</p>
+            <p class={impactLinkParentClass} set:html={inlineMarkdownToHtml(topic.data.impact)} />
           )}
         </CardContent>
       </Card>
@@ -140,11 +151,11 @@ if (topic.data.references) {
           {Array.isArray(topic.data.mitigation) ? (
             <ul class="list-disc ml-6 space-y-2">
               {topic.data.mitigation.map((item: string) => (
-                <li class="text-gray-700 dark:text-zinc-300 text-[0.9375rem] leading-relaxed break-words text-pretty hyphens-auto [&_a]:text-primary-600 [&_a]:no-underline [&_a]:hover:text-primary-700 [&_a]:hover:underline dark:[&_a]:hover:text-primary-400 [&_a]:break-words" set:html={item.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank" rel="noopener noreferrer">$1</a>').replace(/\*\*([^*]+)\*\*/g, '<strong class="font-semibold text-gray-900 dark:text-zinc-100">$1</strong>').replace(/`([^`]+)`/g, '<code class="bg-gray-100 border border-gray-200 text-gray-900 px-1 py-0.5 rounded text-xs font-mono break-words dark:bg-zinc-950 dark:border-zinc-800 dark:text-emerald-400">$1</code>')} />
+                <li class={impactLinkParentClass} set:html={inlineMarkdownToHtml(item)} />
               ))}
             </ul>
           ) : (
-            <p class="text-gray-700 dark:text-zinc-300 text-[0.9375rem] leading-relaxed break-words text-pretty hyphens-auto [&_a]:text-primary-600 [&_a]:no-underline [&_a]:hover:text-primary-700 [&_a]:hover:underline dark:[&_a]:hover:text-primary-400 [&_a]:break-words" set:html={topic.data.mitigation.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank" rel="noopener noreferrer">$1</a>').replace(/\*\*([^*]+)\*\*/g, '<strong class="font-semibold text-gray-900 dark:text-zinc-100">$1</strong>').replace(/`([^`]+)`/g, '<code class="bg-gray-100 border border-gray-200 text-gray-900 px-1 py-0.5 rounded text-xs font-mono break-words dark:bg-zinc-950 dark:border-zinc-800 dark:text-emerald-400">$1</code>')} />
+            <p class={impactLinkParentClass} set:html={inlineMarkdownToHtml(topic.data.mitigation)} />
           )}
         </CardContent>
       </Card>
