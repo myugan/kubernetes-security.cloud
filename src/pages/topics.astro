@@ -24,9 +24,9 @@ const availableCategories = [...new Set(topics.map(t => t.data.category))].sort(
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
           </svg>
         </div>
-        <h1 class="text-3xl sm:text-4xl font-bold text-gray-900">Topics</h1>
+        <h1 class="text-3xl sm:text-4xl font-bold text-gray-900 dark:text-zinc-100">Topics</h1>
       </div>
-      <p class="text-xl text-gray-600 mb-6">
+      <p class="text-xl text-gray-600 dark:text-zinc-400 mb-6">
         Reference materials covering offensive and defensive Kubernetes security techniques
       </p>
 
@@ -39,9 +39,9 @@ const availableCategories = [...new Set(topics.map(t => t.data.category))].sort(
               type="text"
               id="search-input"
               placeholder="Search topics by keyword..."
-              class="w-full px-4 py-3 pl-12 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none text-sm bg-white text-gray-900"
+              class="w-full px-4 py-3 pl-12 border border-gray-300 dark:border-zinc-700 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none text-sm bg-white dark:bg-zinc-900 text-gray-900 dark:text-zinc-100"
             />
-            <svg class="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg class="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-500 dark:text-zinc-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
             </svg>
           </div>
@@ -51,13 +51,13 @@ const availableCategories = [...new Set(topics.map(t => t.data.category))].sort(
             <button
               type="button"
               id="filter-toggle-btn"
-              class="inline-flex items-center gap-1.5 text-sm text-gray-600 hover:text-gray-900 transition-colors"
+              class="inline-flex items-center gap-1.5 text-sm text-gray-600 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-zinc-100 transition-colors"
             >
               <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
               </svg>
               Filter by Category
-              <svg id="filter-toggle-icon" class="w-4 h-4 text-gray-400 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg id="filter-toggle-icon" class="w-4 h-4 text-gray-500 dark:text-zinc-500 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
               </svg>
             </button>
@@ -85,10 +85,10 @@ const availableCategories = [...new Set(topics.map(t => t.data.category))].sort(
           <!-- Active Filter Tags -->
           <div id="active-filters" class="mt-3 hidden">
             <div class="flex items-center gap-2 flex-wrap">
-              <span class="text-xs text-gray-500">Active:</span>
+              <span class="text-xs text-gray-500 dark:text-zinc-500">Active:</span>
               <div id="active-filter-tags" class="flex flex-wrap gap-2">
               </div>
-              <button id="clear-all-filters" class="text-xs text-primary-600 hover:text-primary-700 font-medium ml-2">
+              <button id="clear-all-filters" class="text-xs text-primary-600 hover:text-primary-700 dark:hover:text-primary-400 font-medium ml-2">
                 Clear all
               </button>
             </div>
@@ -98,12 +98,12 @@ const availableCategories = [...new Set(topics.map(t => t.data.category))].sort(
 
       <!-- View Toggle -->
       <div class="flex items-center justify-end gap-2">
-        <span class="text-sm text-gray-500">View:</span>
-        <div class="flex border border-gray-300 rounded-lg overflow-hidden">
+        <span class="text-sm text-gray-500 dark:text-zinc-500">View:</span>
+        <div class="flex border border-gray-300 dark:border-zinc-700 rounded-lg overflow-hidden">
           <button
             type="button"
             id="view-grid"
-            class="view-toggle-btn px-3 py-1.5 text-sm font-medium bg-gray-100 text-gray-900 border-r border-gray-300"
+            class="view-toggle-btn px-3 py-1.5 text-sm font-medium bg-gray-100 dark:bg-zinc-800 text-gray-900 dark:text-zinc-100 border-r border-gray-300 dark:border-zinc-700"
             title="Grid view"
           >
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -113,7 +113,7 @@ const availableCategories = [...new Set(topics.map(t => t.data.category))].sort(
           <button
             type="button"
             id="view-list"
-            class="view-toggle-btn px-3 py-1.5 text-sm font-medium bg-white text-gray-600 hover:bg-gray-50"
+            class="view-toggle-btn px-3 py-1.5 text-sm font-medium bg-white dark:bg-zinc-900 text-gray-600 dark:text-zinc-400 hover:bg-gray-50 dark:bg-zinc-800/60"
             title="List view"
           >
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -135,7 +135,7 @@ const availableCategories = [...new Set(topics.map(t => t.data.category))].sort(
             data-title={topic.data.title.toLowerCase()}
             data-description={topic.data.description.toLowerCase()}
           >
-            <Card class="hover:border-gray-300 transition-colors h-full">
+            <Card class="hover:border-gray-300 dark:border-zinc-700 transition-colors h-full">
               <CardHeader>
                 <div class="flex gap-2 flex-wrap mb-2">
                   <span class={`inline-flex items-center gap-1 px-2 py-0.5 text-xs font-medium rounded border ${categoryColors.bg} ${categoryColors.text} ${categoryColors.border}`}>
@@ -153,7 +153,7 @@ const availableCategories = [...new Set(topics.map(t => t.data.category))].sort(
     </div>
 
     <div id="no-results" class="hidden text-center py-12">
-      <p class="text-gray-500 text-lg">No topics found matching your search.</p>
+      <p class="text-gray-500 dark:text-zinc-500 text-lg">No topics found matching your search.</p>
     </div>
 
     <script>
@@ -192,10 +192,10 @@ const availableCategories = [...new Set(topics.map(t => t.data.category))].sort(
           topicsContainer.classList.remove('flex', 'flex-col', 'gap-3');
           topicsContainer.classList.add('grid', 'sm:grid-cols-2', 'lg:grid-cols-3', 'gap-4');
           
-          viewGridBtn?.classList.remove('bg-white', 'text-gray-600', 'hover:bg-gray-50');
-          viewGridBtn?.classList.add('bg-gray-100', 'text-gray-900');
-          viewListBtn?.classList.remove('bg-gray-100', 'text-gray-900');
-          viewListBtn?.classList.add('bg-white', 'text-gray-600', 'hover:bg-gray-50');
+          viewGridBtn?.classList.remove('bg-white dark:bg-zinc-900', 'text-gray-600 dark:text-zinc-400', 'hover:bg-gray-50 dark:bg-zinc-800/60');
+          viewGridBtn?.classList.add('bg-gray-100 dark:bg-zinc-800', 'text-gray-900 dark:text-zinc-100');
+          viewListBtn?.classList.remove('bg-gray-100 dark:bg-zinc-800', 'text-gray-900 dark:text-zinc-100');
+          viewListBtn?.classList.add('bg-white dark:bg-zinc-900', 'text-gray-600 dark:text-zinc-400', 'hover:bg-gray-50 dark:bg-zinc-800/60');
           
           localStorage.setItem('topics-view', 'grid');
         }
@@ -205,10 +205,10 @@ const availableCategories = [...new Set(topics.map(t => t.data.category))].sort(
           topicsContainer.classList.remove('grid', 'sm:grid-cols-2', 'lg:grid-cols-3', 'gap-4');
           topicsContainer.classList.add('flex', 'flex-col', 'gap-3');
           
-          viewListBtn?.classList.remove('bg-white', 'text-gray-600', 'hover:bg-gray-50');
-          viewListBtn?.classList.add('bg-gray-100', 'text-gray-900');
-          viewGridBtn?.classList.remove('bg-gray-100', 'text-gray-900');
-          viewGridBtn?.classList.add('bg-white', 'text-gray-600', 'hover:bg-gray-50');
+          viewListBtn?.classList.remove('bg-white dark:bg-zinc-900', 'text-gray-600 dark:text-zinc-400', 'hover:bg-gray-50 dark:bg-zinc-800/60');
+          viewListBtn?.classList.add('bg-gray-100 dark:bg-zinc-800', 'text-gray-900 dark:text-zinc-100');
+          viewGridBtn?.classList.remove('bg-gray-100 dark:bg-zinc-800', 'text-gray-900 dark:text-zinc-100');
+          viewGridBtn?.classList.add('bg-white dark:bg-zinc-900', 'text-gray-600 dark:text-zinc-400', 'hover:bg-gray-50 dark:bg-zinc-800/60');
           
           localStorage.setItem('topics-view', 'list');
         }

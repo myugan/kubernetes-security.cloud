@@ -21,9 +21,9 @@ const sortedEntries = glossaryEntries.sort((a, b) => a.data.title.localeCompare(
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
           </svg>
         </div>
-        <h1 class="text-3xl sm:text-4xl font-bold text-gray-900">Glossary</h1>
+        <h1 class="text-3xl sm:text-4xl font-bold text-gray-900 dark:text-zinc-100">Glossary</h1>
       </div>
-      <p class="text-lg text-gray-600 max-w-3xl">
+      <p class="text-lg text-gray-600 dark:text-zinc-400 max-w-3xl">
         Simple definitions and explanations of Kubernetes components, concepts, and security terms
       </p>
     </div>
@@ -31,7 +31,7 @@ const sortedEntries = glossaryEntries.sort((a, b) => a.data.title.localeCompare(
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
       {sortedEntries.map((entry) => (
         <a href={`/glossary/${entry.slug}`} class="block group">
-          <div class="bg-white border border-gray-200 rounded-lg shadow-sm p-6 hover:shadow-md hover:border-gray-300 transition-all h-full flex flex-col">
+          <div class="bg-white dark:bg-zinc-900 border border-gray-200 dark:border-zinc-800 rounded-lg shadow-sm p-6 hover:shadow-md hover:border-gray-300 dark:border-zinc-700 transition-all h-full flex flex-col">
             <div class="flex items-start justify-between mb-3">
               {(() => {
                 const colors = getCategoryColors(entry.data.category);
@@ -42,14 +42,14 @@ const sortedEntries = glossaryEntries.sort((a, b) => a.data.title.localeCompare(
                   </span>
                 );
               })()}
-              <svg class="w-5 h-5 text-gray-400 group-hover:text-gray-600 transition-colors flex-shrink-0 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg class="w-5 h-5 text-gray-500 dark:text-zinc-500 group-hover:text-gray-600 dark:text-zinc-400 transition-colors flex-shrink-0 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
               </svg>
             </div>
-            <h3 class="text-xl font-semibold text-gray-900 mb-2 group-hover:text-gray-700 transition-colors">
+            <h3 class="text-xl font-semibold text-gray-900 dark:text-zinc-100 mb-2 group-hover:text-gray-700 dark:text-zinc-300 transition-colors">
               {entry.data.title}
             </h3>
-            <p class="text-gray-600 text-sm leading-relaxed line-clamp-3 flex-grow">
+            <p class="text-gray-600 dark:text-zinc-400 text-sm leading-relaxed line-clamp-3 flex-grow">
               {entry.data.description}
             </p>
           </div>

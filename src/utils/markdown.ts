@@ -14,7 +14,7 @@ export function renderSimpleMarkdown(markdown: string): string {
     // Convert markdown links [text](url) to HTML
     .replace(
       /\[([^\]]+)\]\(([^)]+)\)/g,
-      '<a href="$2" target="_blank" rel="noopener noreferrer" class="text-primary-600 hover:text-primary-700 hover:underline">$1</a>'
+      '<a href="$2" target="_blank" rel="noopener noreferrer" class="text-primary-600 hover:text-primary-700 dark:hover:text-primary-400 hover:underline">$1</a>'
     )
     // Convert bold **text** to HTML
     .replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>')
@@ -23,7 +23,7 @@ export function renderSimpleMarkdown(markdown: string): string {
     // Convert inline code `code` to HTML
     .replace(
       /`([^`]+)`/g,
-      '<code class="text-sm bg-gray-100 text-gray-900 px-1.5 py-0.5 rounded">$1</code>'
+      '<code class="text-xs bg-gray-100 border border-gray-200 text-gray-900 px-1.5 py-0.5 rounded font-mono dark:bg-zinc-950 dark:border-zinc-800 dark:text-emerald-400">$1</code>'
     );
 
   // Convert list items

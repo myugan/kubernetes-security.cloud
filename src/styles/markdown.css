@@ -1,12 +1,13 @@
-/* Global Markdown/Prose Styles */
-/* Ensures markdown content renders properly across all pages */
+/* Markdown / prose — light default, .dark terminal overrides */
 
 .prose {
   color: inherit;
   max-width: none;
+  /* Slightly smaller than default 16px so body text matches code blocks visually */
+  font-size: 0.9375rem;
+  line-height: 1.65;
 }
 
-/* Headings */
 .prose h1,
 .prose h2,
 .prose h3,
@@ -16,35 +17,43 @@
   font-weight: 700;
   margin-top: 2em;
   margin-bottom: 1em;
-  line-height: 1.25;
+  line-height: 1.3;
   color: rgb(17 24 39);
 }
 
+.dark .prose h1,
+.dark .prose h2,
+.dark .prose h3,
+.dark .prose h4,
+.dark .prose h5,
+.dark .prose h6 {
+  color: rgb(244 244 245);
+}
+
 .prose h1 {
-  font-size: 2em;
+  font-size: 1.75em;
   margin-top: 0;
   margin-bottom: 0.5em;
 }
 
 .prose h2 {
-  font-size: 1.5em;
+  font-size: 1.35em;
   margin-top: 1.5em;
   margin-bottom: 0.75em;
 }
 
 .prose h3 {
-  font-size: 1.25em;
+  font-size: 1.15em;
   margin-top: 1.25em;
   margin-bottom: 0.5em;
 }
 
 .prose h4 {
-  font-size: 1.125em;
+  font-size: 1.05em;
   margin-top: 1em;
   margin-bottom: 0.5em;
 }
 
-/* Paragraphs */
 .prose p {
   margin-top: 1.25em;
   margin-bottom: 1.25em;
@@ -52,11 +61,14 @@
   color: rgb(55 65 81);
 }
 
+.dark .prose p {
+  color: rgb(212 212 216);
+}
+
 .prose p:first-child {
   margin-top: 0;
 }
 
-/* Lists */
 .prose ul,
 .prose ol {
   margin-top: 1.25em;
@@ -69,6 +81,10 @@
   margin-bottom: 0.5em;
   line-height: 1.75;
   color: rgb(55 65 81);
+}
+
+.dark .prose li {
+  color: rgb(212 212 216);
 }
 
 .prose ul {
@@ -87,21 +103,31 @@
   margin-bottom: 0.5em;
 }
 
-/* Strong/Bold */
 .prose strong {
   font-weight: 600;
   color: rgb(17 24 39);
 }
 
-/* Code */
+.dark .prose strong {
+  color: rgb(244 244 245);
+}
+
+/* Fixed rem so code size stays stable when .prose font-size changes */
 .prose code {
-  font-size: 0.875em;
+  font-size: 0.8125rem;
   background-color: rgb(243 244 246);
   padding: 0.125rem 0.375rem;
   border-radius: 0.25rem;
-  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+  font-family: 'Geist Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
   color: rgb(17 24 39);
   font-weight: 500;
+  border: 1px solid rgb(229 231 235);
+}
+
+.dark .prose code {
+  background-color: rgb(9 9 11);
+  color: rgb(52 211 153);
+  border-color: rgb(39 39 42);
 }
 
 .prose pre {
@@ -113,68 +139,97 @@
   margin-top: 1.25em;
   margin-bottom: 1.25em;
   line-height: 1.625;
+  border: 1px solid rgb(31 41 55);
+}
+
+.dark .prose pre {
+  background-color: rgb(24 24 27);
+  color: rgb(228 228 231);
+  border-color: rgb(39 39 42);
 }
 
 .prose pre code {
   background-color: transparent;
   padding: 0;
   color: inherit;
-  font-size: 0.875em;
+  font-size: 0.8125rem;
   font-weight: 400;
+  border: none;
 }
 
-/* Output code blocks - realistic terminal output style */
 .prose pre[data-language="output"] {
-  background-color: rgb(24 24 24); /* Slightly different from command bg */
+  background-color: rgb(249 250 251);
   border-radius: 0.375rem;
   position: relative;
   padding: 0.875rem 1rem;
   margin-top: 0.5rem;
-  border-left: 3px solid rgb(80 80 80);
-  box-shadow: 
-    inset 0 1px 3px rgba(0, 0, 0, 0.3),
-    0 1px 2px rgba(0, 0, 0, 0.1);
+  border-left: 3px solid rgb(209 213 219);
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.06);
+}
+
+.dark .prose pre[data-language="output"] {
+  background-color: rgb(9 9 11);
+  border-left-color: rgb(63 63 70);
+  box-shadow:
+    inset 0 1px 3px rgba(0, 0, 0, 0.4),
+    0 1px 2px rgba(0, 0, 0, 0.2);
 }
 
 .prose pre[data-language="output"] code {
-  color: rgb(180 180 180); /* Slightly dimmer than command text */
-  font-size: 0.8em;
+  color: rgb(75 85 99);
+  font-size: 0.75rem;
   line-height: 1.5;
-  font-family: "SF Mono", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-family: 'Geist Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
   white-space: pre-wrap;
   word-break: break-word;
 }
 
-/* Hide any copy button that might be on output blocks */
+.dark .prose pre[data-language="output"] code {
+  color: rgb(161 161 170);
+}
+
 .prose pre[data-language="output"] .copy-button {
   display: none !important;
 }
 
-/* Bash/Shell command blocks - clean terminal style */
 .prose pre[data-language="bash"],
 .prose pre[data-language="shell"],
 .prose pre[data-language="sh"] {
   position: relative;
-  background-color: rgb(30 30 30);
+  background-color: rgb(17 24 39);
   border-radius: 0.5rem;
   padding: 1rem;
   margin-top: 1.25em;
   margin-bottom: 1.25em;
-  box-shadow: 
-    0 4px 6px -1px rgba(0, 0, 0, 0.15),
-    0 2px 4px -2px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+  border: 1px solid rgb(31 41 55);
+}
+
+.dark .prose pre[data-language="bash"],
+.dark .prose pre[data-language="shell"],
+.dark .prose pre[data-language="sh"] {
+  background-color: rgb(9 9 11);
+  box-shadow:
+    0 4px 6px -1px rgba(0, 0, 0, 0.35),
+    0 2px 4px -2px rgba(0, 0, 0, 0.25);
+  border-color: rgb(39 39 42);
 }
 
 .prose pre[data-language="bash"] code,
 .prose pre[data-language="shell"] code,
 .prose pre[data-language="sh"] code {
-  color: rgb(204 204 204);
-  font-family: "SF Mono", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
-  font-size: 0.85em;
+  color: rgb(229 231 235);
+  font-family: 'Geist Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 0.8rem;
   line-height: 1.6;
 }
 
-/* Copy button for code blocks */
+.dark .prose pre[data-language="bash"] code,
+.dark .prose pre[data-language="shell"] code,
+.dark .prose pre[data-language="sh"] code {
+  color: rgb(212 212 216);
+}
+
 .prose pre {
   position: relative;
 }
@@ -183,46 +238,94 @@
   position: absolute;
   bottom: 0.5rem;
   right: 0.5rem;
+  z-index: 2;
   display: flex;
   align-items: center;
   justify-content: center;
   width: 1.75rem;
   height: 1.75rem;
   padding: 0;
-  background-color: transparent;
-  border: 1px solid rgb(80 80 80);
-  border-radius: 0.25rem;
-  color: rgb(120 120 120);
+  margin: 0;
+  color: rgb(107 114 128);
   cursor: pointer;
+  border: 1px solid rgb(209 213 219);
+  border-radius: 0.25rem;
+  background-color: rgba(255, 255, 255, 0.9);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
   opacity: 0;
-  transition: opacity 0.2s, background-color 0.2s, color 0.2s, border-color 0.2s;
+  pointer-events: none;
+  transition:
+    opacity 0.2s ease,
+    background-color 0.15s ease,
+    border-color 0.15s ease,
+    color 0.15s ease;
 }
 
-.prose pre:hover .copy-button {
+.dark .copy-button {
+  color: rgb(161 161 170);
+  border-color: rgb(63 63 70);
+  background-color: rgba(39, 39, 42, 0.92);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+}
+
+.prose pre:hover .copy-button,
+.prose pre:focus-within .copy-button {
   opacity: 1;
+  pointer-events: auto;
+}
+
+.copy-button:focus-visible {
+  opacity: 1;
+  pointer-events: auto;
+  outline: 2px solid rgb(14 165 233);
+  outline-offset: 2px;
+}
+
+.dark .copy-button:focus-visible {
+  outline-color: rgb(56 189 248);
 }
 
 .copy-button:hover {
-  background-color: rgb(60 60 60);
-  border-color: rgb(100 100 100);
-  color: rgb(180 180 180);
+  color: rgb(55 65 81);
+  border-color: rgb(156 163 175);
+  background-color: rgb(243 244 246);
+}
+
+.dark .copy-button:hover {
+  color: rgb(228 228 231);
+  border-color: rgb(82 82 91);
+  background-color: rgb(52 52 56);
 }
 
 .copy-button.copied {
-  background-color: rgb(50 50 50);
-  border-color: rgb(100 100 100);
-  color: rgb(160 160 160);
+  color: rgb(22 163 74);
+  border-color: rgb(134 239 172);
+  background-color: rgb(240 253 244);
+}
+
+.dark .copy-button.copied {
+  color: rgb(134 239 172);
+  border-color: rgb(22 101 52);
+  background-color: rgba(20 83 45 / 0.35);
 }
 
 .copy-button .hidden {
-  display: none;
+  display: none !important;
 }
 
 .copy-button svg {
   flex-shrink: 0;
+  width: 14px;
+  height: 14px;
 }
 
-/* Blockquotes */
+@media (hover: none), (pointer: coarse) {
+  .copy-button {
+    opacity: 0.88;
+    pointer-events: auto;
+  }
+}
+
 .prose blockquote {
   border-left-width: 4px;
   border-left-color: rgb(209 213 219);
@@ -233,7 +336,11 @@
   color: rgb(75 85 99);
 }
 
-/* Links */
+.dark .prose blockquote {
+  border-left-color: rgb(63 63 70);
+  color: rgb(161 161 170);
+}
+
 .prose a {
   color: rgb(2 132 199);
   text-decoration: none;
@@ -245,7 +352,14 @@
   color: rgb(3 105 161);
 }
 
-/* Horizontal Rules */
+.dark .prose a {
+  color: rgb(56 189 248);
+}
+
+.dark .prose a:hover {
+  color: rgb(125 211 252);
+}
+
 .prose hr {
   border-top-width: 1px;
   border-color: rgb(229 231 235);
@@ -253,7 +367,10 @@
   margin-bottom: 3em;
 }
 
-/* Images */
+.dark .prose hr {
+  border-color: rgb(39 39 42);
+}
+
 .prose img {
   margin-top: 2em;
   margin-bottom: 2em;
@@ -262,13 +379,12 @@
   height: auto;
 }
 
-/* Tables */
 .prose table {
   width: 100%;
   margin-top: 2em;
   margin-bottom: 2em;
   border-collapse: collapse;
-  font-size: 0.875em;
+  font-size: 0.875rem;
 }
 
 .prose th,
@@ -278,21 +394,38 @@
   text-align: left;
 }
 
+.dark .prose th,
+.dark .prose td {
+  border-color: rgb(39 39 42);
+}
+
 .prose th {
   font-weight: 600;
   background-color: rgb(249 250 251);
   color: rgb(17 24 39);
 }
 
+.dark .prose th {
+  background-color: rgb(24 24 27);
+  color: rgb(244 244 245);
+}
+
 .prose td {
   color: rgb(55 65 81);
+}
+
+.dark .prose td {
+  color: rgb(212 212 216);
 }
 
 .prose thead {
   border-bottom: 2px solid rgb(229 231 235);
 }
 
-/* Nested content */
+.dark .prose thead {
+  border-bottom-color: rgb(63 63 70);
+}
+
 .prose > *:first-child {
   margin-top: 0;
 }

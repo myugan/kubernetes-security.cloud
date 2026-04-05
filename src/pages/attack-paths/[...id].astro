@@ -31,49 +31,49 @@ const cytoscapeData = generateCytoscapeData(path.data);
 <BaseLayout title={`${path.data.title} - Attack Paths`}>
   <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
     <div class="mb-8">
-      <a href="/attack-paths" class="text-gray-600 hover:text-gray-900 mb-4 inline-block font-medium">
+      <a href="/attack-paths" class="text-gray-600 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-zinc-100 mb-4 inline-block font-medium">
         ← Back to Attack Paths
       </a>
       <div class="flex gap-2 mb-4 flex-wrap">
-        <span class="inline-block px-3 py-1 text-sm font-medium rounded bg-gray-50 text-gray-700 border border-gray-300">
+        <span class="inline-block px-3 py-1 text-sm font-medium rounded bg-gray-50 dark:bg-zinc-800/60 text-gray-700 dark:text-zinc-300 border border-gray-300 dark:border-zinc-700">
           {path.data.category}
         </span>
         {typeof path.data.kubernetesVersion === 'string' ? (
-          <span class="inline-block px-3 py-1 text-sm font-medium rounded bg-gray-50 text-gray-700 border border-gray-300">
+          <span class="inline-block px-3 py-1 text-sm font-medium rounded bg-gray-50 dark:bg-zinc-800/60 text-gray-700 dark:text-zinc-300 border border-gray-300 dark:border-zinc-700">
             {path.data.kubernetesVersion}
           </span>
         ) : path.data.kubernetesVersion && path.data.kubernetesVersion.length > 0 ? (
           path.data.kubernetesVersion.map((version: string) => (
-            <span class="inline-block px-3 py-1 text-sm font-medium rounded bg-gray-50 text-gray-700 border border-gray-300">
+            <span class="inline-block px-3 py-1 text-sm font-medium rounded bg-gray-50 dark:bg-zinc-800/60 text-gray-700 dark:text-zinc-300 border border-gray-300 dark:border-zinc-700">
               {version}
             </span>
           ))
         ) : null}
       </div>
-      <h1 class="text-4xl font-bold text-gray-900 mb-4">{path.data.title}</h1>
-      <p class="text-xl text-gray-600">{path.data.description}</p>
+      <h1 class="text-4xl font-bold text-gray-900 dark:text-zinc-100 mb-4">{path.data.title}</h1>
+      <p class="text-xl text-gray-600 dark:text-zinc-400">{path.data.description}</p>
     </div>
 
     <Card class="mb-8">
       <CardContent class="p-6 md:p-8 lg:p-10">
-        <h2 class="text-2xl font-bold text-gray-900 mb-6">Attack Path Visualization</h2>
-        <p class="text-sm md:text-base text-gray-600 mb-4">Interactive diagram showing the attack path. Click on nodes to see details. Use mouse wheel to zoom, drag to pan.</p>
+        <h2 class="text-2xl font-bold text-gray-900 dark:text-zinc-100 mb-6">Attack Path Visualization</h2>
+        <p class="text-sm md:text-base text-gray-600 dark:text-zinc-400 mb-4">Interactive diagram showing the attack path. Click on nodes to see details. Use mouse wheel to zoom, drag to pan.</p>
         <CytoscapeDiagram data={cytoscapeData} id={path.id} />
       </CardContent>
     </Card>
 
     <Card>
       <CardContent class="p-6 md:p-8 lg:p-10">
-        <h2 class="text-2xl font-bold text-gray-900 mb-8">Step-by-Step Breakdown</h2>
+        <h2 class="text-2xl font-bold text-gray-900 dark:text-zinc-100 mb-8">Step-by-Step Breakdown</h2>
         <div class="space-y-4">
           {path.data.steps.map((step, index) => {
             const isLast = index === path.data.steps.length - 1;
-            const borderColor = 'border-gray-300';
-            const bgColor = 'bg-white hover:bg-gray-50';
-            const stepNumberBg = 'bg-gray-100 text-gray-700 border-gray-200 group-hover:bg-gray-200';
+            const borderColor = 'border-gray-300 dark:border-zinc-700';
+            const bgColor = 'bg-white dark:bg-zinc-900 hover:bg-gray-50 dark:bg-zinc-800/60';
+            const stepNumberBg = 'bg-gray-100 dark:bg-zinc-800 text-gray-700 dark:text-zinc-300 border-gray-200 dark:border-zinc-800 group-hover:bg-gray-200 dark:bg-zinc-700';
             return (
             <div id={`step-${step.id}`} class="relative group step-breakdown-item" data-step-id={step.id}>
-              <div class={`relative border-l-4 ${borderColor} ${bgColor} rounded-r p-6 md:p-8 transition-colors duration-200 ease-in-out hover:border-gray-400`}>
+              <div class={`relative border-l-4 ${borderColor} ${bgColor} rounded-r p-6 md:p-8 transition-colors duration-200 ease-in-out hover:border-gray-300 dark:border-zinc-600`}>
                 {/* Step number and header */}
                 <div class="flex items-start gap-4 mb-4">
                   <div class="flex-shrink-0">
@@ -83,7 +83,7 @@ const cytoscapeData = generateCytoscapeData(path.data);
                   </div>
                   <div class="flex-1 min-w-0">
                     <div class="flex items-center gap-3 flex-wrap mb-2">
-                      <h3 class="text-xl font-semibold text-gray-900">{step.title}</h3>
+                      <h3 class="text-xl font-semibold text-gray-900 dark:text-zinc-100">{step.title}</h3>
                       {(() => {
                         const stepColors = getCategoryColors(step.type);
                         return (
@@ -94,7 +94,7 @@ const cytoscapeData = generateCytoscapeData(path.data);
                         );
                       })()}
                     </div>
-                    <p class="text-gray-600 text-base md:text-lg leading-relaxed">{step.description}</p>
+                    <p class="text-gray-600 dark:text-zinc-400 text-base md:text-lg leading-relaxed">{step.description}</p>
                   </div>
                 </div>
 
@@ -102,17 +102,17 @@ const cytoscapeData = generateCytoscapeData(path.data);
                 {step.command && (
                   <div class="mt-4 ml-14">
                     <div class="mb-2">
-                      <span class="text-xs font-semibold text-gray-500 uppercase tracking-wider">Command</span>
+                      <span class="text-xs font-semibold text-gray-500 dark:text-zinc-500 uppercase tracking-wider">Command</span>
                     </div>
-                    <div class="relative bg-gray-900 rounded-lg p-4 overflow-x-auto border border-gray-800 group/command">
+                    <div class="relative rounded-lg p-4 overflow-x-auto border border-zinc-800 bg-zinc-950 group/command">
                       <button
                         type="button"
-                        class="copy-command-btn absolute top-3 right-3 px-2.5 py-1.5 text-xs text-gray-300 bg-gray-800 hover:bg-gray-700 hover:text-white font-medium rounded border border-gray-700 transition-all duration-200 active:scale-95 opacity-0 group-hover/command:opacity-100"
+                        class="copy-command-btn absolute top-3 right-3 px-2.5 py-1.5 text-xs font-medium rounded border transition-all duration-200 active:scale-95 opacity-0 group-hover/command:opacity-100 bg-zinc-800 text-zinc-200 border-zinc-600 hover:bg-zinc-700 hover:text-white"
                         data-command={typeof step.command === 'string' ? step.command : step.command.join('\n')}
                       >
                         Copy
                       </button>
-                      <pre class="text-sm text-gray-100 font-mono leading-relaxed"><code>{typeof step.command === 'string' ? step.command : step.command.map((cmd: string) => cmd).join('\n')}</code></pre>
+                      <pre class="text-xs text-zinc-200 font-mono leading-relaxed"><code>{typeof step.command === 'string' ? step.command : step.command.map((cmd: string) => cmd).join('\n')}</code></pre>
                     </div>
                   </div>
                 )}
@@ -121,7 +121,7 @@ const cytoscapeData = generateCytoscapeData(path.data);
                 {step.mitreTechnique && (
                   <div class="mt-4 ml-14">
                     <div class="flex items-center gap-2">
-                      <span class="text-xs font-semibold text-gray-500 uppercase tracking-wider">MITRE ATT&CK:</span>
+                      <span class="text-xs font-semibold text-gray-500 dark:text-zinc-500 uppercase tracking-wider">MITRE ATT&CK:</span>
                       <MitreTechnique techniqueId={step.mitreTechnique} />
                     </div>
                   </div>
@@ -131,7 +131,7 @@ const cytoscapeData = generateCytoscapeData(path.data);
               {/* Connector line to next step */}
               {!isLast && (
                 <div class="flex justify-center my-2">
-                  <div class="w-0.5 h-6 bg-gray-200"></div>
+                  <div class="w-0.5 h-6 bg-gray-200 dark:bg-zinc-700"></div>
                 </div>
               )}
             </div>

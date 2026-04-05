@@ -11,7 +11,7 @@ const containerId = `cytoscape-${id}`;
 const jsonData = JSON.stringify(data);
 ---
 
-<div id={containerId} class="w-full h-[500px] border border-gray-200 rounded-lg bg-white"></div>
+<div id={containerId} class="w-full h-[500px] border border-gray-200 dark:border-zinc-800 rounded-lg bg-white dark:bg-zinc-900"></div>
 
 <script define:vars={{ jsonData, containerId }}>
   async function initializeCytoscape() {
@@ -197,7 +197,7 @@ const jsonData = JSON.stringify(data);
       console.error('Failed to initialize Cytoscape diagram:', error);
       const container = document.getElementById(containerId);
       if (container) {
-        container.innerHTML = '<div class="p-4 text-center text-gray-500">Failed to load diagram. Please refresh the page.</div>';
+        container.innerHTML = '<div class="p-4 text-center text-gray-500 dark:text-zinc-500">Failed to load diagram. Please refresh the page.</div>';
       }
     }
   }
