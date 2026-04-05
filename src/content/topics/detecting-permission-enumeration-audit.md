@@ -1,6 +1,6 @@
 ---
 title: Detecting Permission Enumeration via Audit Logs
-description: Defensive technique for spotting enumeration of current RBAC access by auditing SelfSubjectRulesReview events
+description: Spotting enumeration of current RBAC access by auditing SelfSubjectRulesReview events
 category: defensive
 impact: >-
   When audit logging records SelfSubjectRulesReview, you can see who listed their effective permissions. When it does not, that enumeration is easy to miss in an investigation.
@@ -37,8 +37,6 @@ Audit events are written after the API server has authenticated and authorized t
 If the request carried `Impersonate-User`, `Impersonate-Group`, or related headers and the server accepted them, the identity you were acting as is recorded separately under `impersonatedUser`, again with `username` and `groups`. You are not supposed to see a single blended identity, the log keeps the real subject and the impersonated subject apart so you can tell who held the credential and who they became for authorization.
 
 When there is no impersonation, `impersonatedUser` is usually missing or empty. Field names and nesting follow the [Kubernetes audit Event type](https://kubernetes.io/docs/reference/config-api/apiserver-audit.v1/#audit-k8s-io-v1-Event) your audit policy level still has to include enough detail for those fields to appear.
-
-## curl equivalent
 
 Any client that sends the same `POST` will show up the same way in audit. This matches `kubectl auth can-i --list -n "$NAMESPACE"` if you fill in `TOKEN`, `APISERVER`, `CACERT`, and `NAMESPACE` for your setup.
 
