@@ -201,6 +201,14 @@ export const mitreTechniques: Record<string, MitreTechnique> = {
       'Adversaries may access data from cloud storage.',
     url: 'https://attack.mitre.org/techniques/T1530',
   },
+  T1578: {
+    id: 'T1578',
+    name: 'Modify Cloud Compute Infrastructure',
+    tactic: 'Persistence, Privilege Escalation, Defense Evasion',
+    description:
+      'Adversaries may modify cloud compute infrastructure to abuse resources, maintain access, or alter workload behavior.',
+    url: 'https://attack.mitre.org/techniques/T1578',
+  },
   T1040: {
     id: 'T1040',
     name: 'Network Sniffing',
