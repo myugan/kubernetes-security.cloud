@@ -3,6 +3,7 @@ title: Weaponizing kubectl debug
 description: >-
   Why kubectl debug is a privilege escalation path, not just a troubleshooting tool
 category: offensive
+createdAt: 2026-04-05
 impact: >-
   Ephemeral debug inherits the pod's network namespace, service account, and volume mounts. Node debug mounts the host filesystem at `/host`, `chroot /host` gives full host root access.
 mitigation:

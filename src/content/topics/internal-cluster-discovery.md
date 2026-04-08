@@ -2,6 +2,7 @@
 title: Internal Cluster Discovery
 description: Techniques for discovering available services, APIs, and potential attack vectors within a Kubernetes cluster
 category: offensive
+createdAt: 2026-01-13
 impact: Reveals exposed APIs, misconfigurations, and internal services that can be leveraged for Lateral Movement
 mitigation:
   - "Implement network policies to restrict pod-to-pod communication, please refer to [K07: Missing Network Segmentation Controls](https://github.com/OWASP/www-project-kubernetes-top-ten/blob/main/2022/en/src/K07-network-segmentation.md)"

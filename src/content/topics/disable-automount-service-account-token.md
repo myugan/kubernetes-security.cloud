@@ -2,6 +2,7 @@
 title: Disable Automatic Mounting of Default Service Account Tokens
 description: Preventing token theft by controlling service account token mounting
 category: defensive
+createdAt: 2026-01-10
 impact: The default service account is not inherently privileged and only becomes a risk when associated with elevated roles or role bindings.
 mitigation: 
   - Disable automounting for service accounts that don't need API access

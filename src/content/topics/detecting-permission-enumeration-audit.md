@@ -2,6 +2,7 @@
 title: Detecting Permission Enumeration via Audit Logs
 description: Spotting enumeration of current RBAC access by auditing SelfSubjectRulesReview events
 category: defensive
+createdAt: 2026-04-05
 impact: >-
   When audit logging records SelfSubjectRulesReview, you can see who listed their effective permissions. When it does not, that enumeration is easy to miss in an investigation.
 mitigation:

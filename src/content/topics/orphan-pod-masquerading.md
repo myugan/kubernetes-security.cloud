@@ -2,6 +2,7 @@
 title: Orphan Pod Masquerading
 description: Creating orphan pods that mimic controller-managed naming conventions to blend in with legitimate workloads
 category: offensive
+createdAt: 2026-01-15
 impact: Orphan pods disguised as controller-managed workloads can evade casual inspection and complicate incident response
 mitigation:
   - Verify pod ownership using `.metadata.ownerReferences`

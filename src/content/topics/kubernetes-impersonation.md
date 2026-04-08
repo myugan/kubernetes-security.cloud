@@ -2,6 +2,7 @@
 title: Kubernetes Impersonation
 description: Abusing the impersonate verb and Impersonate-* headers so the API server authorizes requests as another user, group, or ServiceAccount
 category: offensive
+createdAt: 2026-04-05
 impact: >-
   If you can impersonate, you don’t need someone else’s token. You can call the API as them, get to things your own account can’t, and it often looks like everyday cluster traffic.
 mitigation:

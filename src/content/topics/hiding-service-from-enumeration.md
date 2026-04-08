@@ -2,6 +2,7 @@
 title: Hiding Services from Enumeration
 description: Preventing internal service discovery by disabling automatic injection of service environment variables
 category: defensive
+createdAt: 2026-01-14
 impact: Reduces the attack surface by hiding internal service endpoints from any pods
 mitigation:
   - Use DNS-based service discovery instead of environment variables

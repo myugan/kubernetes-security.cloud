@@ -2,6 +2,7 @@
 title: Data Exfiltration via Kubernetes Events
 description: How attackers can misuse Kubernetes Events to move data out after cluster compromise
 category: offensive
+createdAt: 2026-04-08
 impact: >-
   An attacker with cluster access and permission to create `events` can hide stolen data inside normal-looking event messages. Because Events are expected control-plane traffic, this can blend into noise and bypass checks that focus only on pods, secrets, and network egress.
 mitigation:

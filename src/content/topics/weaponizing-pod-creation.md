@@ -2,6 +2,7 @@
 title: Weaponizing Pod Creation Access
 description: How pod creation permissions can be leveraged to escalate privileges and escape to the underlying node
 category: offensive
+createdAt: 2026-01-16
 impact: An attacker with pod creation access can potentially gain node-level access, steal credentials, or achieve cluster-admin privileges
 mitigation:
   - Restrict pod creation using Pod Security Admission
