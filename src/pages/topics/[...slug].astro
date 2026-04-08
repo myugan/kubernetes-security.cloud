@@ -19,6 +19,9 @@ export async function getStaticPaths() {
 
 const { topic } = Astro.props;
 const { Content } = await topic.render();
+const wordsPerMinute = 220;
+const markdownWordCount = topic.body.trim().split(/\s+/).filter(Boolean).length;
+const estimatedReadMinutes = Math.max(1, Math.ceil(markdownWordCount / wordsPerMinute));
 
 // Get tool details from central config
 const toolsList = topic.data.tools ? getTools(topic.data.tools) : [];
@@ -109,6 +112,12 @@ const impactLinkParentClass =
             </span>
           );
         })()}
+        <span class="inline-flex items-center gap-1.5 px-3 py-1 text-sm font-medium rounded border border-gray-200 bg-white text-gray-700 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-300">
+          <svg class="w-4 h-4 text-gray-500 dark:text-zinc-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+          {estimatedReadMinutes} min read
+        </span>
       </div>
       <h1 class="text-3xl md:text-4xl font-bold text-gray-900 dark:text-zinc-100 mb-6">{topic.data.title}</h1>
       <p class="text-xl md:text-2xl text-gray-600 dark:text-zinc-400 leading-relaxed max-w-4xl">{topic.data.description}</p>

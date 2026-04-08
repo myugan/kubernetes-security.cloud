@@ -13,65 +13,136 @@ const sortedTopics = topics.sort((a, b) => a.data.title.localeCompare(b.data.tit
 
 // Get unique categories from actual content
 const availableCategories = [...new Set(topics.map(t => t.data.category))].sort();
+const totalTopics = sortedTopics.length;
+const mitreMappedTopicsCount = topics.filter((topic) =>
+  Array.isArray(topic.data.mitreTechniques) && topic.data.mitreTechniques.length > 0
+).length;
+const offensiveCount = topics.filter((topic) =>
+  topic.data.category.toLowerCase() === 'offensive'
+).length;
+const defensiveCount = topics.filter((topic) =>
+  topic.data.category.toLowerCase() === 'defensive'
+).length;
 ---
 
 <BaseLayout
   title="Topics - Kubernetes Security"
   description="Reference materials covering offensive and defensive Kubernetes security techniques, with impact and mitigation for each topic."
 >
-  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-    <div class="mb-8">
-      <div class="flex items-center gap-3 mb-4">
-        <div class="text-primary-600">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 sm:py-12">
+    <div class="mb-10">
+      <div class="rounded-2xl border border-gray-200/80 bg-gradient-to-b from-white to-gray-50/60 p-6 sm:p-8 dark:border-zinc-800 dark:from-zinc-900 dark:to-zinc-900/40">
+        <div class="flex items-center gap-3 mb-4">
+          <div class="text-primary-600">
           <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
           </svg>
+          </div>
+          <h1 class="text-3xl sm:text-4xl font-bold text-gray-900 dark:text-zinc-100">Topics</h1>
         </div>
-        <h1 class="text-3xl sm:text-4xl font-bold text-gray-900 dark:text-zinc-100">Topics</h1>
+        <p class="text-base sm:text-lg text-gray-600 dark:text-zinc-400 max-w-3xl">
+          Reference materials covering offensive and defensive Kubernetes security techniques
+        </p>
+
+        <div class="mt-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+          <div class="rounded-xl border border-gray-200 bg-white/90 px-4 py-4 dark:border-zinc-800 dark:bg-zinc-900/70">
+            <div class="flex items-start justify-between gap-3">
+              <div>
+                <p class="text-xs font-semibold tracking-wide text-gray-500 dark:text-zinc-500">Total</p>
+                <p class="mt-1 text-2xl font-semibold text-gray-900 dark:text-zinc-100">{totalTopics}</p>
+              </div>
+              <span class="inline-flex h-9 w-9 items-center justify-center rounded-lg bg-gray-100 text-gray-700 dark:bg-zinc-800 dark:text-zinc-300">
+                <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                </svg>
+              </span>
+            </div>
+          </div>
+          <div class="rounded-xl border border-gray-200 bg-white/90 px-4 py-4 dark:border-zinc-800 dark:bg-zinc-900/70">
+            <div class="flex items-start justify-between gap-3">
+              <div>
+                <p class="text-xs font-semibold tracking-wide text-gray-500 dark:text-zinc-500">MITRE ATT&CK mapped</p>
+                <p class="mt-1 text-2xl font-semibold text-gray-900 dark:text-zinc-100">{mitreMappedTopicsCount}</p>
+              </div>
+              <span class="inline-flex h-9 w-9 items-center justify-center rounded-lg bg-gray-100 text-gray-700 dark:bg-zinc-800 dark:text-zinc-300">
+                <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.868v4.264a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 12a7 7 0 11-14 0 7 7 0 0114 0z" />
+                </svg>
+              </span>
+            </div>
+          </div>
+          <div class="rounded-xl border border-gray-200 bg-white/90 px-4 py-4 dark:border-zinc-800 dark:bg-zinc-900/70">
+            <div class="flex items-start justify-between gap-3">
+              <div>
+                <p class="text-xs font-semibold tracking-wide text-gray-500 dark:text-zinc-500">Offensive</p>
+                <p class="mt-1 text-2xl font-semibold text-gray-900 dark:text-zinc-100">{offensiveCount}</p>
+              </div>
+              <span class="inline-flex h-9 w-9 items-center justify-center rounded-lg bg-rose-50 text-rose-600 dark:bg-rose-500/10 dark:text-rose-300">
+                <CategoryIcon category="offensive" class="h-5 w-5" />
+              </span>
+            </div>
+          </div>
+          <div class="rounded-xl border border-gray-200 bg-white/90 px-4 py-4 dark:border-zinc-800 dark:bg-zinc-900/70">
+            <div class="flex items-start justify-between gap-3">
+              <div>
+                <p class="text-xs font-semibold tracking-wide text-gray-500 dark:text-zinc-500">Defensive</p>
+                <p class="mt-1 text-2xl font-semibold text-gray-900 dark:text-zinc-100">{defensiveCount}</p>
+              </div>
+              <span class="inline-flex h-9 w-9 items-center justify-center rounded-lg bg-sky-50 text-sky-600 dark:bg-sky-500/10 dark:text-sky-300">
+                <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3l7 4v5c0 5-3.5 8-7 9-3.5-1-7-4-7-9V7l7-4z" />
+                </svg>
+              </span>
+            </div>
+          </div>
+        </div>
       </div>
-      <p class="text-xl text-gray-600 dark:text-zinc-400 mb-6">
-        Reference materials covering offensive and defensive Kubernetes security techniques
-      </p>
 
       <!-- Search Bar with Tag Filters -->
-      <div class="mb-8">
-        <Card class="p-6">
+      <div class="mt-6 mb-8">
+        <Card class="p-4 sm:p-6 rounded-2xl">
           <!-- Search Input -->
           <div class="relative">
             <input
               type="text"
               id="search-input"
               placeholder="Search topics by keyword..."
-              class="w-full px-4 py-3 pl-12 border border-gray-300 dark:border-zinc-700 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none text-sm bg-white dark:bg-zinc-900 text-gray-900 dark:text-zinc-100"
+              class="w-full px-3.5 py-2.5 pl-10 border border-gray-300 dark:border-zinc-700 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none text-sm bg-white dark:bg-zinc-900 text-gray-900 dark:text-zinc-100"
             />
-            <svg class="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-500 dark:text-zinc-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500 dark:text-zinc-500 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
             </svg>
           </div>
 
           <!-- Filter by Tags (Collapsible) -->
-          <div class="mt-3">
+          <div class="mt-4">
             <button
               type="button"
               id="filter-toggle-btn"
-              class="inline-flex items-center gap-1.5 text-sm text-gray-600 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-zinc-100 transition-colors"
+              class="group inline-flex items-center gap-2 px-3 py-2 rounded-lg border border-gray-200 bg-gray-50 text-sm font-medium text-gray-700 hover:bg-white hover:border-gray-300 dark:border-zinc-700 dark:bg-zinc-900/70 dark:text-zinc-300 dark:hover:bg-zinc-900 dark:hover:border-zinc-600 transition-colors"
+              aria-expanded="false"
+              aria-controls="filter-tags-content"
             >
-              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg class="w-4 h-4 text-gray-500 dark:text-zinc-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
               </svg>
-              Filter by Category
+              <span>Filter by category</span>
+              <span id="filter-selected-count" class="hidden items-center justify-center min-w-5 h-5 px-1.5 rounded-full bg-primary-100 text-primary-800 text-[11px] font-semibold dark:bg-primary-900/40 dark:text-primary-200"></span>
               <svg id="filter-toggle-icon" class="w-4 h-4 text-gray-500 dark:text-zinc-500 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
               </svg>
             </button>
             <div id="filter-tags-content" class="hidden pt-3">
-              <div class="flex flex-wrap gap-2">
+              <div class="rounded-xl border border-gray-200/80 bg-gray-50/60 p-3 dark:border-zinc-700 dark:bg-zinc-900/40">
+                <p class="text-xs text-gray-500 dark:text-zinc-400 mb-2">Choose one or more categories</p>
+                <div class="flex flex-wrap gap-2">
                 {availableCategories.map(category => {
                   const categoryColors = getCategoryColors(category);
                   return (
                     <button
                       type="button"
-                      class={`tag-filter-btn inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg border transition-colors ${categoryColors.bg} ${categoryColors.text} ${categoryColors.border} hover:opacity-80`}
+                      class={`tag-filter-btn inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg border transition-all ${categoryColors.bg} ${categoryColors.text} ${categoryColors.border} hover:opacity-90 hover:-translate-y-0.5`}
                       data-tag-type="category"
                       data-tag-value={category}
                       data-tag-label={category.charAt(0).toUpperCase() + category.slice(1)}
@@ -81,6 +152,7 @@ const availableCategories = [...new Set(topics.map(t => t.data.category))].sort(
                     </button>
                   );
                 })}
+                </div>
               </div>
             </div>
           </div>
@@ -100,54 +172,76 @@ const availableCategories = [...new Set(topics.map(t => t.data.category))].sort(
       </div>
 
       <!-- View Toggle -->
-      <div class="flex items-center justify-end gap-2">
-        <span class="text-sm text-gray-500 dark:text-zinc-500">View:</span>
-        <div class="flex border border-gray-300 dark:border-zinc-700 rounded-lg overflow-hidden">
+      <div class="flex items-center justify-between gap-3 mb-4">
+        <p class="text-base text-gray-600 dark:text-zinc-400">
+          Showing <span id="results-count-inline" class="font-semibold text-gray-700 dark:text-zinc-300">{totalTopics}</span> topic{totalTopics === 1 ? '' : 's'}
+        </p>
+        <div class="flex items-center gap-2">
+          <span class="text-sm text-gray-500 dark:text-zinc-500">View:</span>
+          <div class="flex border border-gray-300 dark:border-zinc-700 rounded-lg overflow-hidden">
           <button
             type="button"
             id="view-grid"
-            class="view-toggle-btn px-3 py-1.5 text-sm font-medium bg-gray-100 dark:bg-zinc-800 text-gray-900 dark:text-zinc-100 border-r border-gray-300 dark:border-zinc-700"
+            class="view-toggle-btn inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium bg-gray-200 dark:bg-zinc-700 text-gray-900 dark:text-zinc-100 border-r border-gray-300 dark:border-zinc-700"
             title="Grid view"
+            aria-pressed="true"
           >
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
             </svg>
+            <span class="hidden sm:inline">Grid</span>
           </button>
           <button
             type="button"
             id="view-list"
-            class="view-toggle-btn px-3 py-1.5 text-sm font-medium bg-white dark:bg-zinc-900 text-gray-600 dark:text-zinc-400 hover:bg-gray-50 dark:bg-zinc-800/60"
+            class="view-toggle-btn inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium bg-white dark:bg-zinc-900 text-gray-600 dark:text-zinc-400 hover:bg-gray-50 dark:bg-zinc-800/60"
             title="List view"
+            aria-pressed="false"
           >
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
             </svg>
+            <span class="hidden sm:inline">List</span>
           </button>
+          </div>
         </div>
       </div>
     </div>
 
-    <div id="topics-container" class="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+    <div id="topics-container" class="grid sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5">
       {sortedTopics.map((topic) => {
         const categoryColors = getCategoryColors(topic.data.category);
         return (
           <a 
             href={`/topics/${topic.slug}`} 
-            class="block topic-card" 
+            class="block topic-card group" 
             data-category={topic.data.category}
             data-title={topic.data.title.toLowerCase()}
             data-description={topic.data.description.toLowerCase()}
           >
-            <Card class="hover:border-gray-300 dark:border-zinc-700 transition-colors h-full">
-              <CardHeader>
-                <div class="flex gap-2 flex-wrap mb-2">
-                  <span class={`inline-flex items-center gap-1 px-2 py-0.5 text-xs font-medium rounded border ${categoryColors.bg} ${categoryColors.text} ${categoryColors.border}`}>
-                    <CategoryIcon category={topic.data.category} class={`w-3 h-3 ${categoryColors.icon}`} />
-                    {topic.data.category}
+            <Card class="topic-card-surface h-full border-gray-200/80 dark:border-zinc-800 transition-all duration-200 hover:-translate-y-1 hover:shadow-md hover:border-gray-300 dark:hover:border-zinc-700">
+              <CardHeader class="topic-card-header">
+                <div class="topic-card-content">
+                  <div class="topic-card-meta flex items-center justify-between gap-3 mb-2">
+                    <span class={`inline-flex items-center gap-1 px-2 py-0.5 text-xs font-medium rounded border ${categoryColors.bg} ${categoryColors.text} ${categoryColors.border}`}>
+                      <CategoryIcon category={topic.data.category} class={`w-3 h-3 ${categoryColors.icon}`} />
+                      {topic.data.category}
+                    </span>
+                    <svg class="topic-card-corner-arrow w-4 h-4 text-gray-400 dark:text-zinc-600 transition-colors shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                    </svg>
+                  </div>
+                  <CardTitle class="topic-card-title mb-3 line-clamp-2 break-words leading-snug">{topic.data.title}</CardTitle>
+                  <CardDescription class="topic-card-description line-clamp-3">{topic.data.description}</CardDescription>
+                </div>
+                <div class="topic-card-cta hidden mt-4">
+                  <span class="inline-flex items-center gap-1.5 rounded-md border border-gray-200 bg-gray-50 px-3 py-1.5 text-sm font-medium text-gray-700 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-200">
+                    Read topic
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                    </svg>
                   </span>
                 </div>
-                <CardTitle class="mb-3 line-clamp-2 break-words leading-snug">{topic.data.title}</CardTitle>
-                <CardDescription class="line-clamp-3">{topic.data.description}</CardDescription>
               </CardHeader>
             </Card>
           </a>
@@ -174,31 +268,60 @@ const availableCategories = [...new Set(topics.map(t => t.data.category))].sort(
         let filterToggleBtn: HTMLButtonElement | null = null;
         let filterTagsContent: HTMLElement | null = null;
         let filterToggleIcon: HTMLElement | null = null;
+        let filterSelectedCount: HTMLElement | null = null;
+        let resultsCountInline: HTMLElement | null = null;
 
         const activeFiltersSet = new Set<string>();
 
         function toggleFilterTags() {
-          if (!filterTagsContent || !filterToggleIcon) return;
+          if (!filterTagsContent || !filterToggleIcon || !filterToggleBtn) return;
           
           const isHidden = filterTagsContent.classList.contains('hidden');
           if (isHidden) {
             filterTagsContent.classList.remove('hidden');
             filterToggleIcon.classList.add('rotate-180');
+            filterToggleBtn.setAttribute('aria-expanded', 'true');
           } else {
             filterTagsContent.classList.add('hidden');
             filterToggleIcon.classList.remove('rotate-180');
+            filterToggleBtn.setAttribute('aria-expanded', 'false');
           }
         }
 
         function setGridView() {
           if (!topicsContainer) return;
           topicsContainer.classList.remove('flex', 'flex-col', 'gap-3');
-          topicsContainer.classList.add('grid', 'sm:grid-cols-2', 'lg:grid-cols-3', 'gap-4');
+          topicsContainer.classList.add('grid', 'sm:grid-cols-2', 'lg:grid-cols-3', 'gap-4', 'sm:gap-5');
           
-          viewGridBtn?.classList.remove('bg-white dark:bg-zinc-900', 'text-gray-600 dark:text-zinc-400', 'hover:bg-gray-50 dark:bg-zinc-800/60');
-          viewGridBtn?.classList.add('bg-gray-100 dark:bg-zinc-800', 'text-gray-900 dark:text-zinc-100');
-          viewListBtn?.classList.remove('bg-gray-100 dark:bg-zinc-800', 'text-gray-900 dark:text-zinc-100');
-          viewListBtn?.classList.add('bg-white dark:bg-zinc-900', 'text-gray-600 dark:text-zinc-400', 'hover:bg-gray-50 dark:bg-zinc-800/60');
+          viewGridBtn?.classList.remove('bg-white', 'dark:bg-zinc-900', 'text-gray-600', 'dark:text-zinc-400', 'hover:bg-gray-50', 'dark:bg-zinc-800/60');
+          viewGridBtn?.classList.add('bg-gray-200', 'dark:bg-zinc-700', 'text-gray-900', 'dark:text-zinc-100');
+          viewListBtn?.classList.remove('bg-gray-200', 'dark:bg-zinc-700', 'text-gray-900', 'dark:text-zinc-100');
+          viewListBtn?.classList.add('bg-white', 'dark:bg-zinc-900', 'text-gray-600', 'dark:text-zinc-400', 'hover:bg-gray-50', 'dark:bg-zinc-800/60');
+          viewGridBtn?.setAttribute('aria-pressed', 'true');
+          viewListBtn?.setAttribute('aria-pressed', 'false');
+
+          topicCards?.forEach((card) => {
+            card.classList.remove('w-full');
+            const cardElement = card as HTMLElement;
+            const surface = cardElement.querySelector('.topic-card-surface');
+            const header = cardElement.querySelector('.topic-card-header');
+            const content = cardElement.querySelector('.topic-card-content');
+            const titleEl = cardElement.querySelector('.topic-card-title');
+            const description = cardElement.querySelector('.topic-card-description');
+            const cta = cardElement.querySelector('.topic-card-cta');
+            const meta = cardElement.querySelector('.topic-card-meta');
+            const cornerArrow = cardElement.querySelector('.topic-card-corner-arrow');
+
+            surface?.classList.remove('sm:border-l-4', 'sm:border-l-gray-300', 'dark:sm:border-l-zinc-600', 'sm:hover:border-l-gray-400', 'dark:sm:hover:border-l-zinc-500', 'sm:bg-gray-50/40', 'dark:sm:bg-zinc-900/80');
+            header?.classList.remove('sm:flex', 'sm:flex-row', 'sm:items-center', 'sm:justify-between', 'sm:gap-6');
+            content?.classList.remove('sm:flex-1', 'sm:min-w-0');
+            titleEl?.classList.remove('sm:mb-2');
+            description?.classList.remove('sm:line-clamp-2', 'sm:max-w-3xl');
+            meta?.classList.remove('sm:mb-1');
+            cta?.classList.remove('sm:shrink-0', 'sm:ml-6', 'sm:mt-0', 'sm:self-center', 'sm:block');
+            cta?.classList.add('hidden');
+            cornerArrow?.classList.remove('hidden', 'sm:hidden');
+          });
           
           localStorage.setItem('topics-view', 'grid');
         }
@@ -206,12 +329,38 @@ const availableCategories = [...new Set(topics.map(t => t.data.category))].sort(
         function setListView() {
           if (!topicsContainer) return;
           topicsContainer.classList.remove('grid', 'sm:grid-cols-2', 'lg:grid-cols-3', 'gap-4');
+          topicsContainer.classList.remove('sm:gap-5');
           topicsContainer.classList.add('flex', 'flex-col', 'gap-3');
           
-          viewListBtn?.classList.remove('bg-white dark:bg-zinc-900', 'text-gray-600 dark:text-zinc-400', 'hover:bg-gray-50 dark:bg-zinc-800/60');
-          viewListBtn?.classList.add('bg-gray-100 dark:bg-zinc-800', 'text-gray-900 dark:text-zinc-100');
-          viewGridBtn?.classList.remove('bg-gray-100 dark:bg-zinc-800', 'text-gray-900 dark:text-zinc-100');
-          viewGridBtn?.classList.add('bg-white dark:bg-zinc-900', 'text-gray-600 dark:text-zinc-400', 'hover:bg-gray-50 dark:bg-zinc-800/60');
+          viewListBtn?.classList.remove('bg-white', 'dark:bg-zinc-900', 'text-gray-600', 'dark:text-zinc-400', 'hover:bg-gray-50', 'dark:bg-zinc-800/60');
+          viewListBtn?.classList.add('bg-gray-200', 'dark:bg-zinc-700', 'text-gray-900', 'dark:text-zinc-100');
+          viewGridBtn?.classList.remove('bg-gray-200', 'dark:bg-zinc-700', 'text-gray-900', 'dark:text-zinc-100');
+          viewGridBtn?.classList.add('bg-white', 'dark:bg-zinc-900', 'text-gray-600', 'dark:text-zinc-400', 'hover:bg-gray-50', 'dark:bg-zinc-800/60');
+          viewListBtn?.setAttribute('aria-pressed', 'true');
+          viewGridBtn?.setAttribute('aria-pressed', 'false');
+
+          topicCards?.forEach((card) => {
+            card.classList.add('w-full');
+            const cardElement = card as HTMLElement;
+            const surface = cardElement.querySelector('.topic-card-surface');
+            const header = cardElement.querySelector('.topic-card-header');
+            const content = cardElement.querySelector('.topic-card-content');
+            const titleEl = cardElement.querySelector('.topic-card-title');
+            const description = cardElement.querySelector('.topic-card-description');
+            const cta = cardElement.querySelector('.topic-card-cta');
+            const meta = cardElement.querySelector('.topic-card-meta');
+            const cornerArrow = cardElement.querySelector('.topic-card-corner-arrow');
+
+            surface?.classList.add('sm:border-l-4', 'sm:border-l-gray-300', 'dark:sm:border-l-zinc-600', 'sm:hover:border-l-gray-400', 'dark:sm:hover:border-l-zinc-500', 'sm:bg-gray-50/40', 'dark:sm:bg-zinc-900/80');
+            header?.classList.add('sm:flex', 'sm:flex-row', 'sm:items-center', 'sm:justify-between', 'sm:gap-8');
+            content?.classList.add('sm:flex-1', 'sm:min-w-0');
+            titleEl?.classList.add('sm:mb-2');
+            description?.classList.add('sm:line-clamp-2', 'sm:max-w-3xl');
+            meta?.classList.add('sm:mb-1');
+            cta?.classList.add('sm:shrink-0', 'sm:ml-6', 'sm:mt-0', 'sm:self-center', 'sm:block');
+            cta?.classList.remove('hidden');
+            cornerArrow?.classList.add('hidden', 'sm:hidden');
+          });
           
           localStorage.setItem('topics-view', 'list');
         }
@@ -241,6 +390,19 @@ const availableCategories = [...new Set(topics.map(t => t.data.category))].sort(
               });
               activeFilterTags.appendChild(tag);
             });
+          }
+
+          if (filterSelectedCount) {
+            const count = activeFiltersSet.size;
+            if (count > 0) {
+              filterSelectedCount.textContent = String(count);
+              filterSelectedCount.classList.remove('hidden');
+              filterSelectedCount.classList.add('inline-flex');
+            } else {
+              filterSelectedCount.textContent = '';
+              filterSelectedCount.classList.add('hidden');
+              filterSelectedCount.classList.remove('inline-flex');
+            }
           }
         }
 
@@ -328,6 +490,10 @@ const availableCategories = [...new Set(topics.map(t => t.data.category))].sort(
             topicsContainer.classList.remove('hidden');
             noResults.classList.add('hidden');
           }
+
+          if (resultsCountInline) {
+            resultsCountInline.textContent = String(visibleCount);
+          }
         }
 
         function initSearch() {
@@ -344,6 +510,8 @@ const availableCategories = [...new Set(topics.map(t => t.data.category))].sort(
           filterToggleBtn = document.getElementById('filter-toggle-btn') as HTMLButtonElement;
           filterTagsContent = document.getElementById('filter-tags-content');
           filterToggleIcon = document.getElementById('filter-toggle-icon');
+          filterSelectedCount = document.getElementById('filter-selected-count');
+          resultsCountInline = document.getElementById('results-count-inline');
 
           if (!searchInput || !topicsContainer || !noResults || !topicCards || topicCards.length === 0) {
             setTimeout(initSearch, 100);
