@@ -201,6 +201,14 @@ export const mitreTechniques: Record<string, MitreTechnique> = {
       'Adversaries may access data from cloud storage.',
     url: 'https://attack.mitre.org/techniques/T1530',
   },
+  T1537: {
+    id: 'T1537',
+    name: 'Transfer Data to Cloud Account',
+    tactic: 'Exfiltration',
+    description:
+      'Adversaries may exfiltrate data by moving it to another cloud account they control.',
+    url: 'https://attack.mitre.org/techniques/T1537',
+  },
   T1578: {
     id: 'T1578',
     name: 'Modify Cloud Compute Infrastructure',
