@@ -81,12 +81,18 @@ Create a new Markdown file in `src/content/topics/`:
 ---
 title: Your Topic
 description: Brief description
-level: beginner
-category: defensive
-impact: Description of impact
-mitigation: Description of mitigation
-prerequisites:
-  - Prerequisite 1
+category: offensive
+impact:
+  - Impact point 1
+  - Impact point 2
+mitigation:
+  - Mitigation point 1
+  - Mitigation point 2
+tools:
+  - kubectl
+mitreTechniques:
+  - T1610
+kubernetesVersion: "1.28+"
 ---
 
 Your topic content here...
@@ -99,13 +105,17 @@ Create a new YAML file in `src/content/attack-paths/`:
 ```yaml
 title: "Attack Path Title"
 description: "Description of the attack path"
-difficulty: beginner
 category: "Category Name"
+kubernetesVersion: "1.28+"
+mitreTechniques:
+  - T1610
 steps:
   - id: "step1"
     title: "Step Title"
     description: "Step description"
     type: initial
+    mitreTechnique: "T1610"
+    command: "kubectl get pods -A"
     connections:
       - "step2"
   - id: "step2"
