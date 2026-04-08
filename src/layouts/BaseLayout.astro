@@ -150,6 +150,7 @@ const ogImageUrl = new URL(image, site.url).href;
           <div class="hidden md:flex items-center gap-6">
             <a href="/glossary" class="text-gray-600 hover:text-primary-600 dark:text-zinc-500 dark:hover:text-primary-400 transition-colors">Glossary</a>
             <a href="/topics" class="text-gray-600 hover:text-primary-600 dark:text-zinc-500 dark:hover:text-primary-400 transition-colors">Topics</a>
+            <a href="/techniques" class="text-gray-600 hover:text-primary-600 dark:text-zinc-500 dark:hover:text-primary-400 transition-colors">ATT&amp;CK Map</a>
             {features.attackPaths && (
               <a href="/attack-paths" class="text-gray-600 hover:text-primary-600 dark:text-zinc-500 dark:hover:text-primary-400 transition-colors">Attack Paths</a>
             )}
@@ -167,7 +168,7 @@ const ogImageUrl = new URL(image, site.url).href;
               class="inline-flex items-center gap-1 text-gray-600 hover:text-primary-600 dark:text-zinc-500 dark:hover:text-primary-400 transition-colors"
               title="Kubernetes Threat Matrix (MITRE ATT&amp;CK-style) — Redguard"
             >
-              MITRE ATT&amp;CK
+              Threat Matrix
               <svg class="w-3.5 h-3.5 opacity-70" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
               </svg>
@@ -202,6 +203,9 @@ const ogImageUrl = new URL(image, site.url).href;
             <a href="/topics" class="block px-3 py-2 rounded-lg text-gray-600 hover:text-gray-900 hover:bg-gray-100 dark:text-zinc-500 dark:hover:text-zinc-100 dark:hover:bg-zinc-800/80 transition-colors">
               Topics
             </a>
+            <a href="/techniques" class="block px-3 py-2 rounded-lg text-gray-600 hover:text-gray-900 hover:bg-gray-100 dark:text-zinc-500 dark:hover:text-zinc-100 dark:hover:bg-zinc-800/80 transition-colors">
+              ATT&amp;CK Map
+            </a>
             {features.attackPaths && (
               <a href="/attack-paths" class="block px-3 py-2 rounded-lg text-gray-600 hover:text-gray-900 hover:bg-gray-100 dark:text-zinc-500 dark:hover:text-zinc-100 dark:hover:bg-zinc-800/80 transition-colors">
                 Attack Paths
@@ -223,7 +227,7 @@ const ogImageUrl = new URL(image, site.url).href;
               class="flex items-center gap-2 px-3 py-2 rounded-lg text-gray-600 hover:text-gray-900 hover:bg-gray-100 dark:text-zinc-500 dark:hover:text-zinc-100 dark:hover:bg-zinc-800/80 transition-colors"
               title="Kubernetes Threat Matrix (MITRE ATT&amp;CK-style) — Redguard"
             >
-              MITRE ATT&amp;CK
+              Threat Matrix
               <svg class="w-3.5 h-3.5 opacity-70 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
               </svg>
@@ -239,10 +243,25 @@ const ogImageUrl = new URL(image, site.url).href;
       <slot />
     </main>
     <footer class="bg-white dark:bg-[#0c0c0e] border-t border-gray-200 dark:border-zinc-800 mt-auto">
-      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-        <p class="text-center text-gray-500 dark:text-zinc-600 text-sm">
-          © {currentYear} kubernetes-security.cloud · Made by <a href="https://www.linkedin.com/in/muhammadyugan/" target="_blank" rel="noopener noreferrer" class="text-primary-600 hover:text-primary-700 dark:text-primary-400 dark:hover:text-primary-300 hover:underline">myugan</a>
-        </p>
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div class="grid gap-6 md:grid-cols-2 md:items-start">
+          <div>
+            <p class="text-sm font-semibold text-gray-900 dark:text-zinc-100">Kubernetes Security</p>
+            <p class="mt-2 text-sm text-gray-500 dark:text-zinc-500 max-w-sm">
+              Practical offensive and defensive references to help you learn Kubernetes security faster.
+            </p>
+          </div>
+
+          <div class="md:text-right">
+            <p class="text-sm text-gray-500 dark:text-zinc-500">
+              Built by
+              <a href="https://www.linkedin.com/in/muhammadyugan/" target="_blank" rel="noopener noreferrer" class="text-primary-600 hover:text-primary-700 dark:text-primary-400 dark:hover:text-primary-300 hover:underline">
+                myugan
+              </a>
+            </p>
+            <p class="mt-2 text-xs text-gray-400 dark:text-zinc-600">© {currentYear} kubernetes-security.cloud</p>
+          </div>
+        </div>
       </div>
     </footer>
     

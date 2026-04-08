@@ -1,0 +1,378 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import { getCollection } from 'astro:content';
+import Card from '../components/ui/Card.astro';
+import CardHeader from '../components/ui/CardHeader.astro';
+import CardTitle from '../components/ui/CardTitle.astro';
+import CardDescription from '../components/ui/CardDescription.astro';
+import { getAllMitreTechniques } from '../data/mitre-attack';
+
+const topics = await getCollection('topics');
+const techniques = getAllMitreTechniques();
+
+const topicMap = new Map<string, { slug: string; title: string; category: string }[]>();
+for (const topic of topics) {
+  const ids = topic.data.mitreTechniques ?? [];
+  for (const id of ids) {
+    const list = topicMap.get(id) ?? [];
+    list.push({
+      slug: topic.slug,
+      title: topic.data.title,
+      category: topic.data.category,
+    });
+    topicMap.set(id, list);
+  }
+}
+
+const totalMappedTechniques = techniques.filter((t) => (topicMap.get(t.id)?.length ?? 0) > 0).length;
+const totalMappings = Array.from(topicMap.values()).reduce((sum, items) => sum + items.length, 0);
+
+const groupedByPrimaryTactic = techniques.reduce((acc, technique) => {
+  const primaryTactic = technique.tactic.split(',')[0].trim();
+  if (!acc.has(primaryTactic)) acc.set(primaryTactic, []);
+  acc.get(primaryTactic)?.push(technique);
+  return acc;
+}, new Map<string, typeof techniques>());
+
+const tacticStats = Array.from(groupedByPrimaryTactic.entries())
+  .map(([tactic, items]) => {
+    const mappedCount = items.filter((item) => (topicMap.get(item.id)?.length ?? 0) > 0).length;
+    return { tactic, total: items.length, mapped: mappedCount };
+  })
+  .sort((a, b) => b.mapped - a.mapped || a.tactic.localeCompare(b.tactic));
+
+const tacticOrder = [
+  'Initial Access',
+  'Execution',
+  'Persistence',
+  'Privilege Escalation',
+  'Defense Evasion',
+  'Credential Access',
+  'Discovery',
+  'Lateral Movement',
+  'Collection',
+  'Command and Control',
+  'Exfiltration',
+  'Impact',
+];
+
+const orderedTacticEntries = Array.from(groupedByPrimaryTactic.entries()).sort((a, b) => {
+  const ai = tacticOrder.indexOf(a[0]);
+  const bi = tacticOrder.indexOf(b[0]);
+  if (ai !== -1 && bi !== -1) return ai - bi;
+  if (ai !== -1) return -1;
+  if (bi !== -1) return 1;
+  return a[0].localeCompare(b[0]);
+});
+
+const graphNodes: Array<{ data: { id: string; label: string; type: string; href?: string; techniqueId?: string } }> = [];
+const graphEdges: Array<{ data: { id: string; source: string; target: string; type?: string } }> = [];
+const techniqueDetails = Object.fromEntries(
+  techniques.map((t) => [t.id, { ...t, topics: topicMap.get(t.id) ?? [] }])
+);
+
+for (const [tactic, list] of orderedTacticEntries) {
+  const tacticId = `tactic:${tactic}`;
+  graphNodes.push({ data: { id: tacticId, label: tactic, type: 'tactic' } });
+
+  for (const technique of list) {
+    const techniqueId = `tech:${technique.id}`;
+    graphNodes.push({
+      data: {
+        id: techniqueId,
+        label: `${technique.id}\n${technique.name}`,
+        type: 'technique',
+        href: technique.url,
+        techniqueId: technique.id,
+      },
+    });
+    graphEdges.push({
+      data: {
+        id: `${tacticId}->${techniqueId}`,
+        source: tacticId,
+        target: techniqueId,
+      },
+    });
+
+  }
+}
+
+for (let i = 0; i < orderedTacticEntries.length - 1; i++) {
+  const from = `tactic:${orderedTacticEntries[i][0]}`;
+  const to = `tactic:${orderedTacticEntries[i + 1][0]}`;
+  graphEdges.push({
+    data: {
+      id: `${from}->${to}:order`,
+      source: from,
+      target: to,
+      type: 'ordering',
+    },
+  });
+}
+
+const graphDataJson = JSON.stringify({ nodes: graphNodes, edges: graphEdges });
+const techniqueDetailsJson = JSON.stringify(techniqueDetails);
+---
+
+<BaseLayout
+  title="ATT&CK Map - Kubernetes Security"
+  description="A single-page visualization of MITRE ATT&CK techniques mapped across Kubernetes security topics."
+>
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+    <div class="mb-8">
+      <div class="flex items-center gap-3 mb-4">
+        <div class="text-primary-600">
+          <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7h18M3 12h18M3 17h18" />
+          </svg>
+        </div>
+        <h1 class="text-3xl sm:text-4xl font-bold text-gray-900 dark:text-zinc-100">ATT&amp;CK Map</h1>
+      </div>
+      <p class="text-base sm:text-lg text-gray-600 dark:text-zinc-400 max-w-3xl">
+        One page that visualizes all MITRE ATT&CK techniques and where they are covered across topics.
+      </p>
+    </div>
+
+    <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-8">
+      <Card class="p-4">
+        <p class="text-xs font-semibold tracking-wide text-gray-500 dark:text-zinc-500">Total techniques</p>
+        <p class="mt-1 text-2xl font-semibold text-gray-900 dark:text-zinc-100">{techniques.length}</p>
+      </Card>
+      <Card class="p-4">
+        <p class="text-xs font-semibold tracking-wide text-gray-500 dark:text-zinc-500">Mapped techniques</p>
+        <p class="mt-1 text-2xl font-semibold text-gray-900 dark:text-zinc-100">{totalMappedTechniques}</p>
+      </Card>
+      <Card class="p-4">
+        <p class="text-xs font-semibold tracking-wide text-gray-500 dark:text-zinc-500">Total topic mappings</p>
+        <p class="mt-1 text-2xl font-semibold text-gray-900 dark:text-zinc-100">{totalMappings}</p>
+      </Card>
+    </div>
+
+    <Card class="mb-8">
+      <CardHeader>
+        <CardTitle>Tactic Coverage</CardTitle>
+        <CardDescription>Quick visualization of mapped techniques by primary tactic.</CardDescription>
+      </CardHeader>
+      <div class="px-6 pb-6 space-y-3">
+        {tacticStats.map((item) => {
+          const pct = item.total > 0 ? Math.round((item.mapped / item.total) * 100) : 0;
+          return (
+            <div>
+              <div class="flex items-center justify-between text-sm mb-1">
+                <span class="text-gray-700 dark:text-zinc-300">{item.tactic}</span>
+                <span class="text-gray-500 dark:text-zinc-500">{item.mapped}/{item.total}</span>
+              </div>
+              <div class="h-2 rounded-full bg-gray-100 dark:bg-zinc-800 overflow-hidden">
+                <div class="h-full bg-primary-600 dark:bg-primary-400" style={`width: ${pct}%`}></div>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </Card>
+
+    <Card class="mb-8">
+      <CardHeader>
+        <CardTitle>Interactive Technique Graph</CardTitle>
+        <CardDescription>
+          Simplified animated flow: Tactic → Technique. Click a technique to see related topics in the panel.
+        </CardDescription>
+      </CardHeader>
+      <div class="px-6 pb-6">
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
+          <div class="lg:col-span-2">
+            <div id="techniques-graph" class="w-full h-[720px] rounded-xl border border-gray-200 dark:border-zinc-800 bg-white dark:bg-zinc-900"></div>
+          </div>
+          <div class="rounded-xl border border-gray-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-4">
+            <p class="text-xs font-semibold tracking-wide text-gray-500 dark:text-zinc-500 mb-2">Technique Details</p>
+            <h3 id="technique-panel-title" class="text-lg font-semibold text-gray-900 dark:text-zinc-100">Select a technique</h3>
+            <p id="technique-panel-desc" class="mt-2 text-sm text-gray-600 dark:text-zinc-400">
+              Click any red technique node to view mapped topics and open the MITRE reference.
+            </p>
+            <div id="technique-panel-topics" class="mt-4 space-y-2"></div>
+            <a id="technique-panel-link" href="#" target="_blank" rel="noopener noreferrer" class="hidden mt-4 inline-flex items-center gap-1 text-sm text-primary-600 hover:text-primary-700 dark:hover:text-primary-400">
+              Open on MITRE
+              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+              </svg>
+            </a>
+          </div>
+        </div>
+      </div>
+    </Card>
+  </div>
+
+  <script define:vars={{ graphDataJson, techniqueDetailsJson }}>
+    async function loadScript(src) {
+      return new Promise((resolve, reject) => {
+        const script = document.createElement('script');
+        script.src = src;
+        script.onload = resolve;
+        script.onerror = reject;
+        document.head.appendChild(script);
+      });
+    }
+
+    async function initTechniquesGraph() {
+      const container = document.getElementById('techniques-graph');
+      if (!container) return;
+
+      try {
+        if (typeof cytoscape === 'undefined') {
+          await Promise.all([
+            loadScript('https://cdn.jsdelivr.net/npm/cytoscape@3.27.0/dist/cytoscape.min.js'),
+            loadScript('https://cdn.jsdelivr.net/npm/dagre@0.8.5/dist/dagre.min.js'),
+            loadScript('https://cdn.jsdelivr.net/npm/cytoscape-dagre@2.5.0/cytoscape-dagre.min.js'),
+          ]);
+        }
+        if (typeof cytoscape !== 'undefined' && typeof cytoscapeDagre !== 'undefined') {
+          cytoscape.use(cytoscapeDagre);
+        }
+
+        const graph = JSON.parse(graphDataJson);
+        const detailsMap = JSON.parse(techniqueDetailsJson);
+        const panelTitle = document.getElementById('technique-panel-title');
+        const panelDesc = document.getElementById('technique-panel-desc');
+        const panelTopics = document.getElementById('technique-panel-topics');
+        const panelLink = document.getElementById('technique-panel-link');
+        const cy = cytoscape({
+          container,
+          elements: {
+            nodes: graph.nodes,
+            edges: graph.edges,
+          },
+          style: [
+            {
+              selector: 'node',
+              style: {
+                label: 'data(label)',
+                width: 'label',
+                height: 'label',
+                shape: 'roundrectangle',
+                'background-color': '#f3f4f6',
+                'border-width': 2,
+                'border-color': '#9ca3af',
+                color: '#111827',
+                'text-valign': 'center',
+                'text-halign': 'center',
+                'text-wrap': 'wrap',
+                'text-max-width': '200px',
+                'font-size': '12px',
+                'font-weight': 600,
+                padding: '10px',
+              },
+            },
+            {
+              selector: 'node[type = "tactic"]',
+              style: {
+                'background-color': '#ddd6fe',
+                'border-color': '#7c3aed',
+              },
+            },
+            {
+              selector: 'node[type = "technique"]',
+              style: {
+                'background-color': '#fee2e2',
+                'border-color': '#dc2626',
+              },
+            },
+            {
+              selector: 'node.pulse',
+              style: {
+                'border-width': 4,
+                'border-color': '#f59e0b',
+                'shadow-blur': 20,
+                'shadow-color': '#f59e0b',
+                'shadow-opacity': 0.6,
+              },
+            },
+            {
+              selector: 'edge',
+              style: {
+                width: 1.8,
+                'line-color': '#9ca3af',
+                'target-arrow-color': '#9ca3af',
+                'target-arrow-shape': 'triangle',
+                'curve-style': 'bezier',
+              },
+            },
+            {
+              selector: 'edge[type = "ordering"]',
+              style: {
+                width: 0,
+                opacity: 0,
+                'target-arrow-shape': 'none',
+              },
+            },
+          ],
+          layout: {
+            name: 'dagre',
+            rankDir: 'LR',
+            nodeSep: 30,
+            rankSep: 120,
+            edgeSep: 10,
+          },
+          minZoom: 0.15,
+          maxZoom: 2.5,
+          wheelSensitivity: 0.2,
+        });
+
+        cy.fit(undefined, 10);
+        cy.zoom({
+          level: Math.max(cy.zoom() * 2.2, 1.15),
+          renderedPosition: { x: cy.width() / 2, y: cy.height() / 2 },
+        });
+
+        cy.on('tap', 'node', (evt) => {
+          const nodeType = evt.target.data('type');
+          if (nodeType !== 'technique') return;
+          const techniqueId = evt.target.data('techniqueId');
+          if (!techniqueId || !detailsMap[techniqueId]) return;
+
+          const info = detailsMap[techniqueId];
+          if (panelTitle) panelTitle.textContent = `${info.id} — ${info.name}`;
+          if (panelDesc) panelDesc.textContent = info.description;
+
+          if (panelTopics) {
+            panelTopics.innerHTML = '';
+            if (info.topics.length === 0) {
+              panelTopics.innerHTML = '<p class="text-sm text-amber-700 dark:text-amber-300">Not mapped to topics yet.</p>';
+            } else {
+              info.topics.forEach((topic) => {
+                const a = document.createElement('a');
+                a.href = `/topics/${topic.slug}`;
+                a.className = 'block rounded-md border border-gray-200 dark:border-zinc-700 px-3 py-2 text-sm text-gray-700 dark:text-zinc-300 hover:bg-gray-50 dark:hover:bg-zinc-800';
+                a.textContent = topic.title;
+                panelTopics.appendChild(a);
+              });
+            }
+          }
+
+          if (panelLink) {
+            panelLink.href = info.url;
+            panelLink.classList.remove('hidden');
+          }
+        });
+
+        // Subtle loop animation: pulse random mapped techniques.
+        setInterval(() => {
+          const techniqueNodes = cy.nodes('node[type = "technique"]');
+          if (techniqueNodes.length === 0) return;
+          cy.nodes().removeClass('pulse');
+          const randomNode = techniqueNodes[Math.floor(Math.random() * techniqueNodes.length)];
+          randomNode.addClass('pulse');
+          setTimeout(() => randomNode.removeClass('pulse'), 1200);
+        }, 1800);
+      } catch (error) {
+        console.error('Failed to render techniques graph:', error);
+        container.innerHTML = '<div class="p-4 text-center text-gray-500 dark:text-zinc-500">Unable to load graph. Refresh and try again.</div>';
+      }
+    }
+
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', initTechniquesGraph);
+    } else {
+      initTechniquesGraph();
+    }
+  </script>
+</BaseLayout>
