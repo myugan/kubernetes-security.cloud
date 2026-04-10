@@ -22,6 +22,10 @@ interface Props {
   section?: string;
   /** Accessible label for the preview image */
   imageAlt?: string;
+  /** ISO datetime for article publishing time */
+  publishedTime?: string;
+  /** ISO datetime for article updated time */
+  modifiedTime?: string;
 }
 
 const {
@@ -31,6 +35,8 @@ const {
   ogType = 'website',
   section,
   imageAlt,
+  publishedTime,
+  modifiedTime,
 } = Astro.props;
 
 const metaDescription = toMetaDescription(descriptionProp ?? site.description);
@@ -47,8 +53,11 @@ const ogImageUrl = new URL(image, site.url).href;
   <head>
     <meta charset="UTF-8" />
     <meta name="description" content={metaDescription} />
+    <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="color-scheme" content="light dark" />
+    <meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)" />
+    <meta name="theme-color" content="#0c0c0e" media="(prefers-color-scheme: dark)" />
     <script is:inline>
       (function () {
         function applyColorScheme() {
@@ -99,6 +108,12 @@ const ogImageUrl = new URL(image, site.url).href;
     {ogType === 'article' && section && (
       <meta property="article:section" content={section} />
     )}
+    {ogType === 'article' && publishedTime && (
+      <meta property="article:published_time" content={publishedTime} />
+    )}
+    {ogType === 'article' && modifiedTime && (
+      <meta property="article:modified_time" content={modifiedTime} />
+    )}
 
     <!-- Twitter Card -->
     <meta name="twitter:card" content="summary_large_image" />
@@ -121,6 +136,30 @@ const ogImageUrl = new URL(image, site.url).href;
         "url": site.url
       }
     })} />
+    {ogType === 'article' && (
+      <script
+        type="application/ld+json"
+        set:html={JSON.stringify({
+          "@context": "https://schema.org",
+          "@type": "Article",
+          "headline": title,
+          "description": metaDescription,
+          "image": [ogImageUrl],
+          "author": {
+            "@type": "Person",
+            "name": "myugan"
+          },
+          "publisher": {
+            "@type": "Organization",
+            "name": site.name,
+            "url": site.url
+          },
+          "datePublished": publishedTime,
+          "dateModified": modifiedTime ?? publishedTime,
+          "mainEntityOfPage": canonicalUrl
+        })}
+      />
+    )}
     
     <title>{title}</title>
     

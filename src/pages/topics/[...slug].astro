@@ -22,6 +22,7 @@ const { Content } = await topic.render();
 const wordsPerMinute = 220;
 const markdownWordCount = topic.body.trim().split(/\s+/).filter(Boolean).length;
 const estimatedReadMinutes = Math.max(1, Math.ceil(markdownWordCount / wordsPerMinute));
+const publishedTime = topic.data.createdAt ? topic.data.createdAt.toISOString() : undefined;
 const createdAtLabel = topic.data.createdAt
   ? new Intl.DateTimeFormat('en-US', { year: 'numeric', month: 'short', day: 'numeric' }).format(topic.data.createdAt)
   : 'Not specified';
@@ -99,6 +100,8 @@ const impactLinkParentClass =
   description={topic.data.description}
   ogType="article"
   section={topic.data.category}
+  publishedTime={publishedTime}
+  modifiedTime={publishedTime}
 >
   <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
     <div class="mb-10">
