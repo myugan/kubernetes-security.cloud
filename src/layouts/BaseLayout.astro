@@ -177,6 +177,17 @@ const ogImageUrl = new URL(image, site.url).href;
     )}
   </head>
   <body class="bg-white text-gray-900 dark:bg-[#0c0c0e] dark:text-zinc-300 antialiased flex flex-col min-h-screen font-sans selection:bg-emerald-200/60 selection:text-emerald-900 dark:selection:bg-emerald-500/25 dark:selection:text-emerald-100">
+    <div id="page-skeleton" class="fixed inset-0 z-[70] bg-white dark:bg-[#0c0c0e] transition-opacity duration-200 pointer-events-none">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+        <div class="h-10 w-48 rounded-md bg-gray-200/80 dark:bg-zinc-800/80 animate-pulse"></div>
+      </div>
+      <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-4">
+        <div class="h-8 w-72 rounded-md bg-gray-200/80 dark:bg-zinc-800/80 animate-pulse"></div>
+        <div class="h-4 w-full rounded-md bg-gray-200/70 dark:bg-zinc-800/70 animate-pulse"></div>
+        <div class="h-4 w-11/12 rounded-md bg-gray-200/70 dark:bg-zinc-800/70 animate-pulse"></div>
+        <div class="h-4 w-9/12 rounded-md bg-gray-200/70 dark:bg-zinc-800/70 animate-pulse"></div>
+      </div>
+    </div>
     <header class="bg-white/95 dark:bg-[#0c0c0e]/95 backdrop-blur-sm border-b border-gray-200 dark:border-zinc-800 sticky top-0 z-50">
       <nav class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="flex justify-between items-center h-16">
@@ -281,6 +292,32 @@ const ogImageUrl = new URL(image, site.url).href;
     </footer>
     
     <script>
+      const pageSkeleton = document.getElementById('page-skeleton');
+
+      function hideSkeleton() {
+        if (!pageSkeleton) return;
+        pageSkeleton.classList.add('opacity-0');
+        window.setTimeout(() => {
+          pageSkeleton.classList.add('hidden');
+        }, 220);
+      }
+
+      function showSkeleton() {
+        if (!pageSkeleton) return;
+        pageSkeleton.classList.remove('hidden', 'opacity-0');
+      }
+
+      // Hide on initial load.
+      if (document.readyState === 'complete') {
+        hideSkeleton();
+      } else {
+        window.addEventListener('load', hideSkeleton, { once: true });
+      }
+
+      // Show skeleton during Astro view transitions and hide when swapped.
+      document.addEventListener('astro:before-preparation', showSkeleton);
+      document.addEventListener('astro:after-swap', hideSkeleton);
+
       // Mobile menu toggle
       const mobileMenuBtn = document.getElementById('mobile-menu-btn');
       const mobileMenu = document.getElementById('mobile-menu');
