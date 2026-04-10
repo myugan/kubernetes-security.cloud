@@ -134,9 +134,4 @@ A single node returns:
 
 The `pod_cidr` reveals the full pod network range, which is useful for lateral movement planning. The `container_runtime_version` field reveals the runtime type and version, which indicates the expected socket path on the host. The `system_uuid` is a stable hardware identifier that persists across reboots and can be used to correlate node identity across different data sources.
 
-## Why This Evades Detection
-
-Standard Kubernetes intrusion detection focuses on the API server audit log. Techniques like `kubectl auth can-i`, `SelfSubjectRulesReview`, and direct `kubectl get` commands all generate audit events that anomaly detection systems alert on.
-
-This technique produces no Kubernetes API events because the attacker never calls the Kubernetes API. The only observable signal is HTTP traffic to the Prometheus Service, which blends into normal scraper and dashboard traffic. Unless the cluster has application-layer network flow analysis, this technique is invisible to standard audit-based detection.
 
