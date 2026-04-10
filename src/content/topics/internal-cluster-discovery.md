@@ -47,6 +47,7 @@ curl -k https://${KUBERNETES_SERVICE_HOST}:${KUBERNETES_SERVICE_PORT}/version
 }
 ```
 
+> [!NOTE]
 > The `gitVersion` field can reveal the cloud provider, such as `gke` for Google Kubernetes Engine or `eks` for Amazon EKS.
 
 Knowing the exact Kubernetes version allows attackers to search for known CVEs and exploits specific to that version.
@@ -111,7 +112,8 @@ This reveals internal services that may be interesting targets such as databases
 
 **kube-hunter** simplifies the reconnaissance process by automatically discovering Kubernetes components and checking for common misconfigurations. Rather than manually probing each endpoint, the tool scans for exposed APIs, weak authentication settings, and other security issues in a single run.
 
-> **Note:** The tool requires Python and pip to install, which can be challenging in containerized environments where minimal images typically lack Python.
+> [!NOTE]
+> The tool requires Python and pip to install, which can be challenging in containerized environments where minimal images typically lack Python.
 
 ## What to Look For
 

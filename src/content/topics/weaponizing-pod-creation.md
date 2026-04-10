@@ -155,7 +155,8 @@ spec:
         type: Directory
 ```
 
-> **Note:** In cloud-managed Kubernetes clusters (GKE, EKS, AKS), the control plane, etcd, and controller manager are fully managed by the provider and cannot be accessed or targeted by users.
+> [!NOTE]
+> In cloud-managed Kubernetes clusters (GKE, EKS, AKS), the control plane, etcd, and controller manager are fully managed by the provider and cannot be accessed or targeted by users.
 
 This pod targets a control plane node and mounts the etcd data directory. **By default, Kubernetes does not enable encryption at rest for etcd**, meaning all cluster state including Secrets are stored in base64 encoding without encryption. An attacker with access to the etcd data directory can read all **Secrets**, **ConfigMaps**, and cluster configuration in plaintext. 
 

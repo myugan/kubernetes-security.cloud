@@ -23,7 +23,8 @@ references: |
 
 Attackers and insiders often want to know what their current identity can do before they move sideways or try to escalate. One common way is `kubectl auth can-i --list`, which creates a `SelfSubjectRulesReview` in the `authorization.k8s.io` API group. The same call shows up when people debug RBAC honestly. Audit logs can record who asked for that review so you can line it up with other activity.
 
-> **Note:** Kubernetes audit logging must be enabled on the API server, with an audit policy that records `selfsubjectrulesreviews` and `subjectrulesreviews` (or still matches these requests).
+> [!NOTE]
+> Kubernetes audit logging must be enabled on the API server, with an audit policy that records `selfsubjectrulesreviews` and `subjectrulesreviews` (or still matches these requests).
 
 ## How the request shows up
 

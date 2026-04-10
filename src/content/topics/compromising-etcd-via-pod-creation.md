@@ -25,7 +25,8 @@ references: |
 
 This topic is the **next step** after [Weaponizing Pod Creation Access](/topics/weaponizing-pod-creation/). That page shows how **pod create** plus **hostPath** can mount node filesystems, including `/var/lib/etcd` on stacked control plane nodes, to read raw member data. Here the **hostPath** is limited to the **etcd PKI directory only** (`/etc/kubernetes/pki/etcd` on typical kubeadm clusters), not the rest of `/etc/kubernetes/pki`. You copy **etcd’s CA** and a TLS keypair under that directory that etcd will accept as a client (kubeadm commonly exposes **`server.crt`** and **`server.key`** there), combine that with **hostNetwork** on the same machine as **etcd**, and use **etcdctl** to speak to **etcd** over mutual TLS. That still yields **live** reads (and, depending on etcd configuration and file permissions, writes) against the entire Kubernetes object store.
 
-> **Note:** This applies to clusters where **etcd** runs on (or is reachable from) nodes you can schedule onto, for example with **stacked etcd** on control plane VMs. On **GKE, EKS, AKS**, and similar offerings, the control plane and etcd are **not** customer-schedulable. These paths do not apply in the same way.
+> [!NOTE]
+> This applies to clusters where **etcd** runs on (or is reachable from) nodes you can schedule onto, for example with **stacked etcd** on control plane VMs. On **GKE, EKS, AKS**, and similar offerings, the control plane and etcd are **not** customer-schedulable. These paths do not apply in the same way.
 
 ## Why etcd client certificates matter
 
@@ -84,6 +85,7 @@ spec:
         type: Directory
 ```
 
+> [!TIP]
 > The image **`bitnamilegacy/etcd:3.6.4`** is a convenience choice: it includes **`etcdctl`** and a real shell (**`/bin/sh`**), so **`kubectl exec`** works the way the steps below expect. Many upstream **etcd** images are minimal or distroless and do not ship an interactive shell.
 
 **hostNetwork: true** is what makes `https://127.0.0.1:2379` (typical for local **etcd** on the control plane) reachable from the pod’s network namespace. **dnsPolicy: ClusterFirstWithHostNet** keeps in-cluster DNS usable if you also need Kubernetes API access from the same pod.

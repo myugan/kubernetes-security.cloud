@@ -22,6 +22,7 @@ ServiceAccount tokens are high-value credentials in Kubernetes. They provide aut
 
 In most real Kubernetes breaches, attackers follow a common pattern: compromise a pod, discover a ServiceAccount token, use it to access the Kubernetes API, then enumerate permissions, pods, secrets, and nodes. The techniques documented here use only legitimate Kubernetes features and RBAC-allowed actions, making them difficult to distinguish from normal cluster activity.
 
+> [!NOTE]
 > This content is based on research by [Mohammad Bilal](https://www.linkedin.com/feed/update/urn:li:activity:7416365841073508352/).
 
 ## Reading Tokens via kubectl exec
@@ -173,4 +174,5 @@ The following table summarizes the RBAC permissions required for each technique 
 | | jobs | create | batch |
 | Patching Workloads | deployments, statefulsets, daemonsets | patch, update | apps |
 
-> **Note:** `kubectl cp` and `kubectl exec` share identical RBAC requirements because `kubectl cp` does not have its own API endpoint. Under the hood, it spawns an exec session to run `tar` inside the container. To see this in action, run `kubectl cp` with the `-v=6` flag to observe the exec API calls being made.
+> [!NOTE]
+> `kubectl cp` and `kubectl exec` share identical RBAC requirements because `kubectl cp` does not have its own API endpoint. Under the hood, it spawns an exec session to run `tar` inside the container. To see this in action, run `kubectl cp` with the `-v=6` flag to observe the exec API calls being made.

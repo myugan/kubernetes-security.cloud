@@ -60,6 +60,7 @@ KUBERNETES_SERVICE_PORT=443
 KUBERNETES_SERVICE_PORT_HTTPS=443
 ```
 
+> [!NOTE]
 > Only the Kubernetes API service variables remain, as these are always injected regardless of the `enableServiceLinks` setting.
 
 With **enableServiceLinks: false**, applications should use DNS-based service discovery instead of environment variables. Kubernetes provides built-in DNS resolution for services:

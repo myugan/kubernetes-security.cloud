@@ -35,7 +35,8 @@ Prometheus collects metrics from three sources that together produce a complete 
 
 From inside a compromised pod, Prometheus is reachable via its cluster DNS name. The service name is typically predictable, as Helm chart defaults produce names like `prometheus-server.<namespace>.svc.cluster.local`. The service is discoverable without any API calls by checking environment variables injected into the pod at startup.
 
-> **Note:** Kubernetes automatically injects `{SERVICENAME}_SERVICE_HOST` and `{SERVICENAME}_SERVICE_PORT` variables for every service in the same namespace, making it possible to locate Prometheus entirely passively before any network probe is made. This behavior is covered in detail under [Internal Cluster Discovery](/topics/internal-cluster-discovery).
+> [!NOTE]
+> Kubernetes automatically injects `{SERVICENAME}_SERVICE_HOST` and `{SERVICENAME}_SERVICE_PORT` variables for every service in the same namespace, making it possible to locate Prometheus entirely passively before any network probe is made. This behavior is covered in detail under [Internal Cluster Discovery](/topics/internal-cluster-discovery).
 
 ```bash
 env | grep -i prometheus
@@ -134,4 +135,9 @@ A single node returns:
 
 The `pod_cidr` reveals the full pod network range, which is useful for lateral movement planning. The `container_runtime_version` field reveals the runtime type and version, which indicates the expected socket path on the host. The `system_uuid` is a stable hardware identifier that persists across reboots and can be used to correlate node identity across different data sources.
 
+## Why This Evades Detection
+
+Standard Kubernetes intrusion detection focuses on the API server audit log. Techniques like `kubectl auth can-i`, `SelfSubjectRulesReview`, and direct `kubectl get` commands all generate audit events that anomaly detection systems alert on.
+
+This technique produces no Kubernetes API events because the attacker never calls the Kubernetes API. The only observable signal is HTTP traffic to the Prometheus Service, which blends into normal scraper and dashboard traffic. Unless the cluster has application-layer network flow analysis, this technique is invisible to standard audit-based detection.
 

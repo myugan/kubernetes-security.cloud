@@ -108,7 +108,8 @@ A more reliable approach is using a **C2 agent** beacon as the encoded payload i
 
 Filebeat is Ubuntu-based, so `bash`, `curl`, `python3` and other common tools are available. This makes it a flexible payload host. Choosing a disguise image that includes a shell is therefore a deliberate part of this technique.
 
-> **Note:** Distroless images ship with no shell, no package manager and often no standard utilities at all, which significantly limits what an attacker can execute directly inside the container. If the target cluster enforces distroless images, the attacker must rely on a pre-compiled static binary or find another execution path.
+> [!NOTE]
+> Distroless images ship with no shell, no package manager and often no standard utilities at all, which significantly limits what an attacker can execute directly inside the container. If the target cluster enforces distroless images, the attacker must rely on a pre-compiled static binary or find another execution path.
 
 The `FB_CONF_CHECKSUM` value decodes to the following reverse shell command, where `x.x.x.x` is replaced with the attacker's listener IP:
 
