@@ -404,7 +404,7 @@ const ogImageUrl = new URL(image, site.url).href;
       
       // Run on page load
       addCopyButtons();
-      
+
       // Also run after view transitions (if using)
       document.addEventListener('astro:after-swap', addCopyButtons);
     </script>
