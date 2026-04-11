@@ -7,9 +7,11 @@ import CardTitle from '../components/ui/CardTitle.astro';
 import CardDescription from '../components/ui/CardDescription.astro';
 import CategoryIcon from '../components/CategoryIcon.astro';
 import { getCategoryColors } from '../components/CategoryColors.astro';
+import { formatTopicDate, getRecentTopics } from '../utils/recent-topics';
 
 const topics = await getCollection('topics');
 const sortedTopics = topics.sort((a, b) => a.data.title.localeCompare(b.data.title));
+const recentTopics = getRecentTopics(topics, 5);
 
 // Get unique categories from actual content
 const availableCategories = [...new Set(topics.map(t => t.data.category))].sort();
@@ -99,50 +101,111 @@ const defensiveCount = topics.filter((topic) =>
         </div>
       </div>
 
+      {recentTopics.length > 0 && (
+        <div class="mt-6 rounded-2xl border border-gray-200/90 bg-gradient-to-b from-gray-50/70 to-white px-5 py-5 shadow-sm dark:border-zinc-800 dark:from-zinc-900/40 dark:to-zinc-950 sm:px-6">
+          <div class="border-b border-gray-200/80 pb-4 dark:border-zinc-800">
+            <div class="flex items-start gap-3">
+              <div class="text-primary-600 shrink-0">
+                <svg class="w-7 h-7 sm:w-8 sm:h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                </svg>
+              </div>
+              <div class="min-w-0">
+                <h2 class="text-base font-semibold tracking-tight text-gray-900 dark:text-zinc-50">Recently added</h2>
+                <p class="mt-1.5 text-sm leading-relaxed text-gray-600 dark:text-zinc-400">
+                  Newest at the top. Each date is when that topic was first listed here.
+                </p>
+              </div>
+            </div>
+          </div>
+          <ul class="mt-1 space-y-0.5 pt-1">
+            {recentTopics.map((topic) => {
+              const categoryColors = getCategoryColors(topic.data.category);
+              return (
+                <li>
+                  <a
+                    href={`/topics/${topic.slug}`}
+                    class="group flex flex-col gap-1.5 rounded-lg px-2 py-2.5 -mx-2 transition-colors hover:bg-white/90 dark:hover:bg-zinc-800/70 sm:flex-row sm:items-center sm:justify-between sm:gap-6 sm:py-2.5"
+                  >
+                    <span class="text-sm font-medium leading-snug text-gray-900 group-hover:text-primary-700 dark:text-zinc-100 dark:group-hover:text-primary-400">
+                      {topic.data.title}
+                    </span>
+                    <span class="flex shrink-0 items-center gap-2.5 text-xs tabular-nums sm:justify-end">
+                      <span
+                        class={`rounded-md px-2 py-0.5 capitalize ring-1 ring-inset ring-black/[0.06] dark:ring-white/[0.08] ${categoryColors.bg} ${categoryColors.text}`}
+                      >
+                        {topic.data.category}
+                      </span>
+                      <time
+                        class="text-gray-500 dark:text-zinc-500"
+                        datetime={topic.data.createdAt!.toISOString().slice(0, 10)}
+                      >
+                        {formatTopicDate(topic.data.createdAt!)}
+                      </time>
+                    </span>
+                  </a>
+                </li>
+              );
+            })}
+          </ul>
+        </div>
+      )}
+
       <!-- Search Bar with Tag Filters -->
-      <div class="mt-6 mb-8">
-        <Card class="p-4 sm:p-6 rounded-2xl">
-          <!-- Search Input -->
-          <div class="relative">
-            <input
-              type="text"
-              id="search-input"
-              placeholder="Search topics by keyword..."
-              class="w-full px-3.5 py-2.5 pl-10 border border-gray-300 dark:border-zinc-700 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none text-sm bg-white dark:bg-zinc-900 text-gray-900 dark:text-zinc-100"
-            />
-            <svg class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500 dark:text-zinc-500 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-            </svg>
+      <div class="mt-6 mb-6">
+        <Card class="p-3 sm:p-4 rounded-xl">
+          <!-- Search Input + reset -->
+          <div class="flex items-center gap-2">
+            <div class="relative min-w-0 flex-1">
+              <input
+                type="text"
+                id="search-input"
+                placeholder="Search topics..."
+                class="w-full py-2 pl-9 pr-3 border border-gray-300 dark:border-zinc-700 rounded-md focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none text-[13px] leading-tight bg-white dark:bg-zinc-900 text-gray-900 dark:text-zinc-100"
+              />
+              <svg class="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-500 dark:text-zinc-500 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+              </svg>
+            </div>
+            <button
+              type="button"
+              id="reset-filters-btn"
+              class="hidden shrink-0 rounded-md border border-gray-200 bg-white px-2.5 py-2 text-[13px] font-medium text-gray-700 shadow-sm transition-colors hover:bg-gray-50 dark:border-zinc-600 dark:bg-zinc-900 dark:text-zinc-300 dark:hover:bg-zinc-800"
+              title="Clear search and category filters"
+              aria-label="Reset search and filters"
+            >
+              Reset
+            </button>
           </div>
 
           <!-- Filter by Tags (Collapsible) -->
-          <div class="mt-4">
+          <div class="mt-2.5">
             <button
               type="button"
               id="filter-toggle-btn"
-              class="group inline-flex items-center gap-2 px-3 py-2 rounded-lg border border-gray-200 bg-gray-50 text-sm font-medium text-gray-700 hover:bg-white hover:border-gray-300 dark:border-zinc-700 dark:bg-zinc-900/70 dark:text-zinc-300 dark:hover:bg-zinc-900 dark:hover:border-zinc-600 transition-colors"
+              class="group inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-md border border-gray-200 bg-gray-50 text-xs font-medium text-gray-700 hover:bg-white hover:border-gray-300 dark:border-zinc-700 dark:bg-zinc-900/70 dark:text-zinc-300 dark:hover:bg-zinc-900 dark:hover:border-zinc-600 transition-colors"
               aria-expanded="false"
               aria-controls="filter-tags-content"
             >
-              <svg class="w-4 h-4 text-gray-500 dark:text-zinc-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg class="w-3.5 h-3.5 text-gray-500 dark:text-zinc-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
               </svg>
               <span>Filter by category</span>
               <span id="filter-selected-count" class="hidden items-center justify-center min-w-5 h-5 px-1.5 rounded-full bg-primary-100 text-primary-800 text-[11px] font-semibold dark:bg-primary-900/40 dark:text-primary-200"></span>
-              <svg id="filter-toggle-icon" class="w-4 h-4 text-gray-500 dark:text-zinc-500 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg id="filter-toggle-icon" class="w-3.5 h-3.5 text-gray-500 dark:text-zinc-500 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
               </svg>
             </button>
-            <div id="filter-tags-content" class="hidden pt-3">
-              <div class="rounded-xl border border-gray-200/80 bg-gray-50/60 p-3 dark:border-zinc-700 dark:bg-zinc-900/40">
-                <p class="text-xs text-gray-500 dark:text-zinc-400 mb-2">Choose one or more categories</p>
-                <div class="flex flex-wrap gap-2">
+            <div id="filter-tags-content" class="hidden pt-2">
+              <div class="rounded-lg border border-gray-200/80 bg-gray-50/60 p-2.5 dark:border-zinc-700 dark:bg-zinc-900/40">
+                <p class="text-[11px] text-gray-500 dark:text-zinc-400 mb-1.5">Choose one or more categories</p>
+                <div class="flex flex-wrap gap-1.5">
                 {availableCategories.map(category => {
                   const categoryColors = getCategoryColors(category);
                   return (
                     <button
                       type="button"
-                      class={`tag-filter-btn inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg border transition-all ${categoryColors.bg} ${categoryColors.text} ${categoryColors.border} hover:opacity-90 hover:-translate-y-0.5`}
+                      class={`tag-filter-btn inline-flex items-center gap-1.5 px-2.5 py-1 text-[11px] font-medium rounded-md border transition-all ${categoryColors.bg} ${categoryColors.text} ${categoryColors.border} hover:opacity-90 hover:-translate-y-0.5`}
                       data-tag-type="category"
                       data-tag-value={category}
                       data-tag-label={category.charAt(0).toUpperCase() + category.slice(1)}
@@ -158,9 +221,9 @@ const defensiveCount = topics.filter((topic) =>
           </div>
 
           <!-- Active Filter Tags -->
-          <div id="active-filters" class="mt-3 hidden">
-            <div class="flex items-center gap-2 flex-wrap">
-              <span class="text-xs text-gray-500 dark:text-zinc-500">Active:</span>
+          <div id="active-filters" class="mt-2 hidden">
+            <div class="flex items-center gap-1.5 flex-wrap">
+              <span class="text-[11px] text-gray-500 dark:text-zinc-500">Active:</span>
               <div id="active-filter-tags" class="flex flex-wrap gap-2">
               </div>
               <button id="clear-all-filters" class="text-xs text-primary-600 hover:text-primary-700 dark:hover:text-primary-400 font-medium ml-2">
@@ -270,8 +333,25 @@ const defensiveCount = topics.filter((topic) =>
         let filterToggleIcon: HTMLElement | null = null;
         let filterSelectedCount: HTMLElement | null = null;
         let resultsCountInline: HTMLElement | null = null;
+        let resetFiltersBtn: HTMLButtonElement | null = null;
 
         const activeFiltersSet = new Set<string>();
+
+        function updateResetButtonVisibility() {
+          if (!resetFiltersBtn || !searchInput) return;
+          const hasSearch = searchInput.value.trim().length > 0;
+          const hasCategories = activeFiltersSet.size > 0;
+          if (hasSearch || hasCategories) {
+            resetFiltersBtn.classList.remove('hidden');
+          } else {
+            resetFiltersBtn.classList.add('hidden');
+          }
+        }
+
+        function resetFilters() {
+          if (searchInput) searchInput.value = '';
+          clearAllFilters();
+        }
 
         function toggleFilterTags() {
           if (!filterTagsContent || !filterToggleIcon || !filterToggleBtn) return;
@@ -494,6 +574,8 @@ const defensiveCount = topics.filter((topic) =>
           if (resultsCountInline) {
             resultsCountInline.textContent = String(visibleCount);
           }
+
+          updateResetButtonVisibility();
         }
 
         function initSearch() {
@@ -512,6 +594,7 @@ const defensiveCount = topics.filter((topic) =>
           filterToggleIcon = document.getElementById('filter-toggle-icon');
           filterSelectedCount = document.getElementById('filter-selected-count');
           resultsCountInline = document.getElementById('results-count-inline');
+          resetFiltersBtn = document.getElementById('reset-filters-btn') as HTMLButtonElement;
 
           if (!searchInput || !topicsContainer || !noResults || !topicCards || topicCards.length === 0) {
             setTimeout(initSearch, 100);
@@ -538,6 +621,8 @@ const defensiveCount = topics.filter((topic) =>
           if (clearAllBtn) {
             clearAllBtn.addEventListener('click', clearAllFilters);
           }
+
+          resetFiltersBtn?.addEventListener('click', resetFilters);
 
           filterToggleBtn?.addEventListener('click', toggleFilterTags);
           viewGridBtn?.addEventListener('click', setGridView);
