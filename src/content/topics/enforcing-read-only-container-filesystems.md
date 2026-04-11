@@ -1,6 +1,6 @@
 ---
 title: Enforcing Read-Only Container Filesystems
-description: Enforcing readOnlyRootFilesystem to prevent attackers from writing tools, backdoors, or scripts to a container's filesystem after gaining code execution
+description: Prevent attackers from writing tools, backdoors, or scripts to a container's filesystem after gaining code execution
 category: defensive
 createdAt: 2026-04-11
 impact: Prevents an attacker with code execution inside a container from dropping malware, modifying binaries, or writing reverse shell scripts to the filesystem. Limits post-compromise actions to what is already present in the container image.
