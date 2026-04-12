@@ -160,13 +160,13 @@ This field is not displayed by `kubectl get events` or `kubectl get events -o wi
 
 ```json
 {
-  "message": "Successfully pulled image \"nginx:1.21.6\" in 1.565s (1.565s including waiting). Image size: 134469729 bytes.",
+  "message": "Successfully pulled image \"order-service:v2.4.1\" in 2.103s (2.103s including waiting). Image size: 134469729 bytes.",
   "reportingComponent": "kubelet",
-  "reportingInstance": "65794a68624763694f694a53557a49314e694973496d74705a434936496e4e766257557461326c6b496e30"
+  "reportingInstance": "65794a68624763694f694a53557a49314e694973496d74705a434936496b4e4b596e6857566b4a5a626a45336444464d513052334f4863774e6c6c5a52454e7a4d304e55634846785a30316b53456b7453453835646c6b6966512e65794a68645751694f6c73696148523063484d364c79397264574a..."
 }
 ```
 
-The `reportingInstance` value hex-decodes to `eyJhbGciOiJSUzI1NiIsImtpZCI6InNvbWUta2lkIn0`, which is a Kubernetes service account JWT token header. Real kubelet events set `reportingInstance` to the node hostname. Any value that is not a valid cluster hostname warrants inspection.
+The `reportingInstance` value hex-decodes to the first chunk of a service account JWT token for `system:serviceaccount:production:deployer`. Three consecutive events carry the full token across three chunks, reassembled on retrieval. Real kubelet events set `reportingInstance` to the node hostname. Any value that is not a valid cluster hostname warrants inspection.
 
 Detection requires an explicit query. The default event list will not surface this:
 
