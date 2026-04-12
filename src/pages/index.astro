@@ -2,12 +2,6 @@
 import BaseLayout from '../layouts/BaseLayout.astro';
 import Card from '../components/ui/Card.astro';
 import CardContent from '../components/ui/CardContent.astro';
-import { getCategoryColors } from '../components/CategoryColors.astro';
-import { getCollection } from 'astro:content';
-import { formatTopicDate, getRecentTopics } from '../utils/recent-topics';
-
-const topics = await getCollection('topics');
-const latestTopics = getRecentTopics(topics, 3);
 ---
 
 <BaseLayout title="About - Kubernetes Security Encyclopedia" description="An encyclopedia of Kubernetes security — terminology, attack patterns, defensive strategies, and tools.">
@@ -20,59 +14,6 @@ const latestTopics = getRecentTopics(topics, 3);
         An encyclopedia of Kubernetes security — terminology, attack patterns, defensive strategies, and tools.
       </p>
     </div>
-
-    {latestTopics.length > 0 && (
-      <div class="mb-8 rounded-2xl border border-gray-200/90 bg-gradient-to-b from-gray-50/70 to-white px-5 py-5 shadow-sm dark:border-zinc-800 dark:from-zinc-900/40 dark:to-zinc-950 sm:px-6">
-        <div class="border-b border-gray-200/80 pb-4 dark:border-zinc-800">
-          <div class="flex items-start gap-3">
-            <div class="text-primary-600 shrink-0" title="Recently added">
-              <svg class="w-7 h-7 sm:w-8 sm:h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-            </div>
-            <div class="min-w-0">
-              <p class="text-base font-semibold tracking-tight text-gray-900 dark:text-zinc-50">Recently added topics</p>
-              <p class="mt-1.5 text-sm leading-relaxed text-gray-600 dark:text-zinc-400">
-                Newest at the top ·{' '}
-                <a href="/topics" class="font-medium text-primary-600 hover:text-primary-700 dark:text-primary-400 dark:hover:text-primary-300">
-                  View all topics
-                </a>
-              </p>
-            </div>
-          </div>
-        </div>
-        <ul class="mt-1 space-y-0.5 pt-1">
-          {latestTopics.map((topic) => {
-            const categoryColors = getCategoryColors(topic.data.category);
-            return (
-              <li>
-                <a
-                  href={`/topics/${topic.slug}`}
-                  class="group flex flex-col gap-1.5 rounded-lg px-2 py-2.5 -mx-2 transition-colors hover:bg-white/90 dark:hover:bg-zinc-800/70 sm:flex-row sm:items-center sm:justify-between sm:gap-6 sm:py-2.5"
-                >
-                  <span class="text-sm font-medium leading-snug text-gray-900 group-hover:text-primary-700 dark:text-zinc-100 dark:group-hover:text-primary-400">
-                    {topic.data.title}
-                  </span>
-                  <span class="flex shrink-0 items-center gap-2.5 text-xs tabular-nums sm:justify-end">
-                    <span
-                      class={`rounded-md px-2 py-0.5 capitalize ring-1 ring-inset ring-black/[0.06] dark:ring-white/[0.08] ${categoryColors.bg} ${categoryColors.text}`}
-                    >
-                      {topic.data.category}
-                    </span>
-                    <time
-                      class="text-gray-500 dark:text-zinc-500"
-                      datetime={topic.data.createdAt!.toISOString().slice(0, 10)}
-                    >
-                      {formatTopicDate(topic.data.createdAt!)}
-                    </time>
-                  </span>
-                </a>
-              </li>
-            );
-          })}
-        </ul>
-      </div>
-    )}
 
     <Card class="mb-8">
       <CardContent class="p-8 md:p-10 lg:p-12">
