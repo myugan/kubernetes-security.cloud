@@ -7,7 +7,6 @@ impact: >-
   An attacker with create on serviceaccounts/token in any namespace can generate a valid, usable token for any service account in that namespace, including ones bound to powerful cluster roles. No pod needs to exist. No Secret is created. The operation leaves only an audit log entry.
 mitigation:
   - Treat create on serviceaccounts/token as a privileged permission equivalent to impersonation. Audit every binding that grants it.
-  - Alert on TokenRequest audit events where the requesting identity is not a known controller and the target service account is not the requester's own account.
   - Scope token-requestor roles to a single named service account using resourceNames rather than granting access to all accounts in a namespace.
 mitreTechniques:
   - T1528
@@ -45,7 +44,9 @@ A caller sends a `TokenRequest` specifying how long the token should live and wh
 }
 ```
 
-A caller with `create` on the `serviceaccounts/token` subresource can call this endpoint for any service account the RBAC rule covers, not just its own. The API server has no requirement that the requester and the target be the same identity, which means any over-permissive grant of the subresource becomes an impersonation primitive.
+The `spec` also accepts an optional `boundObjectRef` field that ties the resulting token to the lifetime of a specific pod or Secret. Without it the token is unbound: it remains valid until `exp` regardless of whether the requesting workload still exists.
+
+A caller with `create` on the `serviceaccounts/token` subresource can call this endpoint for any service account the RBAC rule covers, not just its own. The token is generated in memory and never written to etcd — no Secret object is created and the credential cannot be retrieved after the API response is returned. The API server has no requirement that the requester and the target be the same identity, which means any over-permissive grant of the subresource becomes an impersonation primitive.
 
 ## RBAC permissions required
 
@@ -58,7 +59,7 @@ rules:
 
 This is the minimum needed. The attacker does not need `get` on `serviceaccounts`, `create` on `pods`, or access to `secrets`.
 
-When checking this permission with `kubectl auth can-i`, the slash notation returns a misleading `no`. The `--subresource` flag is required:
+When checking this permission with `kubectl auth can-i`, the slash notation returns a misleading `no`. `kubectl auth can-i` submits a `SelfSubjectAccessReview` to the API server. The slash form (`serviceaccounts/token`) populates only the `resource` field of the review spec, leaving the `subresource` field empty. The API server evaluates the review with no subresource set, which does not match the actual RBAC rule. The `--subresource` flag is required to populate the correct field:
 
 ```bash
 kubectl auth can-i create serviceaccounts/token -n <namespace>
@@ -88,9 +89,6 @@ To identify which candidates hold useful permissions without access to rolebindi
 kubectl auth can-i --list -n <namespace> \
   --as=system:serviceaccount:<namespace>:<candidate-sa>
 ```
-
-> [!NOTE]
-> Each probe issues a `SelfSubjectRulesReview` which appears in the audit log, but the response body containing the full permission list is not captured unless the audit policy logs authorization resources at `RequestResponse` level.
 
 ## The escalation path
 
@@ -156,7 +154,9 @@ The returned token is signed by the API server's `--service-account-signing-key-
 | `kubernetes.io.namespace` | `kube-system` |
 | `kubernetes.io.serviceaccount.name` | `replicaset-controller` |
 | `exp` | `now + expirationSeconds` |
-| `jti` | unique token ID, recorded in the audit log as `issued-credential-id` |
+| `iat` | token issuance time |
+| `nbf` | not-before time, equal to `iat` |
+| `jti` | unique token identifier |
 
 Verifying the permission difference using impersonation:
 
@@ -174,7 +174,7 @@ The retrieved token carries the `replicaset-controller` identity with cluster-wi
 
 The TokenRequest API is designed to replace long-lived auto-mounted tokens. The permission is therefore present in clusters that follow the modern token model. What makes it dangerous is scope: a role that grants `create` on `serviceaccounts/token` without a `resourceNames` restriction allows token generation for every service account in the namespace, not just the requester's own.
 
-The token is ephemeral. After its expiry time there is nothing left in the cluster. The only durable record is in the audit log.
+The token is ephemeral. After its expiry time there is nothing left in the cluster.
 
 The curl command above does not include a `boundObjectRef` in the request spec. Without it the token is not tied to any pod lifetime and remains valid for the full `expirationSeconds` duration even after the pod that requested it is deleted. An attacker can retrieve the token, delete the attacking pod to remove the immediate evidence, and continue using the token externally until it expires.
 
@@ -190,6 +190,6 @@ curl -sk https://<apiserver>/api/v1/namespaces/<namespace>/serviceaccounts \
   -H "Authorization: Bearer <bound-token>"
 ```
 
-A 403 means the API server accepted the credential and evaluated RBAC. A 401 means it rejected the token before reaching authorization. Once the bound pod is deleted, the bound token is permanently dead regardless of its `exp` claim.
+A 403 means the API server accepted the credential and evaluated RBAC. A 401 means it rejected the token before reaching authorization. When `boundObjectRef` is present, the API server's token authenticator validates on every incoming request that the referenced object still exists. This check runs before RBAC evaluation. If the bound object is gone, the API server rejects the token in the authenticator before authorization is attempted, which is why the bound token produces 401 rather than 403. Once the bound pod is deleted, the bound token is permanently dead regardless of its `exp` claim.
 
 When `--service-account-max-token-expiration` is not set on the API server, there is no ceiling. The API server accepts any value, requesting 99999999 seconds produces a token valid to 2029. Setting the flag caps all issued tokens to the configured maximum regardless of what the caller requests. Requesting a long-lived token before detection means the credential survives rotation of the attacking pod's own service account.
