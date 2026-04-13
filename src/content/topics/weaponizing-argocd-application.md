@@ -38,7 +38,9 @@ ArgoCD's controller service account typically holds broad Kubernetes permissions
 
 The key misuse here is that ArgoCD treats the `Application` object as a **trusted instruction**. It does not verify whether the user who created the `Application` actually has permission to deploy the resources defined inside it. The authorization check happens at the **ArgoCD RBAC level only**, not at the Kubernetes resource level for the requesting user.
 
-## Repository Setup
+## The attack sequence
+
+### Repository Setup
 
 The attacker hosts a Git repository that mimics a real internal infrastructure repository, using names, labels, and images that blend in with legitimate cluster tooling. ArgoCD only needs read access to it.
 
@@ -124,7 +126,7 @@ nc -lvnp 4444
 ```
 
 
-## Mounting a Privileged ServiceAccount
+### Mounting a Privileged ServiceAccount
 
 Mounting the host filesystem is not the only path. An attacker can also specify a **high-privileged ServiceAccount** in the pod spec using `serviceAccountName`. The pod will then have that ServiceAccount's token mounted automatically at runtime, giving API server access at whatever privilege level that ServiceAccount holds.
 
@@ -165,7 +167,7 @@ cat /var/run/secrets/kubernetes.io/serviceaccount/token
 
 This approach is useful when the target namespace has Pod Security Admission or admission webhooks that block hostPath mounts, since it requires no volume mounts at all.
 
-## Creating the Application
+### Creating the Application
 
 The attacker creates an ArgoCD `Application` pointing to their repository. The name, labels, and path structure are all chosen to mirror how a real logging stack would appear in the ArgoCD UI, indistinguishable from a deployment made by the platform team.
 
@@ -198,7 +200,7 @@ spec:
 
 Within seconds of creation, ArgoCD syncs the manifests and the DaemonSet is deployed across every node in the cluster. Each node independently calls back to the attacker.
 
-## Persistence Through selfHeal
+### Persistence Through selfHeal
 
 The **`selfHeal: true`** sync policy is what makes this technique persistent. If a defender detects and deletes the malicious DaemonSet or its pods, ArgoCD detects the **drift** from the desired Git state and immediately reconciles by recreating the resources. This cycle repeats **indefinitely** until the `Application` object itself is removed.
 

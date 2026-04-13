@@ -115,7 +115,6 @@ Use bindings to discover user and group strings. For ServiceAccounts, emit the `
 ### Users
 
 ```bash
-# No native "list users" in Kubernetes — derive from RBAC bindings
 kubectl get clusterrolebindings -o json | \
   jq -r '.items[].subjects[]? | select(.kind=="User") | .name'
 

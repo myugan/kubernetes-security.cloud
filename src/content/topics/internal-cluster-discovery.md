@@ -21,6 +21,8 @@ After gaining initial access to a pod, the first step is reconnaissance. This in
 
 From a compromised pod, manual reconnaissance with built-in tools tends to be the most reliable. Most container images come with basic networking utilities, or you can fall back on shell built-ins.
 
+## Manual reconnaissance
+
 ### Discovering Kubernetes Version
 
 Identifying the Kubernetes version is part of gathering information that may be useful for further actions. The `/version` endpoint is often accessible without authentication and reveals detailed version information.
