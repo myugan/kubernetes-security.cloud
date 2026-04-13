@@ -156,7 +156,7 @@ The digest `414b4941494f53464f444e4e374558414d504c45000000000000000000000000` he
 
 **`reportingInstance`**
 
-This field is not displayed by `kubectl get events` or `kubectl get events -o wide`. It only appears in `-o json` output. An attacker stores a hex-encoded service account token fragment here while the visible event message remains a normal pull result:
+This field is not displayed by `kubectl get events`. In `-o wide` output it appears in the **SOURCE** column as `kubelet, <value>` alongside the component name, but the hex string blends into the wide table and is easy to overlook. Only `-o json` surfaces it cleanly as a dedicated field. An attacker stores a hex-encoded service account token fragment here while the visible event message remains a normal pull result:
 
 ```json
 {
@@ -172,10 +172,10 @@ Detection requires an explicit query. The default event list will not surface th
 
 ```bash
 kubectl get events -n <namespace> -o json \
-  | jq '.items[] | select(.reportingInstance != "" and (.reportingInstance | test("^[a-z0-9][a-z0-9\\-\\.]+$") | not)) | {name: .metadata.name, reportingInstance}'
+  | jq '.items[] | select(.reportingInstance != null and (.reportingInstance | length) > 253) | {name: .metadata.name, reportingInstance}'
 ```
 
-This returns events where `reportingInstance` is set to a value that does not match a standard hostname pattern.
+The hostname length limit of 253 characters is the reliable threshold. Hex-encoded payloads are at minimum hundreds of characters — a 933-character JWT produces 1866 hex characters, split across three chunks of ~622 each. A hostname regex is not sufficient because hex strings consist entirely of `[0-9a-f]`, which passes any `[a-z0-9]` pattern.
 
 ## Known Legitimate Event Writers
 
