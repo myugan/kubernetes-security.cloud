@@ -21,7 +21,7 @@ LAST SEEN   TYPE     REASON   OBJECT                   MESSAGE
 6m          Normal   Pulled   pod/nginx                Successfully pulled image "nginx:1.21.6" in 7.425s (7.425s including waiting). Image size: 134469729 bytes.
 ```
 
-Both events share `reason: Pulled` and the same image name. The malicious one references a pod that does not exist, and the image size is approximately 177GB against the real 128MB for nginx:1.21.6. Neither is a reliable automated signal. The reliable signal is in the audit log.
+Both events share `reason: Pulled` and the same image name. The malicious one references a pod that does not exist, and the image size is approximately 177GB against the real 128MB for `nginx:1.21.6`. Neither is a reliable automated signal. The reliable signal is in the audit log.
 
 ## How Detection Works
 
@@ -175,9 +175,9 @@ kubectl get events -n <namespace> -o json \
   | jq '.items[] | select(.reportingInstance != null and (.reportingInstance | length) > 253) | {name: .metadata.name, reportingInstance}'
 ```
 
-The hostname length limit of 253 characters is the reliable threshold. Hex-encoded payloads are at minimum hundreds of characters — a 933-character JWT produces 1866 hex characters, split across three chunks of ~622 each. A hostname regex is not sufficient because hex strings consist entirely of `[0-9a-f]`, which passes any `[a-z0-9]` pattern.
+The hostname length limit of 253 characters is the reliable threshold. Hex-encoded payloads are at minimum hundreds of characters a 933-character JWT produces 1866 hex characters, split across three chunks of ~622 each. A hostname regex is not sufficient because hex strings consist entirely of `[0-9a-f]`, which passes any `[a-z0-9]` pattern.
 
-The query above only works while the event is still in etcd. At `Request` level the audit log captures `requestObject.reportingInstance` permanently at write time, before the event expires. A SIEM rule on that field with the same length threshold catches the channel regardless of event retention:
+The query above only works while the event is still in etcd. The audit log at `Metadata` level genuinely hides `reportingInstance`, the `requestObject` is absent and the canary value does not appear anywhere in the audit entry. At `Request` level the audit log captures `requestObject.reportingInstance` permanently at write time, before the event expires. A SIEM rule on that field with the same length threshold catches the channel regardless of event retention:
 
 ```bash
 grep '"resource":"events"' /var/log/kubernetes/audit.log \
