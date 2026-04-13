@@ -177,6 +177,14 @@ kubectl get events -n <namespace> -o json \
 
 The hostname length limit of 253 characters is the reliable threshold. Hex-encoded payloads are at minimum hundreds of characters — a 933-character JWT produces 1866 hex characters, split across three chunks of ~622 each. A hostname regex is not sufficient because hex strings consist entirely of `[0-9a-f]`, which passes any `[a-z0-9]` pattern.
 
+The query above only works while the event is still in etcd. At `Request` level the audit log captures `requestObject.reportingInstance` permanently at write time, before the event expires. A SIEM rule on that field with the same length threshold catches the channel regardless of event retention:
+
+```bash
+grep '"resource":"events"' /var/log/kubernetes/audit.log \
+  | grep '"verb":"create"' \
+  | jq 'select((.requestObject.reportingInstance // "" | length) > 253) | {user: .user.username, name: .objectRef.name, reportingInstance: .requestObject.reportingInstance}'
+```
+
 ## Known Legitimate Event Writers
 
 Any event creation from an identity outside this list warrants investigation:
