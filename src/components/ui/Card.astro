@@ -6,6 +6,6 @@ interface Props {
 const { class: className = '' } = Astro.props;
 ---
 
-<div class={`rounded-lg border border-gray-200 dark:border-zinc-800 bg-white dark:bg-zinc-900/40 shadow-sm dark:shadow-black/20 ${className}`}>
+<div class={`rounded-2xl border border-gray-200/90 dark:border-zinc-700/80 bg-white/95 dark:bg-zinc-900/72 shadow-[0_10px_30px_-18px_rgba(2,6,23,0.28)] dark:shadow-[0_24px_52px_-28px_rgba(2,6,23,0.95)] ring-1 ring-black/[0.02] dark:ring-white/[0.04] backdrop-blur-sm transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_16px_36px_-18px_rgba(2,6,23,0.34)] dark:hover:shadow-[0_28px_56px_-28px_rgba(2,6,23,0.98)] ${className}`}>
   <slot />
 </div>

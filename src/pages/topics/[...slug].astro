@@ -2,6 +2,7 @@
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import { getCollection } from 'astro:content';
 import MitreTechniquesList from '../../components/MitreTechniquesList.astro';
+import TopicToc from '../../components/TopicToc.astro';
 import Card from '../../components/ui/Card.astro';
 import CardContent from '../../components/ui/CardContent.astro';
 import CategoryIcon from '../../components/CategoryIcon.astro';
@@ -18,7 +19,30 @@ export async function getStaticPaths() {
 }
 
 const { topic } = Astro.props;
-const { Content } = await topic.render();
+const { Content, headings } = await topic.render();
+const tocHeadings = (headings ?? []).filter((heading) => heading.depth >= 2 && heading.depth <= 4);
+
+type TocNode = { slug: string; text: string; depth: number; children: TocNode[] };
+
+function buildTocTree(items: { depth: number; slug: string; text: string }[]): TocNode[] {
+  const root: TocNode[] = [];
+  const stack: TocNode[] = [];
+  for (const h of items) {
+    const node: TocNode = { slug: h.slug, text: h.text, depth: h.depth, children: [] };
+    while (stack.length > 0 && stack[stack.length - 1].depth >= h.depth) {
+      stack.pop();
+    }
+    if (stack.length === 0) {
+      root.push(node);
+    } else {
+      stack[stack.length - 1].children.push(node);
+    }
+    stack.push(node);
+  }
+  return root;
+}
+
+const tocTree = buildTocTree(tocHeadings);
 const wordsPerMinute = 220;
 const markdownWordCount = topic.body.trim().split(/\s+/).filter(Boolean).length;
 const estimatedReadMinutes = Math.max(1, Math.ceil(markdownWordCount / wordsPerMinute));
@@ -103,9 +127,9 @@ const impactLinkParentClass =
   publishedTime={publishedTime}
   modifiedTime={publishedTime}
 >
-  <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-    <div class="mb-10">
-      <a href="/topics" class="text-gray-600 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-zinc-100 mb-6 inline-block font-medium">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 lg:py-16">
+    <header class="mb-10 lg:mb-14">
+      <a href="/topics" class="text-gray-600 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-zinc-100 mb-5 inline-block text-sm font-medium transition-colors sm:text-base">
         ← Back to Topics
       </a>
       <div class="flex gap-2 mb-6 flex-wrap">
@@ -131,17 +155,50 @@ const impactLinkParentClass =
           Created: {createdAtLabel}
         </span>
       </div>
-      <h1 class="text-3xl md:text-4xl font-bold text-gray-900 dark:text-zinc-100 mb-6">{topic.data.title}</h1>
-      <p class="text-xl md:text-2xl text-gray-600 dark:text-zinc-400 leading-relaxed max-w-4xl">{topic.data.description}</p>
-    </div>
+      <h1 class="text-3xl font-bold tracking-tight text-gray-900 dark:text-zinc-100 sm:text-4xl lg:text-5xl lg:leading-[1.1] mb-5 max-w-4xl">
+        {topic.data.title}
+      </h1>
+      <p class="text-lg leading-relaxed text-gray-600 dark:text-zinc-400 sm:text-xl sm:leading-relaxed max-w-3xl">
+        {topic.data.description}
+      </p>
+    </header>
 
-    <Card class="mb-8">
-      <CardContent class="p-8 md:p-12 lg:p-16 prose prose-slate dark:prose-invert max-w-none prose-headings:font-bold prose-headings:text-gray-900 dark:prose-headings:text-zinc-100 prose-h1:hidden prose-h2:text-xl prose-h2:mt-8 prose-h2:mb-4 prose-h3:text-lg prose-h3:mt-6 prose-h3:mb-3 prose-p:text-gray-700 dark:prose-p:text-zinc-300 prose-p:leading-relaxed prose-p:text-[0.9375rem] prose-ul:list-disc prose-ol:list-decimal prose-li:text-gray-700 dark:prose-li:text-zinc-300 prose-li:text-[0.9375rem] prose-strong:text-gray-900 dark:prose-strong:text-zinc-100 prose-strong:font-semibold prose-code:text-xs prose-code:bg-gray-100 prose-code:text-gray-900 dark:prose-code:bg-zinc-950 dark:prose-code:text-zinc-200 prose-code:px-1.5 prose-code:py-0.5 prose-code:rounded prose-pre:text-xs prose-pre:bg-gray-900 prose-pre:text-gray-100 dark:prose-pre:bg-zinc-950 dark:prose-pre:text-zinc-100 prose-blockquote:border-l-4 prose-blockquote:border-primary-500 prose-blockquote:pl-4 prose-blockquote:italic prose-blockquote:text-gray-600 dark:prose-blockquote:text-zinc-500 prose-a:text-primary-600 hover:prose-a:underline">
+    <div class:list={[tocHeadings.length > 0 && 'flex flex-col gap-8 lg:flex-row lg:items-start lg:gap-10']}>
+      {tocHeadings.length > 0 && (
+        <aside
+          class="shrink-0 lg:sticky lg:top-28 lg:w-60 xl:w-72"
+          aria-label="On this page"
+        >
+          <nav
+            class="rounded-lg border border-gray-200 bg-gray-50/80 dark:border-zinc-700 dark:bg-zinc-900/40"
+            aria-labelledby="topic-toc-label"
+          >
+            <p
+              id="topic-toc-label"
+              class="border-b border-gray-200 px-3 py-2.5 text-sm font-medium text-gray-600 dark:border-zinc-700 dark:text-zinc-400"
+            >
+              On this page
+            </p>
+            <div class="max-h-52 overflow-y-auto overscroll-contain px-3 py-2.5 [-webkit-overflow-scrolling:touch] sm:max-h-56 lg:max-h-[min(70vh,28rem)] lg:px-3.5 lg:py-3">
+              <TopicToc items={tocTree} />
+            </div>
+          </nav>
+        </aside>
+      )}
+
+      <div class:list={['space-y-8', tocHeadings.length > 0 && 'min-w-0 flex-1']}>
+    <Card class="mb-0 overflow-hidden shadow-md dark:shadow-black/30">
+      <CardContent
+        class:list={[
+          'topic-article-prose prose prose-slate dark:prose-invert max-w-none p-6 sm:p-8 lg:p-10 xl:p-12 lg:prose-lg prose-headings:font-bold prose-headings:text-gray-900 dark:prose-headings:text-zinc-100 prose-h1:hidden prose-h2:mt-10 prose-h2:mb-4 prose-h2:text-xl prose-h2:lg:text-2xl prose-h2:scroll-mt-24 prose-h3:mt-8 prose-h3:mb-3 prose-h3:text-lg prose-h3:lg:text-xl prose-h3:scroll-mt-24 prose-h4:scroll-mt-24 prose-p:text-gray-700 dark:prose-p:text-zinc-300 prose-p:leading-[1.7] prose-ul:list-disc prose-ol:list-decimal prose-li:text-gray-700 dark:prose-li:text-zinc-300 prose-strong:text-gray-900 dark:prose-strong:text-zinc-100 prose-strong:font-semibold prose-code:text-[0.85em] prose-code:font-medium prose-code:bg-gray-100 prose-code:text-gray-900 dark:prose-code:bg-zinc-950 dark:prose-code:text-zinc-200 prose-code:px-1.5 prose-code:py-0.5 prose-code:rounded prose-pre:text-sm prose-pre:leading-relaxed prose-pre:bg-gray-900 prose-pre:text-gray-100 dark:prose-pre:bg-zinc-950 dark:prose-pre:text-zinc-100 prose-blockquote:border-l-4 prose-blockquote:border-primary-500 prose-blockquote:pl-4 prose-blockquote:italic prose-blockquote:text-gray-600 dark:prose-blockquote:text-zinc-500 prose-a:text-primary-600 prose-a:font-medium hover:prose-a:underline',
+          tocHeadings.length > 0 ? 'max-w-3xl' : 'max-w-3xl mx-auto',
+        ]}
+      >
         <Content />
       </CardContent>
     </Card>
 
-    <div class="space-y-6 mb-8">
+    <div class="space-y-6">
       <Card>
         <CardContent class="p-6 md:p-8 lg:p-10">
           <h2 class="text-xl font-semibold text-gray-900 dark:text-zinc-100 mb-4 flex items-center gap-2">
@@ -263,11 +320,13 @@ const impactLinkParentClass =
     </div>
 
     {topic.data.mitreTechniques && topic.data.mitreTechniques.length > 0 && (
-      <Card>
+      <Card class="shadow-md dark:shadow-black/30">
         <CardContent class="p-6 md:p-8 lg:p-10">
           <MitreTechniquesList techniqueIds={topic.data.mitreTechniques} />
         </CardContent>
       </Card>
     )}
+      </div>
+    </div>
   </div>
 </BaseLayout>

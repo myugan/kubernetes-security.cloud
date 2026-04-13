@@ -58,6 +58,9 @@ const ogImageUrl = new URL(image, site.url).href;
     <meta name="color-scheme" content="light dark" />
     <meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)" />
     <meta name="theme-color" content="#0c0c0e" media="(prefers-color-scheme: dark)" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&display=swap" rel="stylesheet" />
     <script is:inline>
       (function () {
         function applyColorScheme() {
@@ -176,7 +179,7 @@ const ogImageUrl = new URL(image, site.url).href;
       </>
     )}
   </head>
-  <body class="bg-white text-gray-900 dark:bg-[#0c0c0e] dark:text-zinc-300 antialiased flex flex-col min-h-screen font-sans selection:bg-emerald-200/60 selection:text-emerald-900 dark:selection:bg-emerald-500/25 dark:selection:text-emerald-100">
+  <body class="bg-[radial-gradient(1200px_420px_at_50%_-220px,#eef5ff_0%,#ffffff_52%)] text-gray-900 dark:bg-[radial-gradient(1200px_520px_at_50%_-260px,rgba(30,41,59,0.55)_0%,#09090b_55%)] dark:text-zinc-200 antialiased flex flex-col min-h-screen font-sans selection:bg-emerald-200/60 selection:text-emerald-900 dark:selection:bg-emerald-500/25 dark:selection:text-emerald-100">
     <div id="page-skeleton" class="fixed inset-0 z-[70] bg-white dark:bg-[#0c0c0e] transition-opacity duration-200 pointer-events-none">
       <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
         <div class="h-10 w-48 rounded-md bg-gray-200/80 dark:bg-zinc-800/80 animate-pulse"></div>
@@ -188,7 +191,7 @@ const ogImageUrl = new URL(image, site.url).href;
         <div class="h-4 w-9/12 rounded-md bg-gray-200/70 dark:bg-zinc-800/70 animate-pulse"></div>
       </div>
     </div>
-    <header class="bg-white/95 dark:bg-[#0c0c0e]/95 backdrop-blur-sm border-b border-gray-200 dark:border-zinc-800 sticky top-0 z-50">
+    <header class="sticky top-0 z-50 border-b border-gray-200/90 bg-white/90 backdrop-blur-md dark:border-zinc-800 dark:bg-zinc-950/85">
       <nav class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="flex justify-between items-center h-16">
           <!-- Logo -->
@@ -233,8 +236,8 @@ const ogImageUrl = new URL(image, site.url).href;
         </div>
         
         <!-- Mobile Navigation -->
-        <div id="mobile-menu" class="hidden md:hidden border-t border-gray-200 dark:border-zinc-800">
-          <div class="py-3 space-y-1">
+        <div id="mobile-menu" class="hidden md:hidden border-t border-gray-200/90 py-3 dark:border-zinc-800">
+          <div class="space-y-0.5">
             <a href="/glossary" class="block px-3 py-2 rounded-lg text-gray-600 hover:text-gray-900 hover:bg-gray-100 dark:text-zinc-500 dark:hover:text-zinc-100 dark:hover:bg-zinc-800/80 transition-colors">
               Glossary
             </a>
@@ -268,9 +271,9 @@ const ogImageUrl = new URL(image, site.url).href;
     <main class="flex-grow">
       <slot />
     </main>
-    <footer class="bg-white dark:bg-[#0c0c0e] border-t border-gray-200 dark:border-zinc-800 mt-auto">
-      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div class="grid gap-6 md:grid-cols-2 md:items-start">
+    <footer class="mt-auto border-t border-gray-200/90 bg-white/80 py-10 dark:border-zinc-800 dark:bg-zinc-950/50">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="grid gap-8 md:grid-cols-2 md:items-start">
           <div>
             <p class="text-sm font-semibold text-gray-900 dark:text-zinc-100">Kubernetes Security</p>
             <p class="mt-2 text-sm text-gray-500 dark:text-zinc-500 max-w-sm">

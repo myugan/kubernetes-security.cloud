@@ -1,0 +1,43 @@
+---
+export interface TocItem {
+  slug: string;
+  text: string;
+  depth: number;
+  children: TocItem[];
+}
+
+interface Props {
+  items: TocItem[];
+  nested?: boolean;
+}
+
+const { items, nested = false } = Astro.props;
+import TopicToc from './TopicToc.astro';
+
+const listClass = nested
+  ? 'mt-1 space-y-0.5 border-l border-gray-200 dark:border-zinc-700 ml-2 pl-3'
+  : 'space-y-1';
+---
+
+<ul class={listClass} role="list">
+  {
+    items.map((item) => (
+      <li>
+        <a
+          href={`#${item.slug}`}
+          class:list={[
+            'block rounded-md px-1.5 py-1 text-left leading-snug transition-colors',
+            item.depth === 2 && 'text-sm font-semibold text-gray-900 dark:text-zinc-100',
+            item.depth === 3 && 'text-[13px] font-medium text-gray-700 dark:text-zinc-300',
+            item.depth === 4 && 'text-xs text-gray-600 dark:text-zinc-400',
+            'hover:text-primary-600 dark:hover:text-primary-400',
+            'focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500/30 focus-visible:ring-offset-1 dark:focus-visible:ring-offset-zinc-900',
+          ]}
+        >
+          <span class="line-clamp-2">{item.text}</span>
+        </a>
+        {item.children.length > 0 && <TopicToc items={item.children} nested />}
+      </li>
+    ))
+  }
+</ul>
