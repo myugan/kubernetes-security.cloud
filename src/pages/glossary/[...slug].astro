@@ -69,7 +69,7 @@ function findGlossaryEntryByTitle(title: string) {
       <p class="text-xl text-gray-600 dark:text-zinc-400 leading-relaxed">{entry.data.description}</p>
     </div>
 
-    <div class="bg-white dark:bg-zinc-900 border border-gray-200 dark:border-zinc-800 rounded-lg shadow-sm p-8 md:p-10 lg:p-12">
+    <div class="bg-app-surface border border-app-border rounded-lg shadow-sm p-8 md:p-10 lg:p-12">
       <div class="prose prose-slate dark:prose-invert max-w-none 
         prose-headings:font-bold prose-headings:text-gray-900 dark:prose-headings:text-zinc-100
         prose-h1:text-xl prose-h1:mt-0 prose-h1:mb-6
@@ -80,7 +80,7 @@ function findGlossaryEntryByTitle(title: string) {
         prose-ol:list-decimal prose-ol:ml-6 prose-ol:space-y-2
         prose-li:text-gray-700 dark:prose-li:text-zinc-300 prose-li:leading-relaxed prose-li:text-[0.9375rem]
         prose-strong:text-gray-900 dark:prose-strong:text-zinc-100 prose-strong:font-semibold
-        prose-code:text-xs prose-code:bg-gray-100 prose-code:text-gray-900 dark:prose-code:bg-zinc-950 dark:prose-code:text-emerald-400 prose-code:px-1.5 prose-code:py-0.5 prose-code:rounded prose-code:font-mono
+        prose-code:text-xs prose-code:bg-gray-100 prose-code:text-gray-900 dark:prose-code:bg-zinc-800 dark:prose-code:text-zinc-200 prose-code:px-1.5 prose-code:py-0.5 prose-code:rounded prose-code:font-mono
         prose-pre:text-xs prose-pre:bg-gray-900 prose-pre:text-gray-100 dark:prose-pre:bg-zinc-950 dark:prose-pre:text-zinc-100 prose-pre:rounded-lg prose-pre:p-4
         prose-blockquote:border-l-4 prose-blockquote:border-gray-300 dark:prose-blockquote:border-zinc-600 prose-blockquote:pl-4 prose-blockquote:italic prose-blockquote:text-gray-600 dark:prose-blockquote:text-zinc-500
         prose-a:text-primary-600 prose-a:no-underline hover:prose-a:text-primary-700 dark:hover:prose-a:text-primary-400 hover:prose-a:underline
@@ -89,7 +89,7 @@ function findGlossaryEntryByTitle(title: string) {
       </div>
         
       {entry.data.relatedTerms && entry.data.relatedTerms.length > 0 && (
-        <div class="mt-10 pt-8 border-t border-gray-200 dark:border-zinc-800">
+        <div class="mt-10 pt-8 border-t border-app-border">
           <h2 class="text-xl font-semibold text-gray-900 dark:text-zinc-100 mb-4">Related Terms</h2>
           <div class="flex flex-wrap gap-2">
             {entry.data.relatedTerms.map((term) => {
@@ -98,7 +98,7 @@ function findGlossaryEntryByTitle(title: string) {
                 return (
                   <a 
                     href={`/glossary/${relatedEntry.slug}`} 
-                    class="inline-flex items-center px-3 py-1.5 text-sm font-medium text-gray-700 dark:text-zinc-300 bg-gray-50 dark:bg-zinc-800/60 border border-gray-300 dark:border-zinc-700 rounded-lg hover:bg-gray-100 dark:bg-zinc-800 transition-colors"
+                    class="inline-flex items-center px-3 py-1.5 text-sm font-medium text-app-text-secondary bg-app-surface-muted/70 border border-app-border rounded-lg hover:bg-app-surface-muted transition-colors"
                   >
                     {term}
                   </a>
@@ -106,7 +106,7 @@ function findGlossaryEntryByTitle(title: string) {
               } else {
                 return (
                   <span 
-                    class="inline-flex items-center px-3 py-1.5 text-sm font-medium text-gray-500 dark:text-zinc-500 bg-gray-50 dark:bg-zinc-800/60 border border-gray-200 dark:border-zinc-800 rounded-lg"
+                    class="inline-flex items-center px-3 py-1.5 text-sm font-medium text-app-text-muted bg-app-surface-muted/70 border border-app-border rounded-lg"
                     title="Glossary entry not yet available"
                   >
                     {term}
@@ -119,7 +119,7 @@ function findGlossaryEntryByTitle(title: string) {
       )}
 
       {toolsList.length > 0 && (
-        <div class="mt-10 pt-8 border-t border-gray-200 dark:border-zinc-800">
+        <div class="mt-10 pt-8 border-t border-app-border">
           <div class="flex items-center justify-between mb-4">
             <h2 class="text-xl font-semibold text-gray-900 dark:text-zinc-100 flex items-center gap-2">
               <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -170,7 +170,7 @@ function findGlossaryEntryByTitle(title: string) {
       )}
 
       {entry.data.mitreTechniques && entry.data.mitreTechniques.length > 0 && (
-        <div class="mt-10 pt-8 border-t border-gray-200 dark:border-zinc-800">
+        <div class="mt-10 pt-8 border-t border-app-border">
           <MitreTechniquesList techniqueIds={entry.data.mitreTechniques} />
         </div>
       )}

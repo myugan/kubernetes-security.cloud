@@ -16,7 +16,7 @@ const technique = getMitreTechnique(techniqueId);
       href={technique.url}
       target="_blank"
       rel="noopener noreferrer"
-      class="inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium rounded bg-gray-50 dark:bg-zinc-800/60 text-gray-700 dark:text-zinc-300 border border-gray-300 dark:border-zinc-700 hover:bg-gray-100 dark:bg-zinc-800 transition-colors"
+      class="inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium rounded bg-gray-50 dark:bg-zinc-800/70 text-gray-700 dark:text-zinc-300 border border-gray-300 dark:border-zinc-700 hover:bg-gray-100 dark:hover:bg-zinc-800 transition-colors"
       title={`MITRE ATT&CK ${technique.id}: ${technique.name}`}
     >
       <span class="font-mono font-bold">{technique.id}</span>
@@ -32,7 +32,7 @@ const technique = getMitreTechnique(techniqueId);
 )}
 
 {!technique && (
-  <span class="inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-semibold rounded bg-gray-100 dark:bg-zinc-800 text-gray-700 dark:text-zinc-300 border border-gray-200 dark:border-zinc-800">
+  <span class="inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-semibold rounded bg-gray-100 dark:bg-zinc-800 text-gray-700 dark:text-zinc-300 border border-gray-200 dark:border-zinc-700">
     <span class="font-mono">{techniqueId}</span>
     <span class="text-gray-500 dark:text-zinc-500">(Unknown)</span>
   </span>

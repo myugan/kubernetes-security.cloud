@@ -7,15 +7,15 @@ import CardContent from '../components/ui/CardContent.astro';
 <BaseLayout title="About - Kubernetes Security Encyclopedia" description="An encyclopedia of Kubernetes security — terminology, attack patterns, defensive strategies, and tools.">
   <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
     <div class="mb-12">
-      <h1 class="text-3xl sm:text-4xl md:text-5xl font-bold text-gray-900 dark:text-zinc-100 mb-4">
+      <h1 class="text-3xl sm:text-4xl md:text-5xl font-bold ds-text-primary mb-4">
         About
       </h1>
-      <p class="text-xl text-gray-600 dark:text-zinc-400 leading-relaxed">
+      <p class="text-xl ds-text-secondary leading-relaxed">
         An encyclopedia of Kubernetes security — terminology, attack patterns, defensive strategies, and tools.
       </p>
     </div>
 
-    <Card class="mb-8">
+    <Card class="mb-8 shadow-sm dark:ring-1 dark:ring-zinc-700/70">
       <CardContent class="p-8 md:p-10 lg:p-12">
         <div class="prose prose-slate dark:prose-invert max-w-none 
           prose-headings:font-bold prose-headings:text-gray-900 dark:prose-headings:text-zinc-100
@@ -26,10 +26,10 @@ import CardContent from '../components/ui/CardContent.astro';
           prose-ol:list-decimal prose-ol:ml-6 prose-ol:space-y-2
           prose-li:text-gray-700 dark:prose-li:text-zinc-300 prose-li:leading-relaxed prose-li:text-[0.9375rem]
           prose-strong:text-gray-900 dark:prose-strong:text-zinc-100 prose-strong:font-semibold
-          prose-code:text-xs prose-code:bg-gray-100 prose-code:text-gray-900 dark:prose-code:bg-zinc-950 dark:prose-code:text-emerald-400 prose-code:px-1.5 prose-code:py-0.5 prose-code:rounded prose-code:font-mono
+          prose-code:text-xs prose-code:bg-gray-100 prose-code:text-gray-900 dark:prose-code:bg-zinc-800 dark:prose-code:text-zinc-200 prose-code:px-1.5 prose-code:py-0.5 prose-code:rounded prose-code:font-mono
           prose-pre:text-xs prose-pre:bg-gray-900 prose-pre:text-gray-100 dark:prose-pre:bg-zinc-950 dark:prose-pre:text-zinc-100 prose-pre:rounded-lg prose-pre:p-4
           prose-blockquote:border-l-4 prose-blockquote:border-gray-300 dark:prose-blockquote:border-zinc-600 prose-blockquote:pl-4 prose-blockquote:italic prose-blockquote:text-gray-600 dark:prose-blockquote:text-zinc-500
-          prose-a:text-primary-600 prose-a:no-underline hover:prose-a:underline hover:prose-a:text-primary-700 dark:hover:prose-a:text-primary-400
+          prose-a:text-primary-600 dark:prose-a:text-primary-400 prose-a:no-underline hover:prose-a:underline hover:prose-a:text-primary-700 dark:hover:prose-a:text-primary-300
           prose-hr:border-gray-200 dark:prose-hr:border-zinc-800">
           <h2>What is This Reference?</h2>
           <p>

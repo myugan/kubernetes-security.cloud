@@ -30,6 +30,32 @@ export default {
         ],
       },
       colors: {
+        app: {
+          bg: 'rgb(var(--ks-bg, 255 255 255) / <alpha-value>)',
+          surface: 'rgb(var(--ks-surface, 255 255 255) / <alpha-value>)',
+          'surface-muted': 'rgb(var(--ks-surface-muted, 249 250 251) / <alpha-value>)',
+          border: 'rgb(var(--ks-border, 229 231 235) / <alpha-value>)',
+          'border-strong': 'rgb(var(--ks-border-strong, 209 213 219) / <alpha-value>)',
+          text: {
+            primary: 'rgb(var(--ks-text-primary, 17 24 39) / <alpha-value>)',
+            secondary: 'rgb(var(--ks-text-secondary, 75 85 99) / <alpha-value>)',
+            muted: 'rgb(var(--ks-text-muted, 107 114 128) / <alpha-value>)',
+          },
+          link: {
+            DEFAULT: 'rgb(var(--ks-link, 2 132 199) / <alpha-value>)',
+            hover: 'rgb(var(--ks-link-hover, 3 105 161) / <alpha-value>)',
+          },
+          code: {
+            bg: 'rgb(var(--ks-inline-code-bg, 243 244 246) / <alpha-value>)',
+            text: 'rgb(var(--ks-inline-code-text, 17 24 39) / <alpha-value>)',
+            border: 'rgb(var(--ks-inline-code-border, 229 231 235) / <alpha-value>)',
+          },
+          pre: {
+            bg: 'rgb(var(--ks-pre-bg, 17 24 39) / <alpha-value>)',
+            text: 'rgb(var(--ks-pre-text, 243 244 246) / <alpha-value>)',
+            border: 'rgb(var(--ks-pre-border, 31 41 55) / <alpha-value>)',
+          },
+        },
         primary: {
           50: '#f0f9ff',
           100: '#e0f2fe',

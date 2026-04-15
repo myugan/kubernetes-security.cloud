@@ -61,7 +61,7 @@ if (topic.data.references) {
   let html = topic.data.references;
   
   // Convert markdown links [text](url) to HTML (handle links with descriptions)
-  html = html.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" class="text-primary-600 hover:text-primary-700 dark:hover:text-primary-400 hover:underline inline-flex items-center gap-1" target="_blank" rel="noopener noreferrer">$1<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" /></svg></a>');
+  html = html.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" class="text-primary-600 dark:text-primary-400 hover:text-primary-700 dark:hover:text-primary-300 hover:underline inline-flex items-center gap-1" target="_blank" rel="noopener noreferrer">$1<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" /></svg></a>');
   
   // Convert markdown lists (- item) to HTML
   const lines = html.split('\n');
@@ -110,13 +110,13 @@ if (topic.data.references) {
 /** Minimal markdown for topic cards: links, **bold**, `code` (same rules as mitigation). */
 function inlineMarkdownToHtml(text: string): string {
   return text
-    .replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank" rel="noopener noreferrer">$1</a>')
+    .replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" class="text-primary-600 dark:text-primary-400 hover:text-primary-700 dark:hover:text-primary-300 hover:underline" target="_blank" rel="noopener noreferrer">$1</a>')
     .replace(/\*\*([^*]+)\*\*/g, '<strong class="font-semibold text-gray-900 dark:text-zinc-100">$1</strong>')
     .replace(/`([^`]+)`/g, '<code class="bg-gray-100 border border-gray-200 text-gray-900 px-1 py-0.5 rounded text-xs font-mono break-words dark:bg-zinc-950 dark:border-zinc-800 dark:text-zinc-200">$1</code>');
 }
 
 const impactLinkParentClass =
-  'text-gray-700 dark:text-zinc-300 text-[0.9375rem] leading-relaxed break-words text-pretty hyphens-auto [&_a]:text-primary-600 [&_a]:no-underline [&_a]:hover:text-primary-700 [&_a]:hover:underline dark:[&_a]:hover:text-primary-400 [&_a]:break-words';
+  'text-gray-700 dark:text-zinc-300 text-[0.9375rem] leading-relaxed break-words text-pretty hyphens-auto [&_a]:text-primary-600 dark:[&_a]:text-primary-400 [&_a]:no-underline [&_a]:hover:text-primary-700 dark:[&_a]:hover:text-primary-300 [&_a]:hover:underline [&_a]:break-words';
 ---
 
 <BaseLayout
@@ -129,7 +129,7 @@ const impactLinkParentClass =
 >
   <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 lg:py-16">
     <header class="mb-10 lg:mb-14">
-      <a href="/topics" class="text-gray-600 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-zinc-100 mb-5 inline-block text-sm font-medium transition-colors sm:text-base">
+      <a href="/topics" class="text-gray-600 hover:text-gray-900 dark:text-zinc-300 dark:hover:text-zinc-100 mb-5 inline-block text-sm font-medium transition-colors sm:text-base">
         ← Back to Topics
       </a>
       <div class="flex gap-2 mb-6 flex-wrap">
@@ -158,7 +158,7 @@ const impactLinkParentClass =
       <h1 class="text-3xl font-bold tracking-tight text-gray-900 dark:text-zinc-100 sm:text-4xl lg:text-5xl lg:leading-[1.1] mb-5 max-w-4xl">
         {topic.data.title}
       </h1>
-      <p class="text-lg leading-relaxed text-gray-600 dark:text-zinc-400 sm:text-xl sm:leading-relaxed max-w-3xl">
+      <p class="text-lg leading-relaxed text-gray-600 dark:text-zinc-300 sm:text-xl sm:leading-relaxed max-w-3xl">
         {topic.data.description}
       </p>
     </header>
@@ -167,17 +167,17 @@ const impactLinkParentClass =
       {tocHeadings.length > 0 && (
         <aside
           class="shrink-0 lg:order-last lg:sticky lg:top-24 lg:w-56 xl:w-64"
-          aria-label="On this page"
+          aria-label="Table of Contents"
         >
           <nav
-            class="rounded-lg border border-gray-200 bg-gray-50/80 dark:border-zinc-700 dark:bg-zinc-900/40"
+            class="rounded-lg border border-gray-200 bg-gray-50/80 dark:border-zinc-600 dark:bg-zinc-900/80 dark:ring-1 dark:ring-app-border/40"
             aria-labelledby="topic-toc-label"
           >
             <p
               id="topic-toc-label"
               class="border-b border-gray-200 px-3 py-2.5 text-sm font-medium text-gray-600 dark:border-zinc-700 dark:text-zinc-400"
             >
-              On this page
+              Table of Contents
             </p>
             <div class="max-h-52 overflow-y-auto overscroll-contain px-3 py-2.5 [-webkit-overflow-scrolling:touch] sm:max-h-56 lg:max-h-[min(70vh,28rem)] lg:px-3.5 lg:py-3">
               <TopicToc items={tocTree} />
@@ -187,10 +187,10 @@ const impactLinkParentClass =
       )}
 
       <div class:list={['space-y-8', tocHeadings.length > 0 && 'min-w-0 flex-1 lg:order-first']}>
-    <Card class="mb-0 overflow-hidden shadow-md dark:shadow-black/30">
+    <Card class="mb-0 overflow-hidden shadow-md bg-app-surface/95 border-app-border dark:shadow-black/40 dark:ring-zinc-700/60">
       <CardContent
         class:list={[
-          'topic-article-prose prose prose-slate dark:prose-invert max-w-none p-6 sm:p-8 lg:p-10 xl:p-12 lg:prose-lg prose-headings:font-bold prose-headings:text-gray-900 dark:prose-headings:text-zinc-100 prose-h1:hidden prose-h2:mt-10 prose-h2:mb-4 prose-h2:text-xl prose-h2:lg:text-2xl prose-h2:scroll-mt-24 prose-h3:mt-8 prose-h3:mb-3 prose-h3:text-lg prose-h3:lg:text-xl prose-h3:scroll-mt-24 prose-h4:scroll-mt-24 prose-p:text-gray-700 dark:prose-p:text-zinc-300 prose-p:leading-[1.7] prose-ul:list-disc prose-ol:list-decimal prose-li:text-gray-700 dark:prose-li:text-zinc-300 prose-strong:text-gray-900 dark:prose-strong:text-zinc-100 prose-strong:font-semibold prose-code:text-[0.85em] prose-code:font-medium prose-code:bg-gray-100 prose-code:text-gray-900 dark:prose-code:bg-zinc-950 dark:prose-code:text-zinc-200 prose-code:px-1.5 prose-code:py-0.5 prose-code:rounded prose-pre:text-sm prose-pre:leading-relaxed prose-pre:bg-gray-900 prose-pre:text-gray-100 dark:prose-pre:bg-zinc-950 dark:prose-pre:text-zinc-100 prose-blockquote:border-l-4 prose-blockquote:border-primary-500 prose-blockquote:pl-4 prose-blockquote:italic prose-blockquote:text-gray-600 dark:prose-blockquote:text-zinc-500 prose-a:text-primary-600 prose-a:font-medium hover:prose-a:underline',
+          'topic-article-prose prose prose-slate dark:prose-invert max-w-none p-6 sm:p-8 lg:p-10 xl:p-12 lg:prose-lg prose-headings:font-bold prose-headings:text-gray-900 dark:prose-headings:text-zinc-100 prose-h1:hidden prose-h2:mt-10 prose-h2:mb-4 prose-h2:text-xl prose-h2:lg:text-2xl prose-h2:scroll-mt-24 prose-h3:mt-8 prose-h3:mb-3 prose-h3:text-lg prose-h3:lg:text-xl prose-h3:scroll-mt-24 prose-h4:scroll-mt-24 prose-p:text-gray-700 dark:prose-p:text-zinc-300 prose-p:leading-[1.7] prose-ul:list-disc prose-ol:list-decimal prose-li:text-gray-700 dark:prose-li:text-zinc-300 prose-strong:text-gray-900 dark:prose-strong:text-zinc-100 prose-strong:font-semibold prose-code:text-[0.85em] prose-code:font-medium prose-code:bg-gray-100 prose-code:text-gray-900 dark:prose-code:bg-zinc-800 dark:prose-code:text-zinc-200 prose-code:px-1.5 prose-code:py-0.5 prose-code:rounded prose-pre:text-sm prose-pre:leading-relaxed prose-pre:bg-gray-900 prose-pre:text-gray-100 dark:prose-pre:bg-zinc-950 dark:prose-pre:text-zinc-100 prose-blockquote:border-l-4 prose-blockquote:border-primary-500 prose-blockquote:pl-4 prose-blockquote:italic prose-blockquote:text-gray-600 dark:prose-blockquote:text-zinc-500 prose-a:text-primary-600 prose-a:font-medium hover:prose-a:underline',
           tocHeadings.length > 0 ? 'max-w-3xl' : 'max-w-3xl mx-auto',
         ]}
       >
@@ -199,7 +199,7 @@ const impactLinkParentClass =
     </Card>
 
     <div class="space-y-6">
-      <Card>
+      <Card class="bg-app-surface/95 border-app-border dark:ring-zinc-700/60">
         <CardContent class="p-6 md:p-8 lg:p-10">
           <h2 class="text-xl font-semibold text-gray-900 dark:text-zinc-100 mb-4 flex items-center gap-2">
             <svg class="w-6 h-6 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -218,7 +218,7 @@ const impactLinkParentClass =
           )}
         </CardContent>
       </Card>
-      <Card>
+      <Card class="bg-app-surface/95 border-app-border dark:ring-zinc-700/60">
         <CardContent class="p-6 md:p-8 lg:p-10">
           <h2 class="text-xl font-semibold text-gray-900 dark:text-zinc-100 mb-4 flex items-center gap-2">
             <svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -238,7 +238,7 @@ const impactLinkParentClass =
         </CardContent>
       </Card>
       {toolsList.length > 0 && (
-        <Card>
+        <Card class="bg-app-surface/95 border-app-border dark:ring-zinc-700/60">
           <CardContent class="p-6 md:p-8 lg:p-10">
             <div class="flex items-center justify-between mb-4">
               <h2 class="text-xl font-semibold text-gray-900 dark:text-zinc-100 flex items-center gap-2">
@@ -248,7 +248,7 @@ const impactLinkParentClass =
                 </svg>
                 Tools
               </h2>
-              <a href="/tools" class="text-sm text-primary-600 hover:text-primary-700 dark:hover:text-primary-400 hover:underline inline-flex items-center gap-1">
+              <a href="/tools" class="text-sm text-primary-600 dark:text-primary-400 hover:text-primary-700 dark:hover:text-primary-300 hover:underline inline-flex items-center gap-1">
                 View all tools
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
@@ -265,7 +265,7 @@ const impactLinkParentClass =
                       href={tool.url} 
                       target="_blank" 
                       rel="noopener noreferrer"
-                      class="text-primary-600 hover:text-primary-700 dark:hover:text-primary-400 hover:underline inline-flex items-center gap-1"
+                      class="text-primary-600 dark:text-primary-400 hover:text-primary-700 dark:hover:text-primary-300 hover:underline inline-flex items-center gap-1"
                     >
                       {tool.name}
                       <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -290,7 +290,7 @@ const impactLinkParentClass =
         </Card>
       )}
       {topic.data.references && (
-        <Card>
+        <Card class="bg-app-surface/95 border-app-border dark:ring-zinc-700/60">
           <CardContent class="p-6 md:p-8 lg:p-10">
             <h2 class="text-xl font-semibold text-gray-900 dark:text-zinc-100 mb-4 flex items-center gap-2">
               <svg class="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -307,10 +307,10 @@ const impactLinkParentClass =
               prose-ol:list-decimal prose-ol:ml-6 prose-ol:space-y-2
               prose-li:text-gray-700 dark:prose-li:text-zinc-300 prose-li:leading-relaxed prose-li:text-[0.9375rem]
               prose-strong:text-gray-900 dark:prose-strong:text-zinc-100 prose-strong:font-semibold
-              prose-code:text-xs prose-code:bg-gray-100 prose-code:text-gray-900 dark:prose-code:bg-zinc-950 dark:prose-code:text-zinc-200 prose-code:px-1.5 prose-code:py-0.5 prose-code:rounded prose-code:font-mono
+              prose-code:text-xs prose-code:bg-gray-100 prose-code:text-gray-900 dark:prose-code:bg-zinc-800 dark:prose-code:text-zinc-200 prose-code:px-1.5 prose-code:py-0.5 prose-code:rounded prose-code:font-mono
               prose-pre:text-xs prose-pre:bg-gray-900 prose-pre:text-gray-100 dark:prose-pre:bg-zinc-950 dark:prose-pre:text-zinc-100 prose-pre:rounded-lg prose-pre:p-4
               prose-blockquote:border-l-4 prose-blockquote:border-gray-300 dark:prose-blockquote:border-zinc-600 prose-blockquote:pl-4 prose-blockquote:italic prose-blockquote:text-gray-600 dark:prose-blockquote:text-zinc-500
-              prose-a:text-primary-600 prose-a:no-underline hover:prose-a:text-primary-700 dark:hover:prose-a:text-primary-400 hover:prose-a:underline
+              prose-a:text-primary-600 dark:prose-a:text-primary-400 prose-a:no-underline hover:prose-a:text-primary-700 dark:hover:prose-a:text-primary-300 hover:prose-a:underline
               prose-hr:border-gray-200 dark:prose-hr:border-zinc-800">
               <Fragment set:html={referencesHtml} />
             </div>
@@ -320,7 +320,7 @@ const impactLinkParentClass =
     </div>
 
     {topic.data.mitreTechniques && topic.data.mitreTechniques.length > 0 && (
-      <Card class="shadow-md dark:shadow-black/30">
+      <Card class="shadow-md bg-app-surface/95 border-app-border dark:ring-zinc-700/60 dark:shadow-black/30">
         <CardContent class="p-6 md:p-8 lg:p-10">
           <MitreTechniquesList techniqueIds={topic.data.mitreTechniques} />
         </CardContent>

@@ -48,10 +48,10 @@ const categoryColorMap: Record<string, CategoryColors> = {
     icon: 'text-blue-700 dark:text-blue-300',
   },
   fundamental: {
-    bg: 'bg-slate-50 dark:bg-zinc-800/60',
-    text: 'text-slate-700 dark:text-zinc-300',
-    border: 'border-slate-200 dark:border-zinc-700',
-    icon: 'text-slate-600 dark:text-zinc-400',
+    bg: 'bg-app-surface-muted/70',
+    text: 'text-app-text-secondary',
+    border: 'border-app-border',
+    icon: 'text-app-text-muted',
   },
   initial: {
     bg: 'bg-red-50 dark:bg-red-950/50',
@@ -86,10 +86,10 @@ const categoryColorMap: Record<string, CategoryColors> = {
 };
 
 const defaultCategoryColors: CategoryColors = {
-  bg: 'bg-gray-50 dark:bg-zinc-800/60',
-  text: 'text-gray-700 dark:text-zinc-300',
-  border: 'border-gray-300 dark:border-zinc-700',
-  icon: 'text-gray-600 dark:text-zinc-400',
+  bg: 'bg-app-surface-muted/70',
+  text: 'text-app-text-secondary',
+  border: 'border-app-border',
+  icon: 'text-app-text-muted',
 };
 
 export function getCategoryColors(category: string): CategoryColors {
@@ -115,9 +115,9 @@ const levelColorMap: Record<string, ColorScheme> = {
 };
 
 const defaultLevelColors: ColorScheme = {
-  bg: 'bg-gray-50 dark:bg-zinc-800/60',
-  text: 'text-gray-700 dark:text-zinc-300',
-  border: 'border-gray-300 dark:border-zinc-700',
+  bg: 'bg-app-surface-muted/70',
+  text: 'text-app-text-secondary',
+  border: 'border-app-border',
 };
 
 export function getLevelColors(level: string): ColorScheme {
@@ -148,9 +148,9 @@ const toolTypeColorMap: Record<string, ColorScheme> = {
 };
 
 const defaultToolTypeColors: ColorScheme = {
-  bg: 'bg-gray-50 dark:bg-zinc-800/60',
-  text: 'text-gray-700 dark:text-zinc-300',
-  border: 'border-gray-200 dark:border-zinc-800',
+  bg: 'bg-app-surface-muted/70',
+  text: 'text-app-text-secondary',
+  border: 'border-app-border',
 };
 
 export function getToolTypeColors(type: string): ColorScheme {

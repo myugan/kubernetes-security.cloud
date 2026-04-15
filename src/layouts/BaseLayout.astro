@@ -8,6 +8,7 @@ import '@fontsource/geist-mono/500.css';
 import '@fontsource/geist-mono/600.css';
 import '@fontsource/geist-mono/700.css';
 import '../styles/markdown.css';
+import '../styles/theme.css';
 import { features } from '../config/features';
 import { site } from '../config/site';
 import { toMetaDescription } from '../utils/meta';
@@ -55,16 +56,36 @@ const ogImageUrl = new URL(image, site.url).href;
     <meta name="description" content={metaDescription} />
     <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="color-scheme" content="light" />
-    <meta name="theme-color" content="#ffffff" />
+    <meta name="color-scheme" content="light dark" />
+    <meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)" />
+    <meta name="theme-color" content="#09090b" media="(prefers-color-scheme: dark)" />
     <script is:inline>
       (function () {
         var root = document.documentElement;
-        root.classList.remove('dark');
-        root.style.colorScheme = 'light';
+        var storedTheme = null;
+        try {
+          storedTheme = localStorage.getItem('theme');
+        } catch (e) {
+          storedTheme = null;
+        }
+        var dark = storedTheme
+          ? storedTheme === 'dark'
+          : window.matchMedia('(prefers-color-scheme: dark)').matches;
+        if (dark) root.classList.add('dark');
+        else root.classList.remove('dark');
+        root.style.colorScheme = dark ? 'dark' : 'light';
         document.addEventListener('astro:after-swap', function () {
-          document.documentElement.classList.remove('dark');
-          document.documentElement.style.colorScheme = 'light';
+          var nextStoredTheme = null;
+          try {
+            nextStoredTheme = localStorage.getItem('theme');
+          } catch (e) {
+            nextStoredTheme = null;
+          }
+          var nextDark = nextStoredTheme
+            ? nextStoredTheme === 'dark'
+            : window.matchMedia('(prefers-color-scheme: dark)').matches;
+          document.documentElement.classList.toggle('dark', nextDark);
+          document.documentElement.style.colorScheme = nextDark ? 'dark' : 'light';
         });
       })();
     </script>
@@ -169,19 +190,19 @@ const ogImageUrl = new URL(image, site.url).href;
       </>
     )}
   </head>
-  <body class="bg-[radial-gradient(1200px_420px_at_50%_-220px,#eef5ff_0%,#ffffff_52%)] text-gray-900 dark:bg-[radial-gradient(1200px_520px_at_50%_-260px,rgba(30,41,59,0.55)_0%,#09090b_55%)] dark:text-zinc-200 antialiased flex flex-col min-h-screen font-sans selection:bg-emerald-200/60 selection:text-emerald-900 dark:selection:bg-emerald-500/25 dark:selection:text-emerald-100">
-    <div id="page-skeleton" class="fixed inset-0 z-[70] bg-white dark:bg-[#0c0c0e] transition-opacity duration-200 pointer-events-none">
+  <body class="ks-theme antialiased flex flex-col min-h-screen font-sans selection:bg-emerald-200/60 selection:text-emerald-900 dark:selection:bg-emerald-500/25 dark:selection:text-emerald-100">
+    <div id="page-skeleton" class="fixed inset-0 z-[70] bg-app-bg transition-opacity duration-200 pointer-events-none">
       <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-        <div class="h-10 w-48 rounded-md bg-gray-200/80 dark:bg-zinc-800/80 animate-pulse"></div>
+        <div class="h-10 w-48 rounded-md bg-app-surface-muted/80 animate-pulse"></div>
       </div>
       <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-4">
-        <div class="h-8 w-72 rounded-md bg-gray-200/80 dark:bg-zinc-800/80 animate-pulse"></div>
-        <div class="h-4 w-full rounded-md bg-gray-200/70 dark:bg-zinc-800/70 animate-pulse"></div>
-        <div class="h-4 w-11/12 rounded-md bg-gray-200/70 dark:bg-zinc-800/70 animate-pulse"></div>
-        <div class="h-4 w-9/12 rounded-md bg-gray-200/70 dark:bg-zinc-800/70 animate-pulse"></div>
+        <div class="h-8 w-72 rounded-md bg-app-surface-muted/80 animate-pulse"></div>
+        <div class="h-4 w-full rounded-md bg-app-surface-muted/70 animate-pulse"></div>
+        <div class="h-4 w-11/12 rounded-md bg-app-surface-muted/70 animate-pulse"></div>
+        <div class="h-4 w-9/12 rounded-md bg-app-surface-muted/70 animate-pulse"></div>
       </div>
     </div>
-    <header class="sticky top-0 z-50 border-b border-gray-200/90 bg-white/90 backdrop-blur-md dark:border-zinc-800 dark:bg-zinc-950/85">
+    <header class="ks-header sticky top-0 z-50 border-b backdrop-blur-md dark:ring-1 dark:ring-zinc-700/60">
       <nav class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="flex justify-between items-center h-16">
           <!-- Logo -->
@@ -191,28 +212,58 @@ const ogImageUrl = new URL(image, site.url).href;
           
           <!-- Desktop Navigation -->
           <div class="hidden md:flex items-center gap-6">
-            <a href="/glossary" class="text-gray-600 hover:text-primary-600 dark:text-zinc-500 dark:hover:text-primary-400 transition-colors">Glossary</a>
-            <a href="/topics" class="text-gray-600 hover:text-primary-600 dark:text-zinc-500 dark:hover:text-primary-400 transition-colors">Topics</a>
-            <a href="/techniques" class="text-gray-600 hover:text-primary-600 dark:text-zinc-500 dark:hover:text-primary-400 transition-colors">ATT&amp;CK Map</a>
+            <a href="/glossary" class="ks-nav-link transition-colors">Glossary</a>
+            <a href="/topics" class="ks-nav-link transition-colors">Topics</a>
+            <a href="/techniques" class="ks-nav-link transition-colors">ATT&amp;CK Map</a>
             {features.attackPaths && (
-              <a href="/attack-paths" class="text-gray-600 hover:text-primary-600 dark:text-zinc-500 dark:hover:text-primary-400 transition-colors">Attack Paths</a>
+              <a href="/attack-paths" class="ks-nav-link transition-colors">Attack Paths</a>
             )}
-            <a href="/tools" class="text-gray-600 hover:text-primary-600 dark:text-zinc-500 dark:hover:text-primary-400 transition-colors">Tools</a>
-            <span class="inline-flex items-center gap-2 text-gray-500 dark:text-zinc-500">
+            <a href="/tools" class="ks-nav-link transition-colors">Tools</a>
+            <span class="ks-nav-muted inline-flex items-center gap-2">
               <span>Cheatsheet</span>
               <span class="inline-flex items-center rounded-full border border-amber-300 bg-amber-50 px-2 py-0.5 text-[10px] font-semibold tracking-wide text-amber-700 dark:border-amber-700/70 dark:bg-amber-950/40 dark:text-amber-300">
                 Soon
               </span>
             </span>
-            <a href="/" class="text-gray-600 hover:text-primary-600 dark:text-zinc-500 dark:hover:text-primary-400 transition-colors">About</a>
+            <a href="/" class="ks-nav-link transition-colors">About</a>
+            <button
+              type="button"
+              id="theme-toggle-desktop"
+              class="theme-toggle-btn ks-theme-toggle inline-flex h-9 w-9 items-center justify-center rounded-full border transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500/40 focus-visible:ring-offset-2 dark:focus-visible:ring-offset-zinc-900"
+              aria-label="Toggle theme"
+              aria-pressed="false"
+              title="Toggle theme"
+            >
+              <svg data-icon="sun" class="h-4 w-4 hidden dark:block" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v2m0 14v2m9-9h-2M5 12H3m15.364 6.364l-1.414-1.414M7.05 7.05 5.636 5.636m12.728 0L16.95 7.05M7.05 16.95l-1.414 1.414M12 8a4 4 0 100 8 4 4 0 000-8z" />
+              </svg>
+              <svg data-icon="moon" class="h-4 w-4 dark:hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12.79A9 9 0 1111.21 3c0 .35.02.7.06 1.04A7 7 0 0020 11.73c.34.04.69.06 1 .06z" />
+              </svg>
+            </button>
           </div>
 
-          <div class="flex items-center md:hidden">
+          <div class="flex items-center gap-2 md:hidden">
+          <button
+            type="button"
+            id="theme-toggle-mobile"
+            class="theme-toggle-btn ks-theme-toggle inline-flex h-9 w-9 items-center justify-center rounded-full border transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500/40 focus-visible:ring-offset-2 dark:focus-visible:ring-offset-zinc-900"
+            aria-label="Toggle theme"
+            aria-pressed="false"
+            title="Toggle theme"
+          >
+            <svg data-icon="sun" class="w-5 h-5 hidden dark:block" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v2m0 14v2m9-9h-2M5 12H3m15.364 6.364l-1.414-1.414M7.05 7.05 5.636 5.636m12.728 0L16.95 7.05M7.05 16.95l-1.414 1.414M12 8a4 4 0 100 8 4 4 0 000-8z" />
+            </svg>
+            <svg data-icon="moon" class="w-5 h-5 dark:hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12.79A9 9 0 1111.21 3c0 .35.02.7.06 1.04A7 7 0 0020 11.73c.34.04.69.06 1 .06z" />
+            </svg>
+          </button>
           <!-- Mobile Menu Button -->
           <button 
             type="button" 
             id="mobile-menu-btn"
-            class="p-2 rounded-lg text-gray-600 hover:text-gray-900 hover:bg-gray-100 dark:text-zinc-500 dark:hover:text-zinc-100 dark:hover:bg-zinc-800 transition-colors"
+            class="p-2 rounded-lg ks-nav-link hover:bg-app-surface-muted/70 transition-colors"
             aria-label="Open menu"
           >
             <svg id="menu-icon" class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -226,32 +277,32 @@ const ogImageUrl = new URL(image, site.url).href;
         </div>
         
         <!-- Mobile Navigation -->
-        <div id="mobile-menu" class="hidden md:hidden border-t border-gray-200/90 py-3 dark:border-zinc-800">
+        <div id="mobile-menu" class="ks-mobile-menu hidden md:hidden border-t py-3">
           <div class="space-y-0.5">
-            <a href="/glossary" class="block px-3 py-2 rounded-lg text-gray-600 hover:text-gray-900 hover:bg-gray-100 dark:text-zinc-500 dark:hover:text-zinc-100 dark:hover:bg-zinc-800/80 transition-colors">
+            <a href="/glossary" class="ks-nav-link block px-3 py-2 rounded-lg hover:bg-app-surface-muted/70 transition-colors">
               Glossary
             </a>
-            <a href="/topics" class="block px-3 py-2 rounded-lg text-gray-600 hover:text-gray-900 hover:bg-gray-100 dark:text-zinc-500 dark:hover:text-zinc-100 dark:hover:bg-zinc-800/80 transition-colors">
+            <a href="/topics" class="ks-nav-link block px-3 py-2 rounded-lg hover:bg-app-surface-muted/70 transition-colors">
               Topics
             </a>
-            <a href="/techniques" class="block px-3 py-2 rounded-lg text-gray-600 hover:text-gray-900 hover:bg-gray-100 dark:text-zinc-500 dark:hover:text-zinc-100 dark:hover:bg-zinc-800/80 transition-colors">
+            <a href="/techniques" class="ks-nav-link block px-3 py-2 rounded-lg hover:bg-app-surface-muted/70 transition-colors">
               ATT&amp;CK Map
             </a>
             {features.attackPaths && (
-              <a href="/attack-paths" class="block px-3 py-2 rounded-lg text-gray-600 hover:text-gray-900 hover:bg-gray-100 dark:text-zinc-500 dark:hover:text-zinc-100 dark:hover:bg-zinc-800/80 transition-colors">
+              <a href="/attack-paths" class="ks-nav-link block px-3 py-2 rounded-lg hover:bg-app-surface-muted/70 transition-colors">
                 Attack Paths
               </a>
             )}
-            <a href="/tools" class="block px-3 py-2 rounded-lg text-gray-600 hover:text-gray-900 hover:bg-gray-100 dark:text-zinc-500 dark:hover:text-zinc-100 dark:hover:bg-zinc-800/80 transition-colors">
+            <a href="/tools" class="ks-nav-link block px-3 py-2 rounded-lg hover:bg-app-surface-muted/70 transition-colors">
               Tools
             </a>
-            <div class="flex items-center justify-between px-3 py-2 rounded-lg text-gray-600 dark:text-zinc-500">
+            <div class="ks-nav-muted flex items-center justify-between px-3 py-2 rounded-lg">
               <span>Cheatsheet</span>
               <span class="inline-flex items-center rounded-full border border-amber-300 bg-amber-50 px-2 py-0.5 text-[10px] font-semibold tracking-wide text-amber-700 dark:border-amber-700/70 dark:bg-amber-950/40 dark:text-amber-300">
                 Soon
               </span>
             </div>
-            <a href="/" class="block px-3 py-2 rounded-lg text-gray-600 hover:text-gray-900 hover:bg-gray-100 dark:text-zinc-500 dark:hover:text-zinc-100 dark:hover:bg-zinc-800/80 transition-colors">
+            <a href="/" class="ks-nav-link block px-3 py-2 rounded-lg hover:bg-app-surface-muted/70 transition-colors">
               About
             </a>
           </div>
@@ -261,24 +312,24 @@ const ogImageUrl = new URL(image, site.url).href;
     <main class="flex-grow">
       <slot />
     </main>
-    <footer class="mt-auto border-t border-gray-200/90 bg-white/80 py-10 dark:border-zinc-800 dark:bg-zinc-950/50">
+    <footer class="ks-footer mt-auto border-t py-10 dark:ring-1 dark:ring-zinc-700/50">
       <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="grid gap-8 md:grid-cols-2 md:items-start">
           <div>
-            <p class="text-sm font-semibold text-gray-900 dark:text-zinc-100">Kubernetes Security</p>
-            <p class="mt-2 text-sm text-gray-500 dark:text-zinc-500 max-w-sm">
+            <p class="text-sm font-semibold ds-text-primary">Kubernetes Security</p>
+            <p class="mt-2 text-sm ds-text-secondary max-w-sm">
               Practical offensive and defensive references to help you learn Kubernetes security faster.
             </p>
           </div>
 
           <div class="md:text-right">
-            <p class="text-sm text-gray-500 dark:text-zinc-500">
+            <p class="text-sm ds-text-secondary">
               Built by
-              <a href="https://www.linkedin.com/in/muhammadyugan/" target="_blank" rel="noopener noreferrer" class="text-primary-600 hover:text-primary-700 dark:text-primary-400 dark:hover:text-primary-300 hover:underline">
+              <a href="https://www.linkedin.com/in/muhammadyugan/" target="_blank" rel="noopener noreferrer" class="ds-link hover:underline">
                 myugan
               </a>
             </p>
-            <p class="mt-2 text-xs text-gray-400 dark:text-zinc-600">© {currentYear} kubernetes-security.cloud</p>
+            <p class="mt-2 text-xs ds-text-muted">© {currentYear} kubernetes-security.cloud</p>
           </div>
         </div>
       </div>
@@ -340,6 +391,69 @@ const ogImageUrl = new URL(image, site.url).href;
             closeIcon.classList.add('hidden');
           });
         });
+      }
+
+      function applyTheme(theme) {
+        const dark = theme === 'dark';
+        const root = document.documentElement;
+        const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+        if (!prefersReducedMotion) {
+          root.classList.add('theme-transitioning');
+          window.setTimeout(() => {
+            root.classList.remove('theme-transitioning');
+          }, 260);
+        }
+        root.classList.toggle('dark', dark);
+        root.style.colorScheme = dark ? 'dark' : 'light';
+        try {
+          localStorage.setItem('theme', theme);
+        } catch (e) {
+          // Ignore storage errors in restricted environments.
+        }
+        document.querySelectorAll('.theme-toggle-btn').forEach((button) => {
+          button.setAttribute('aria-label', dark ? 'Switch to light mode' : 'Switch to dark mode');
+          button.setAttribute('title', dark ? 'Switch to light mode' : 'Switch to dark mode');
+          button.setAttribute('aria-pressed', dark ? 'true' : 'false');
+        });
+      }
+
+      function toggleTheme() {
+        const isDark = document.documentElement.classList.contains('dark');
+        applyTheme(isDark ? 'light' : 'dark');
+      }
+
+      document.querySelectorAll('.theme-toggle-btn').forEach((button) => {
+        button.addEventListener('click', toggleTheme);
+      });
+      const initialDark = document.documentElement.classList.contains('dark');
+      document.querySelectorAll('.theme-toggle-btn').forEach((button) => {
+        button.setAttribute('aria-label', initialDark ? 'Switch to light mode' : 'Switch to dark mode');
+        button.setAttribute('title', initialDark ? 'Switch to light mode' : 'Switch to dark mode');
+        button.setAttribute('aria-pressed', initialDark ? 'true' : 'false');
+      });
+
+      // Follow system changes only when user has not chosen a theme explicitly.
+      const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+      function syncWithSystemTheme(event) {
+        let hasStoredTheme = false;
+        try {
+          hasStoredTheme = Boolean(localStorage.getItem('theme'));
+        } catch (e) {
+          hasStoredTheme = false;
+        }
+        if (hasStoredTheme) return;
+        const nextTheme = event.matches ? 'dark' : 'light';
+        applyTheme(nextTheme);
+        try {
+          localStorage.removeItem('theme');
+        } catch (e) {
+          // Ignore storage errors.
+        }
+      }
+      if (typeof mediaQuery.addEventListener === 'function') {
+        mediaQuery.addEventListener('change', syncWithSystemTheme);
+      } else if (typeof mediaQuery.addListener === 'function') {
+        mediaQuery.addListener(syncWithSystemTheme);
       }
 
       // Add copy buttons to command code blocks (not output blocks)

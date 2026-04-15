@@ -1,0 +1,141 @@
+:root {
+  --ks-bg-gradient: radial-gradient(1200px 420px at 50% -220px, #eef5ff 0%, #ffffff 52%);
+  --ks-bg: 255 255 255;
+  --ks-surface: 255 255 255;
+  --ks-surface-muted: 249 250 251;
+  --ks-border: 229 231 235;
+  --ks-border-strong: 209 213 219;
+  --ks-text-primary: 17 24 39;
+  --ks-text-secondary: 75 85 99;
+  --ks-text-muted: 107 114 128;
+  --ks-link: 2 132 199;
+  --ks-link-hover: 147 197 253;
+  --ks-inline-code-bg: 243 244 246;
+  --ks-inline-code-text: 17 24 39;
+  --ks-inline-code-border: 229 231 235;
+  --ks-pre-bg: 17 24 39;
+  --ks-pre-text: 243 244 246;
+  --ks-pre-border: 31 41 55;
+}
+
+.dark {
+  --ks-bg-gradient: radial-gradient(1200px 560px at 50% -260px, rgba(59, 130, 246, 0.06) 0%, #18181b 48%, #09090b 100%);
+  --ks-bg: 9 9 11;
+  --ks-surface: 24 24 27;
+  --ks-surface-muted: 39 39 42;
+  --ks-border: 39 39 42;
+  --ks-border-strong: 63 63 70;
+  --ks-text-primary: 244 244 245;
+  --ks-text-secondary: 212 212 216;
+  --ks-text-muted: 161 161 170;
+  --ks-link: 56 189 248;
+  --ks-link-hover: 29 78 216;
+  --ks-inline-code-bg: 39 39 42;
+  --ks-inline-code-text: 228 228 231;
+  --ks-inline-code-border: 63 63 70;
+  --ks-pre-bg: 24 24 27;
+  --ks-pre-text: 228 228 231;
+  --ks-pre-border: 39 39 42;
+}
+
+body.ks-theme {
+  background: var(--ks-bg-gradient);
+  color: rgb(var(--ks-text-primary));
+}
+
+.ds-surface {
+  background-color: rgb(var(--ks-surface) / 0.95);
+  border-color: rgb(var(--ks-border) / 0.9);
+}
+
+.ds-surface-muted {
+  background-color: rgb(var(--ks-surface-muted) / 0.9);
+  border-color: rgb(var(--ks-border-strong) / 0.9);
+}
+
+.ds-text-primary {
+  color: rgb(var(--ks-text-primary));
+}
+
+.ds-text-secondary {
+  color: rgb(var(--ks-text-secondary));
+}
+
+.ds-text-muted {
+  color: rgb(var(--ks-text-muted));
+}
+
+.ds-link {
+  color: rgb(var(--ks-link));
+}
+
+.ds-link:hover {
+  color: rgb(var(--ks-link-hover));
+}
+
+.ds-input {
+  background-color: rgb(var(--ks-surface));
+  border-color: rgb(var(--ks-border));
+  color: rgb(var(--ks-text-primary));
+}
+
+.ds-input::placeholder {
+  color: rgb(var(--ks-text-muted));
+}
+
+.ks-header {
+  background-color: rgb(var(--ks-surface) / 0.95);
+  border-color: rgb(var(--ks-border-strong) / 0.9);
+  box-shadow: 0 12px 28px -14px rgb(0 0 0 / 0.12);
+}
+
+.dark .ks-header {
+  box-shadow: 0 12px 28px -14px rgb(0 0 0 / 0.78);
+}
+
+.ks-footer {
+  background-color: rgb(var(--ks-surface) / 0.9);
+  border-color: rgb(var(--ks-border-strong) / 0.9);
+}
+
+.ks-nav-link {
+  color: rgb(var(--ks-text-secondary));
+}
+
+.ks-nav-link:hover {
+  color: rgb(var(--ks-link-hover));
+}
+
+.ks-nav-muted {
+  color: rgb(var(--ks-text-muted));
+}
+
+.ks-mobile-menu {
+  border-color: rgb(var(--ks-border));
+  background-color: rgb(var(--ks-surface) / 0.95);
+}
+
+.ks-theme-toggle {
+  border-color: rgb(var(--ks-border));
+  background-color: rgb(var(--ks-surface-muted));
+  color: rgb(var(--ks-text-secondary));
+}
+
+.ks-theme-toggle:hover {
+  background-color: rgb(var(--ks-surface));
+  color: rgb(var(--ks-text-primary));
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  html.theme-transitioning *,
+  html.theme-transitioning *::before,
+  html.theme-transitioning *::after {
+    transition:
+      background-color 220ms ease,
+      border-color 220ms ease,
+      color 220ms ease,
+      fill 220ms ease,
+      stroke 220ms ease,
+      box-shadow 220ms ease !important;
+  }
+}

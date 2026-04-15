@@ -35,7 +35,7 @@ const defensiveCount = topics.filter((topic) =>
     <div class="mb-10">
       <div class="rounded-lg border border-gray-200 bg-gray-50/80 p-6 sm:p-8 dark:border-zinc-700 dark:bg-zinc-900/40">
         <div class="flex items-center gap-3 mb-4">
-          <div class="text-primary-600" aria-hidden="true">
+          <div class="text-[rgb(147,197,253)] dark:text-[rgb(29,78,216)]" aria-hidden="true">
           <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 6h13M8 12h13M8 18h13M3.75 6.75h.01v.01h-.01V6.75zm0 5.25h.01v.01h-.01V12zm0 4.5h.01v.01h-.01v-.01z" />
           </svg>
@@ -103,10 +103,7 @@ const defensiveCount = topics.filter((topic) =>
       {recentTopics.length > 0 && (
         <div class="mt-6 rounded-lg border border-gray-200 bg-gray-50/80 px-4 py-4 dark:border-zinc-700 dark:bg-zinc-900/40 sm:px-5 sm:py-5">
           <div class="border-b border-gray-200 pb-3 dark:border-zinc-700">
-            <h2 class="text-sm font-semibold text-gray-900 dark:text-zinc-100">Recently added</h2>
-            <p class="mt-1 text-sm leading-relaxed text-gray-600 dark:text-zinc-400">
-              Newest first; date is when the topic was first listed.
-            </p>
+            <h2 class="text-sm font-semibold text-gray-900 dark:text-zinc-100">Latest topics</h2>
           </div>
           <ul class="mt-3 space-y-0.5">
             {recentTopics.map((topic) => {
@@ -117,12 +114,22 @@ const defensiveCount = topics.filter((topic) =>
                     href={`/topics/${topic.slug}`}
                     class="group flex flex-col gap-1.5 rounded-lg px-2 py-2.5 -mx-2 transition-colors hover:bg-white/90 dark:hover:bg-zinc-800/70 sm:flex-row sm:items-center sm:justify-between sm:gap-6 sm:py-2.5"
                   >
-                    <span class="text-sm font-medium leading-snug text-gray-900 group-hover:text-primary-700 dark:text-zinc-100 dark:group-hover:text-primary-400">
+                    <span
+                      class:list={[
+                        'text-sm font-medium leading-snug text-gray-900 dark:text-zinc-100',
+                        topic.data.category.toLowerCase() === 'offensive' &&
+                          'group-hover:!text-[rgb(252,165,165)] dark:group-hover:!text-[rgb(185,28,28)]',
+                        topic.data.category.toLowerCase() === 'defensive' &&
+                          'group-hover:!text-[rgb(147,197,253)] dark:group-hover:!text-[rgb(29,78,216)]',
+                        !['offensive', 'defensive'].includes(topic.data.category.toLowerCase()) &&
+                          'group-hover:text-blue-700 dark:group-hover:text-blue-300',
+                      ]}
+                    >
                       {topic.data.title}
                     </span>
                     <span class="flex shrink-0 items-center gap-2.5 text-xs tabular-nums sm:justify-end">
                       <span
-                        class={`rounded-md px-2 py-0.5 capitalize ring-1 ring-inset ring-black/[0.06] dark:ring-white/[0.08] ${categoryColors.bg} ${categoryColors.text}`}
+                        class={`rounded-md px-2 py-0.5 capitalize ring-1 ring-inset ring-black/[0.06] dark:ring-app-border/50 ${categoryColors.bg} ${categoryColors.text}`}
                       >
                         {topic.data.category}
                       </span>
@@ -143,7 +150,7 @@ const defensiveCount = topics.filter((topic) =>
 
       <!-- Search Bar with Tag Filters -->
       <div class="mt-6 mb-4">
-        <Card class="p-3 sm:p-4 rounded-lg border-gray-200 dark:border-zinc-700">
+        <Card class="p-3 sm:p-4 rounded-lg border-app-border bg-app-surface/95 shadow-sm dark:ring-1 dark:ring-zinc-700/70">
           <!-- Search Input + reset -->
           <div class="flex items-center gap-2">
             <div class="relative min-w-0 flex-1">
@@ -155,7 +162,7 @@ const defensiveCount = topics.filter((topic) =>
                 autocomplete="off"
                 placeholder="Search topics..."
                 aria-describedby="search-hint"
-                class="w-full py-2 pl-9 pr-3 border border-gray-300 dark:border-zinc-700 rounded-md focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none text-[13px] leading-tight bg-white dark:bg-zinc-900 text-gray-900 dark:text-zinc-100"
+                class="ds-input w-full py-2 pl-9 pr-3 border rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none text-[13px] leading-tight"
               />
               <span id="search-hint" class="sr-only">Filters the topic cards below as you type.</span>
               <svg class="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-500 dark:text-zinc-500 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -165,7 +172,7 @@ const defensiveCount = topics.filter((topic) =>
             <button
               type="button"
               id="reset-filters-btn"
-              class="hidden shrink-0 rounded-md border border-gray-200 bg-white px-2.5 py-2 text-[13px] font-medium text-gray-700 shadow-sm transition-colors hover:bg-gray-50 dark:border-zinc-600 dark:bg-zinc-900 dark:text-zinc-300 dark:hover:bg-zinc-800"
+              class="hidden shrink-0 rounded-md border border-app-border bg-app-surface px-2.5 py-2 text-[13px] font-medium text-app-text-secondary shadow-sm transition-colors hover:bg-app-surface-muted/80"
               title="Clear search and category filters"
               aria-label="Reset search and filters"
             >
@@ -178,7 +185,7 @@ const defensiveCount = topics.filter((topic) =>
             <button
               type="button"
               id="filter-toggle-btn"
-              class="group inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-md border border-gray-200 bg-gray-50 text-xs font-medium text-gray-700 hover:bg-white hover:border-gray-300 dark:border-zinc-700 dark:bg-zinc-900/70 dark:text-zinc-300 dark:hover:bg-zinc-900 dark:hover:border-zinc-600 transition-colors"
+              class="group inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-md border border-app-border bg-app-surface-muted/70 text-xs font-medium text-app-text-secondary hover:bg-app-surface hover:border-app-border-strong transition-colors"
               aria-expanded="false"
               aria-controls="filter-tags-content"
             >
@@ -186,13 +193,13 @@ const defensiveCount = topics.filter((topic) =>
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
               </svg>
               <span>Filter by category</span>
-              <span id="filter-selected-count" class="hidden items-center justify-center min-w-5 h-5 px-1.5 rounded-full bg-primary-100 text-primary-800 text-[11px] font-semibold dark:bg-primary-900/40 dark:text-primary-200"></span>
+              <span id="filter-selected-count" class="hidden items-center justify-center min-w-5 h-5 px-1.5 rounded-full bg-blue-100 text-blue-800 text-[11px] font-semibold dark:bg-blue-950/70 dark:text-blue-200 border border-blue-300 dark:border-blue-700"></span>
               <svg id="filter-toggle-icon" class="w-3.5 h-3.5 text-gray-500 dark:text-zinc-500 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
               </svg>
             </button>
             <div id="filter-tags-content" class="hidden pt-2">
-              <div class="rounded-lg border border-gray-200/80 bg-gray-50/60 p-2.5 dark:border-zinc-700 dark:bg-zinc-900/40">
+              <div class="rounded-lg border border-app-border/80 bg-app-surface-muted/60 p-2.5">
                 <p class="text-[11px] text-gray-500 dark:text-zinc-400 mb-1.5">Choose one or more categories</p>
                 <div class="flex flex-wrap gap-1.5">
                 {availableCategories.map(category => {
@@ -224,7 +231,7 @@ const defensiveCount = topics.filter((topic) =>
               <button
                 type="button"
                 id="clear-all-filters"
-                class="text-xs font-medium text-primary-600 hover:text-primary-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500/40 focus-visible:ring-offset-2 dark:text-primary-400 dark:hover:text-primary-300 dark:focus-visible:ring-offset-zinc-900 ml-2 rounded-sm"
+                class="text-xs font-medium text-blue-700 hover:text-blue-800 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/40 focus-visible:ring-offset-2 dark:text-blue-300 dark:hover:text-blue-200 dark:focus-visible:ring-offset-zinc-900 ml-2 rounded-sm"
               >
                 Clear all
               </button>
@@ -234,17 +241,17 @@ const defensiveCount = topics.filter((topic) =>
       </div>
 
       <!-- View Toggle -->
-      <div class="mb-5 flex flex-col items-start justify-between gap-3 rounded-lg border border-gray-200 bg-white px-3 py-2 sm:flex-row sm:items-center sm:px-4 sm:py-2.5 lg:sticky lg:top-20 lg:z-20 lg:bg-white/95 lg:backdrop-blur lg:supports-[backdrop-filter]:bg-white/80 dark:border-zinc-700 dark:bg-zinc-950 dark:lg:bg-zinc-950/90 dark:lg:supports-[backdrop-filter]:bg-zinc-950/80">
+      <div class="mb-5 flex flex-col items-start justify-between gap-3 rounded-lg border border-app-border bg-app-surface px-3 py-2 shadow-sm sm:flex-row sm:items-center sm:px-4 sm:py-2.5 lg:sticky lg:top-20 lg:z-20 lg:bg-app-surface/95 lg:backdrop-blur lg:supports-[backdrop-filter]:bg-app-surface/80 dark:shadow-[0_8px_24px_-12px_rgba(0,0,0,0.65)]">
         <p class="text-base text-gray-600 dark:text-zinc-400" aria-live="polite" aria-atomic="true">
           Showing <span id="results-count-inline" class="font-semibold text-gray-700 dark:text-zinc-300">{totalTopics}</span> topic{totalTopics === 1 ? '' : 's'}
         </p>
         <div class="flex items-center gap-2 self-end sm:self-auto">
           <span class="text-sm text-gray-500 dark:text-zinc-500">View:</span>
-          <div class="flex border border-gray-300 dark:border-zinc-700 rounded-lg overflow-hidden">
+          <div class="flex border border-app-border rounded-lg overflow-hidden">
           <button
             type="button"
             id="view-grid"
-            class="view-toggle-btn inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium bg-gray-200 dark:bg-zinc-700 text-gray-900 dark:text-zinc-100 border-r border-gray-300 dark:border-zinc-700"
+            class="view-toggle-btn inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium bg-gray-200 dark:bg-zinc-700 text-gray-900 dark:text-zinc-100 border-r border-app-border"
             title="Grid view"
             aria-pressed="true"
           >
@@ -256,7 +263,7 @@ const defensiveCount = topics.filter((topic) =>
           <button
             type="button"
             id="view-list"
-            class="view-toggle-btn inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium bg-white dark:bg-zinc-900 text-gray-600 dark:text-zinc-400 hover:bg-gray-50 dark:bg-zinc-800/60"
+            class="view-toggle-btn inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium bg-white dark:bg-zinc-900 text-gray-600 dark:text-zinc-400 hover:bg-gray-50 dark:hover:bg-zinc-800/60"
             title="List view"
             aria-pressed="false"
           >
@@ -285,7 +292,7 @@ const defensiveCount = topics.filter((topic) =>
             data-title={topic.data.title.toLowerCase()}
             data-description={topic.data.description.toLowerCase()}
           >
-            <Card class="topic-card-surface h-full border-gray-200/80 dark:border-zinc-800 transition-all duration-200 hover:-translate-y-1 hover:shadow-md hover:border-gray-300 dark:hover:border-zinc-700">
+            <Card class="topic-card-surface h-full bg-app-surface/95 border-app-border/85 shadow-sm dark:ring-1 dark:ring-zinc-700/60 transition-all duration-200 hover:-translate-y-1 hover:shadow-md hover:border-app-border-strong dark:hover:border-zinc-600/90 dark:hover:ring-zinc-600/75">
               <CardHeader class="topic-card-header">
                 <div class="topic-card-content">
                   <div class="topic-card-meta flex items-center justify-between gap-3 mb-2">
@@ -297,8 +304,8 @@ const defensiveCount = topics.filter((topic) =>
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
                     </svg>
                   </div>
-                  <CardTitle class="topic-card-title mb-3 line-clamp-2 break-words leading-snug">{topic.data.title}</CardTitle>
-                  <CardDescription class="topic-card-description line-clamp-3">{topic.data.description}</CardDescription>
+                  <CardTitle class="topic-card-title mb-3 line-clamp-2 break-words leading-snug dark:text-zinc-100">{topic.data.title}</CardTitle>
+                  <CardDescription class="topic-card-description line-clamp-3 dark:text-zinc-200">{topic.data.description}</CardDescription>
                 </div>
                 <div class="topic-card-cta hidden mt-4">
                   <span class="inline-flex items-center gap-1.5 rounded-md border border-gray-200 bg-gray-50 px-3 py-1.5 text-sm font-medium text-gray-700 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-200">
@@ -385,10 +392,10 @@ const defensiveCount = topics.filter((topic) =>
           topicsContainer.classList.remove('flex', 'flex-col', 'gap-3');
           topicsContainer.classList.add('grid', 'sm:grid-cols-2', 'lg:grid-cols-3', 'gap-4', 'sm:gap-5');
           
-          viewGridBtn?.classList.remove('bg-white', 'dark:bg-zinc-900', 'text-gray-600', 'dark:text-zinc-400', 'hover:bg-gray-50', 'dark:bg-zinc-800/60');
+          viewGridBtn?.classList.remove('bg-white', 'dark:bg-zinc-900', 'text-gray-600', 'dark:text-zinc-400', 'hover:bg-gray-50', 'dark:hover:bg-zinc-800/60');
           viewGridBtn?.classList.add('bg-gray-200', 'dark:bg-zinc-700', 'text-gray-900', 'dark:text-zinc-100');
           viewListBtn?.classList.remove('bg-gray-200', 'dark:bg-zinc-700', 'text-gray-900', 'dark:text-zinc-100');
-          viewListBtn?.classList.add('bg-white', 'dark:bg-zinc-900', 'text-gray-600', 'dark:text-zinc-400', 'hover:bg-gray-50', 'dark:bg-zinc-800/60');
+          viewListBtn?.classList.add('bg-white', 'dark:bg-zinc-900', 'text-gray-600', 'dark:text-zinc-400', 'hover:bg-gray-50', 'dark:hover:bg-zinc-800/60');
           viewGridBtn?.setAttribute('aria-pressed', 'true');
           viewListBtn?.setAttribute('aria-pressed', 'false');
 
@@ -404,7 +411,7 @@ const defensiveCount = topics.filter((topic) =>
             const meta = cardElement.querySelector('.topic-card-meta');
             const cornerArrow = cardElement.querySelector('.topic-card-corner-arrow');
 
-            surface?.classList.remove('sm:border-l-4', 'sm:border-l-gray-300', 'dark:sm:border-l-zinc-600', 'sm:hover:border-l-gray-400', 'dark:sm:hover:border-l-zinc-500', 'sm:bg-gray-50/40', 'dark:sm:bg-zinc-900/80');
+            surface?.classList.remove('sm:border-l-4', 'sm:border-l-gray-300', 'dark:sm:border-l-zinc-700', 'sm:hover:border-l-gray-400', 'dark:sm:hover:border-l-zinc-600', 'sm:bg-gray-50/40', 'dark:sm:bg-zinc-900/95');
             header?.classList.remove('sm:flex', 'sm:flex-row', 'sm:items-center', 'sm:justify-between', 'sm:gap-6');
             content?.classList.remove('sm:flex-1', 'sm:min-w-0');
             titleEl?.classList.remove('sm:mb-2');
@@ -424,10 +431,10 @@ const defensiveCount = topics.filter((topic) =>
           topicsContainer.classList.remove('sm:gap-5');
           topicsContainer.classList.add('flex', 'flex-col', 'gap-3');
           
-          viewListBtn?.classList.remove('bg-white', 'dark:bg-zinc-900', 'text-gray-600', 'dark:text-zinc-400', 'hover:bg-gray-50', 'dark:bg-zinc-800/60');
+          viewListBtn?.classList.remove('bg-white', 'dark:bg-zinc-900', 'text-gray-600', 'dark:text-zinc-400', 'hover:bg-gray-50', 'dark:hover:bg-zinc-800/60');
           viewListBtn?.classList.add('bg-gray-200', 'dark:bg-zinc-700', 'text-gray-900', 'dark:text-zinc-100');
           viewGridBtn?.classList.remove('bg-gray-200', 'dark:bg-zinc-700', 'text-gray-900', 'dark:text-zinc-100');
-          viewGridBtn?.classList.add('bg-white', 'dark:bg-zinc-900', 'text-gray-600', 'dark:text-zinc-400', 'hover:bg-gray-50', 'dark:bg-zinc-800/60');
+          viewGridBtn?.classList.add('bg-white', 'dark:bg-zinc-900', 'text-gray-600', 'dark:text-zinc-400', 'hover:bg-gray-50', 'dark:hover:bg-zinc-800/60');
           viewListBtn?.setAttribute('aria-pressed', 'true');
           viewGridBtn?.setAttribute('aria-pressed', 'false');
 
@@ -443,7 +450,7 @@ const defensiveCount = topics.filter((topic) =>
             const meta = cardElement.querySelector('.topic-card-meta');
             const cornerArrow = cardElement.querySelector('.topic-card-corner-arrow');
 
-            surface?.classList.add('sm:border-l-4', 'sm:border-l-gray-300', 'dark:sm:border-l-zinc-600', 'sm:hover:border-l-gray-400', 'dark:sm:hover:border-l-zinc-500', 'sm:bg-gray-50/40', 'dark:sm:bg-zinc-900/80');
+            surface?.classList.add('sm:border-l-4', 'sm:border-l-gray-300', 'dark:sm:border-l-zinc-700', 'sm:hover:border-l-gray-400', 'dark:sm:hover:border-l-zinc-600', 'sm:bg-gray-50/40', 'dark:sm:bg-zinc-900/95');
             header?.classList.add('sm:flex', 'sm:flex-row', 'sm:items-center', 'sm:justify-between', 'sm:gap-8');
             content?.classList.add('sm:flex-1', 'sm:min-w-0');
             titleEl?.classList.add('sm:mb-2');
@@ -470,7 +477,7 @@ const defensiveCount = topics.filter((topic) =>
               const [type, value, label] = tagKey.split(':');
               const tag = document.createElement('button');
               tag.type = 'button';
-              tag.className = 'inline-flex items-center gap-1.5 px-3 py-1.5 bg-primary-100 text-primary-900 rounded-lg text-xs font-medium border border-primary-300 hover:bg-primary-200 transition-colors';
+              tag.className = 'inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium border transition-colors bg-blue-100 text-blue-800 border-blue-300 hover:bg-blue-200 dark:bg-blue-950/70 dark:text-blue-200 dark:border-blue-700 dark:hover:bg-blue-950/80';
               tag.innerHTML = `
                 <span>${label}</span>
                 <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -531,9 +538,9 @@ const defensiveCount = topics.filter((topic) =>
             const tagKey = Array.from(activeFiltersSet).find(key => key.startsWith(`${type}:${value}:`));
             
             if (tagKey) {
-              btn.classList.add('ring-2', 'ring-primary-500', 'ring-offset-2');
+              btn.classList.add('ring-2', 'ring-blue-500', 'ring-offset-2', 'dark:ring-offset-zinc-900');
             } else {
-              btn.classList.remove('ring-2', 'ring-primary-500', 'ring-offset-2');
+              btn.classList.remove('ring-2', 'ring-blue-500', 'ring-offset-2', 'dark:ring-offset-zinc-900');
             }
           });
         }

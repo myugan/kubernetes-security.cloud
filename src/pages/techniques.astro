@@ -181,16 +181,16 @@ const techniqueDetailsJson = JSON.stringify(techniqueDetails);
       <div class="px-6 pb-6">
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
           <div class="lg:col-span-2">
-            <div id="techniques-graph" class="w-full h-[720px] rounded-xl border border-gray-200 dark:border-zinc-800 bg-white dark:bg-zinc-900"></div>
+            <div id="techniques-graph" class="w-full h-[720px] rounded-xl border border-app-border bg-app-surface"></div>
           </div>
-          <div class="rounded-xl border border-gray-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-4">
+          <div class="rounded-xl border border-app-border bg-app-surface p-4">
             <p class="text-xs font-semibold tracking-wide text-gray-500 dark:text-zinc-500 mb-2">Technique Details</p>
             <h3 id="technique-panel-title" class="text-lg font-semibold text-gray-900 dark:text-zinc-100">Select a technique</h3>
             <p id="technique-panel-desc" class="mt-2 text-sm text-gray-600 dark:text-zinc-400">
               Click any red technique node to view mapped topics and open the MITRE reference.
             </p>
             <div id="technique-panel-topics" class="mt-4 space-y-2"></div>
-            <a id="technique-panel-link" href="#" target="_blank" rel="noopener noreferrer" class="hidden mt-4 inline-flex items-center gap-1 text-sm text-primary-600 hover:text-primary-700 dark:hover:text-primary-400">
+            <a id="technique-panel-link" href="#" target="_blank" rel="noopener noreferrer" class="hidden mt-4 inline-flex items-center gap-1 text-sm text-primary-600 dark:text-primary-400 hover:text-primary-700 dark:hover:text-primary-300">
               Open on MITRE
               <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
@@ -235,6 +235,35 @@ const techniqueDetailsJson = JSON.stringify(techniqueDetails);
         const panelDesc = document.getElementById('technique-panel-desc');
         const panelTopics = document.getElementById('technique-panel-topics');
         const panelLink = document.getElementById('technique-panel-link');
+        function getGraphColors() {
+          const isDark = document.documentElement.classList.contains('dark');
+          return isDark
+            ? {
+                nodeBg: '#27272a',
+                nodeBorder: '#52525b',
+                nodeText: '#e4e4e7',
+                tacticBg: '#312e81',
+                tacticBorder: '#818cf8',
+                techniqueBg: '#7f1d1d',
+                techniqueBorder: '#f87171',
+                edge: '#71717a',
+                pulse: '#fbbf24',
+              }
+            : {
+                nodeBg: '#f3f4f6',
+                nodeBorder: '#9ca3af',
+                nodeText: '#111827',
+                tacticBg: '#ddd6fe',
+                tacticBorder: '#7c3aed',
+                techniqueBg: '#fee2e2',
+                techniqueBorder: '#dc2626',
+                edge: '#9ca3af',
+                pulse: '#f59e0b',
+              };
+        }
+
+        const colors = getGraphColors();
+
         const cy = cytoscape({
           container,
           elements: {
@@ -249,10 +278,10 @@ const techniqueDetailsJson = JSON.stringify(techniqueDetails);
                 width: 'label',
                 height: 'label',
                 shape: 'roundrectangle',
-                'background-color': '#f3f4f6',
+                'background-color': colors.nodeBg,
                 'border-width': 2,
-                'border-color': '#9ca3af',
-                color: '#111827',
+                'border-color': colors.nodeBorder,
+                color: colors.nodeText,
                 'text-valign': 'center',
                 'text-halign': 'center',
                 'text-wrap': 'wrap',
@@ -265,24 +294,24 @@ const techniqueDetailsJson = JSON.stringify(techniqueDetails);
             {
               selector: 'node[type = "tactic"]',
               style: {
-                'background-color': '#ddd6fe',
-                'border-color': '#7c3aed',
+                'background-color': colors.tacticBg,
+                'border-color': colors.tacticBorder,
               },
             },
             {
               selector: 'node[type = "technique"]',
               style: {
-                'background-color': '#fee2e2',
-                'border-color': '#dc2626',
+                'background-color': colors.techniqueBg,
+                'border-color': colors.techniqueBorder,
               },
             },
             {
               selector: 'node.pulse',
               style: {
                 'border-width': 4,
-                'border-color': '#f59e0b',
+                'border-color': colors.pulse,
                 'shadow-blur': 20,
-                'shadow-color': '#f59e0b',
+                'shadow-color': colors.pulse,
                 'shadow-opacity': 0.6,
               },
             },
@@ -290,8 +319,8 @@ const techniqueDetailsJson = JSON.stringify(techniqueDetails);
               selector: 'edge',
               style: {
                 width: 1.8,
-                'line-color': '#9ca3af',
-                'target-arrow-color': '#9ca3af',
+                'line-color': colors.edge,
+                'target-arrow-color': colors.edge,
                 'target-arrow-shape': 'triangle',
                 'curve-style': 'bezier',
               },
@@ -323,6 +352,45 @@ const techniqueDetailsJson = JSON.stringify(techniqueDetails);
           renderedPosition: { x: cy.width() / 2, y: cy.height() / 2 },
         });
 
+        function applyGraphColors() {
+          const nextColors = getGraphColors();
+          cy.style()
+            .selector('node')
+            .style({
+              'background-color': nextColors.nodeBg,
+              'border-color': nextColors.nodeBorder,
+              color: nextColors.nodeText,
+            })
+            .selector('node[type = "tactic"]')
+            .style({
+              'background-color': nextColors.tacticBg,
+              'border-color': nextColors.tacticBorder,
+            })
+            .selector('node[type = "technique"]')
+            .style({
+              'background-color': nextColors.techniqueBg,
+              'border-color': nextColors.techniqueBorder,
+            })
+            .selector('node.pulse')
+            .style({
+              'border-color': nextColors.pulse,
+              'shadow-color': nextColors.pulse,
+            })
+            .selector('edge')
+            .style({
+              'line-color': nextColors.edge,
+              'target-arrow-color': nextColors.edge,
+            })
+            .update();
+        }
+
+        document.querySelectorAll('.theme-toggle-btn').forEach((button) => {
+          button.addEventListener('click', () => {
+            window.setTimeout(applyGraphColors, 0);
+          });
+        });
+        document.addEventListener('astro:after-swap', applyGraphColors);
+
         cy.on('tap', 'node', (evt) => {
           const nodeType = evt.target.data('type');
           if (nodeType !== 'technique') return;
@@ -341,7 +409,7 @@ const techniqueDetailsJson = JSON.stringify(techniqueDetails);
               info.topics.forEach((topic) => {
                 const a = document.createElement('a');
                 a.href = `/topics/${topic.slug}`;
-                a.className = 'block rounded-md border border-gray-200 dark:border-zinc-700 px-3 py-2 text-sm text-gray-700 dark:text-zinc-300 hover:bg-gray-50 dark:hover:bg-zinc-800';
+                a.className = 'block rounded-md border border-app-border px-3 py-2 text-sm text-app-text-secondary hover:bg-app-surface-muted/70';
                 a.textContent = topic.title;
                 panelTopics.appendChild(a);
               });
