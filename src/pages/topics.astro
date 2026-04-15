@@ -116,13 +116,13 @@ const defensiveCount = topics.filter((topic) =>
                   >
                     <span
                       class:list={[
-                        'text-sm font-medium leading-snug text-gray-900 group-hover:!text-[rgb(252,165,165)] dark:text-zinc-100',
+                        'text-sm font-medium leading-snug text-gray-900 dark:text-zinc-100',
                         topic.data.category.toLowerCase() === 'offensive' &&
-                          'dark:group-hover:!text-[rgb(185,28,28)]',
+                          'group-hover:text-red-800 dark:group-hover:!text-[rgb(185,28,28)]',
                         topic.data.category.toLowerCase() === 'defensive' &&
-                          'dark:group-hover:!text-[rgb(29,78,216)]',
+                          'group-hover:text-blue-800 dark:group-hover:!text-[rgb(29,78,216)]',
                         !['offensive', 'defensive'].includes(topic.data.category.toLowerCase()) &&
-                          'dark:group-hover:text-blue-300',
+                          'group-hover:text-blue-700 dark:group-hover:text-blue-300',
                       ]}
                     >
                       {topic.data.title}
@@ -162,7 +162,7 @@ const defensiveCount = topics.filter((topic) =>
                 autocomplete="off"
                 placeholder="Search topics..."
                 aria-describedby="search-hint"
-                class="ds-input w-full py-2 pl-9 pr-3 border rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none text-[13px] leading-tight"
+                class="ds-input w-full py-2 pl-9 pr-3 border rounded-md focus:ring-2 focus:ring-app-border-strong/60 focus:border-app-border-strong outline-none text-[13px] leading-tight"
               />
               <span id="search-hint" class="sr-only">Filters the topic cards below as you type.</span>
               <svg class="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-500 dark:text-zinc-500 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
