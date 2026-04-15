@@ -116,13 +116,13 @@ const defensiveCount = topics.filter((topic) =>
                   >
                     <span
                       class:list={[
-                        'text-sm font-medium leading-snug text-gray-900 dark:text-zinc-100',
+                        'text-sm font-medium leading-snug text-gray-900 group-hover:!text-[rgb(252,165,165)] dark:text-zinc-100',
                         topic.data.category.toLowerCase() === 'offensive' &&
-                          'group-hover:!text-[rgb(252,165,165)] dark:group-hover:!text-[rgb(185,28,28)]',
+                          'dark:group-hover:!text-[rgb(185,28,28)]',
                         topic.data.category.toLowerCase() === 'defensive' &&
-                          'group-hover:!text-[rgb(147,197,253)] dark:group-hover:!text-[rgb(29,78,216)]',
+                          'dark:group-hover:!text-[rgb(29,78,216)]',
                         !['offensive', 'defensive'].includes(topic.data.category.toLowerCase()) &&
-                          'group-hover:text-blue-700 dark:group-hover:text-blue-300',
+                          'dark:group-hover:text-blue-300',
                       ]}
                     >
                       {topic.data.title}
