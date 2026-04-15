@@ -142,7 +142,7 @@ const defensiveCount = topics.filter((topic) =>
       )}
 
       <!-- Search Bar with Tag Filters -->
-      <div class="mt-6 mb-6">
+      <div class="mt-6 mb-4">
         <Card class="p-3 sm:p-4 rounded-lg border-gray-200 dark:border-zinc-700">
           <!-- Search Input + reset -->
           <div class="flex items-center gap-2">
@@ -234,11 +234,11 @@ const defensiveCount = topics.filter((topic) =>
       </div>
 
       <!-- View Toggle -->
-      <div class="flex items-center justify-between gap-3 mb-4">
+      <div class="mb-5 flex flex-col items-start justify-between gap-3 rounded-lg border border-gray-200 bg-white px-3 py-2 sm:flex-row sm:items-center sm:px-4 sm:py-2.5 lg:sticky lg:top-20 lg:z-20 lg:bg-white/95 lg:backdrop-blur lg:supports-[backdrop-filter]:bg-white/80 dark:border-zinc-700 dark:bg-zinc-950 dark:lg:bg-zinc-950/90 dark:lg:supports-[backdrop-filter]:bg-zinc-950/80">
         <p class="text-base text-gray-600 dark:text-zinc-400" aria-live="polite" aria-atomic="true">
           Showing <span id="results-count-inline" class="font-semibold text-gray-700 dark:text-zinc-300">{totalTopics}</span> topic{totalTopics === 1 ? '' : 's'}
         </p>
-        <div class="flex items-center gap-2">
+        <div class="flex items-center gap-2 self-end sm:self-auto">
           <span class="text-sm text-gray-500 dark:text-zinc-500">View:</span>
           <div class="flex border border-gray-300 dark:border-zinc-700 rounded-lg overflow-hidden">
           <button
@@ -270,7 +270,11 @@ const defensiveCount = topics.filter((topic) =>
       </div>
     </div>
 
-    <div id="topics-container" class="grid sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5">
+    <section aria-labelledby="topics-browse-heading" class="mb-2">
+      <h2 id="topics-browse-heading" class="sr-only">Browse topics</h2>
+    </section>
+
+    <div id="topics-container" class="grid sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5 lg:gap-6">
       {sortedTopics.map((topic) => {
         const categoryColors = getCategoryColors(topic.data.category);
         return (
@@ -311,8 +315,16 @@ const defensiveCount = topics.filter((topic) =>
       })}
     </div>
 
-    <div id="no-results" class="hidden text-center py-12">
-      <p class="text-gray-500 dark:text-zinc-500 text-lg">No topics found matching your search.</p>
+    <div id="no-results" class="hidden rounded-lg border border-gray-200 bg-gray-50/80 dark:border-zinc-700 dark:bg-zinc-900/40 text-center py-10 px-4">
+      <p class="text-gray-700 dark:text-zinc-300 text-lg font-medium">No topics found matching your filters.</p>
+      <p class="mt-1 text-sm text-gray-500 dark:text-zinc-500">Try another keyword, or clear filters to see everything again.</p>
+      <button
+        type="button"
+        id="no-results-reset-btn"
+        class="mt-4 inline-flex items-center rounded-md border border-gray-200 bg-white px-3 py-1.5 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-100 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-300 dark:hover:bg-zinc-800"
+      >
+        Reset filters
+      </button>
     </div>
 
     <script>
@@ -333,6 +345,7 @@ const defensiveCount = topics.filter((topic) =>
         let filterSelectedCount: HTMLElement | null = null;
         let resultsCountInline: HTMLElement | null = null;
         let resetFiltersBtn: HTMLButtonElement | null = null;
+        let noResultsResetBtn: HTMLButtonElement | null = null;
 
         const activeFiltersSet = new Set<string>();
 
@@ -594,6 +607,7 @@ const defensiveCount = topics.filter((topic) =>
           filterSelectedCount = document.getElementById('filter-selected-count');
           resultsCountInline = document.getElementById('results-count-inline');
           resetFiltersBtn = document.getElementById('reset-filters-btn') as HTMLButtonElement;
+          noResultsResetBtn = document.getElementById('no-results-reset-btn') as HTMLButtonElement;
 
           if (!searchInput || !topicsContainer || !noResults || !topicCards || topicCards.length === 0) {
             setTimeout(initSearch, 100);
@@ -622,6 +636,7 @@ const defensiveCount = topics.filter((topic) =>
           }
 
           resetFiltersBtn?.addEventListener('click', resetFilters);
+          noResultsResetBtn?.addEventListener('click', resetFilters);
 
           filterToggleBtn?.addEventListener('click', toggleFilterTags);
           viewGridBtn?.addEventListener('click', setGridView);

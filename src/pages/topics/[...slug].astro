@@ -163,10 +163,10 @@ const impactLinkParentClass =
       </p>
     </header>
 
-    <div class:list={[tocHeadings.length > 0 && 'flex flex-col gap-8 lg:flex-row lg:items-start lg:gap-10']}>
+    <div class:list={[tocHeadings.length > 0 && 'flex flex-col gap-8 lg:flex-row lg:items-start lg:gap-10 xl:gap-12']}>
       {tocHeadings.length > 0 && (
         <aside
-          class="shrink-0 lg:sticky lg:top-28 lg:w-60 xl:w-72"
+          class="shrink-0 lg:order-last lg:sticky lg:top-24 lg:w-56 xl:w-64"
           aria-label="On this page"
         >
           <nav
@@ -186,7 +186,7 @@ const impactLinkParentClass =
         </aside>
       )}
 
-      <div class:list={['space-y-8', tocHeadings.length > 0 && 'min-w-0 flex-1']}>
+      <div class:list={['space-y-8', tocHeadings.length > 0 && 'min-w-0 flex-1 lg:order-first']}>
     <Card class="mb-0 overflow-hidden shadow-md dark:shadow-black/30">
       <CardContent
         class:list={[

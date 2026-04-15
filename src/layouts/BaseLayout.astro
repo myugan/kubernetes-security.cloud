@@ -55,33 +55,23 @@ const ogImageUrl = new URL(image, site.url).href;
     <meta name="description" content={metaDescription} />
     <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="color-scheme" content="light dark" />
-    <meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)" />
-    <meta name="theme-color" content="#0c0c0e" media="(prefers-color-scheme: dark)" />
+    <meta name="color-scheme" content="light" />
+    <meta name="theme-color" content="#ffffff" />
+    <script is:inline>
+      (function () {
+        var root = document.documentElement;
+        root.classList.remove('dark');
+        root.style.colorScheme = 'light';
+        document.addEventListener('astro:after-swap', function () {
+          document.documentElement.classList.remove('dark');
+          document.documentElement.style.colorScheme = 'light';
+        });
+      })();
+    </script>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&display=swap" rel="stylesheet" />
-    <script is:inline>
-      (function () {
-        function applyColorScheme() {
-          var dark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-          var root = document.documentElement;
-          if (dark) root.classList.add('dark');
-          else root.classList.remove('dark');
-          root.style.colorScheme = dark ? 'dark' : 'light';
-        }
-        applyColorScheme();
-        document.addEventListener('astro:after-swap', applyColorScheme);
-        try {
-          window
-            .matchMedia('(prefers-color-scheme: dark)')
-            .addEventListener('change', applyColorScheme);
-        } catch (e) {
-          window.matchMedia('(prefers-color-scheme: dark)').addListener(applyColorScheme);
-        }
-      })();
-    </script>
-    
+
     <!-- Favicons -->
     <link rel="icon" type="image/x-icon" href="/favicon.ico" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
