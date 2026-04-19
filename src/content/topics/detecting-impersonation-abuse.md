@@ -59,21 +59,16 @@ curl -sk -H "Authorization: Bearer $TOKEN" \
 
 `Metadata` level is enough to see `user` and `impersonatedUser`. You do not need `Request` or `RequestResponse` to detect impersonation itself, though those levels add request bodies for deeper investigation.
 
+Impersonation cannot be targeted in an audit policy by verb or resource. The `impersonate` verb exists only in the RBAC authorization layer and never appears as a request verb in audit events. The `impersonatedUser` field is attached to the actual API request (list, get, create, etc.) that runs under the assumed identity. There is no audit policy rule that matches exclusively on impersonated requests. The only approach is a catch-all rule that logs all requests:
+
 ```yaml
 apiVersion: audit.k8s.io/v1
 kind: Policy
 rules:
   - level: Metadata
-    verbs: ["impersonate"]
-  - level: Metadata
-    resources:
-      - group: ""
-        resources: ["users", "groups", "serviceaccounts"]
-      - group: "authentication.k8s.io"
-        resources: ["uids"]
 ```
 
-A broad catch-all at `Metadata` level also works because `impersonatedUser` appears on every impersonated request regardless of resource.
+Detection is done at query time by filtering for events where `impersonatedUser` is present, not at policy definition time.
 
 ## How impersonation appears in the audit log
 
@@ -144,6 +139,9 @@ kubectl get clusterrolebindings -o json \
 ```
 
 Flag bindings where `resourceNames` is absent, the subject is a ServiceAccount in an application namespace, or the impersonated resource includes `system:masters`.
+
+> [!NOTE]
+> The built-in `admin` and `edit` ClusterRoles both grant `impersonate` on `serviceaccounts` by default. Any subject bound to these roles in a namespace can impersonate any service account within that namespace. Treat namespace-scoped `admin` and `edit` bindings as implicit impersonation grants when auditing for lateral movement risk.
 
 ### List all ServiceAccounts that can impersonate
 
