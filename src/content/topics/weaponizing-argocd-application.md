@@ -21,6 +21,8 @@ references: |
 
 ArgoCD is a GitOps continuous delivery tool that runs a **privileged service account** in the cluster to deploy and reconcile application manifests. An attacker who has only `create` permission on ArgoCD `Application` resources can exploit this trust relationship. They do not need direct pod creation access. **ArgoCD's own service account** performs the deployment on their behalf, making this a classic **confused deputy attack**.
 
+## RBAC permissions
+
 The only required RBAC permission is:
 
 ```yaml

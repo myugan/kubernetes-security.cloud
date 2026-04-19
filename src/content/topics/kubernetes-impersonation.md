@@ -148,7 +148,7 @@ kubectl get serviceaccount default -n default -o jsonpath='{.metadata.uid}'
 kubectl get pods -A -o custom-columns=NAME:.metadata.name,UID:.metadata.uid
 ```
 
-## How an impersonation attack works
+## The attack sequence
 
 1. The attacker signs in as a weak identity (stolen ServiceAccount token, leaked kubeconfig, and the like).
 2. That identity has `impersonate` on `users`, `groups`, `serviceaccounts`, UIDs, or extras.
