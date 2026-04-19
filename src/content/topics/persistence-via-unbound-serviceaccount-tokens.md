@@ -48,7 +48,7 @@ After the attacking pod is deleted, the unbound token continues to authenticate.
 
 ```bash
 # Unbound token after pod deletion
-curl -sk https://<apiserver>/api/v1/namespaces/<namespace>/pods \
+curl -sk https://<apiserver>/api/v1/namespaces/default/secrets \
   -H "Authorization: Bearer <unbound-token>"
 ```
 
@@ -56,13 +56,13 @@ curl -sk https://<apiserver>/api/v1/namespaces/<namespace>/pods \
 {
   "kind": "Status",
   "code": 403,
-  "message": "pods is forbidden: User \"system:serviceaccount:kube-system:replicaset-controller\" cannot list resource \"pods\" in API group \"\" in the namespace \"default\""
+  "message": "secrets is forbidden: User \"system:serviceaccount:kube-system:replicaset-controller\" cannot list resource \"secrets\" in API group \"\" in the namespace \"default\""
 }
 ```
 
 For comparison, a bound token (with `boundObjectRef`) would return **401 Unauthorized** after the bound pod is deleted. The token itself is rejected before reaching authorization. The invalidation is delayed by approximately 10 to 15 seconds due to a hardcoded token authentication cache in the kube-apiserver. The success cache TTL is 10 seconds, set in `pkg/kubeapiserver/options/authentication.go`. On a cache hit the bound pod existence check is bypassed entirely. After the cache expires, additional informer lag may add a few seconds before the pod lookup sees the deletion. This cache TTL is not configurable via CLI flags for the core kube-apiserver. Despite this delay, the bound token is eventually dead. An unbound token has no such dependency and survives until its `exp` claim.
 
-## RBAC permissions required
+## RBAC permissions
 
 The attacker needs only `create` on `serviceaccounts/token` in the target namespace:
 
