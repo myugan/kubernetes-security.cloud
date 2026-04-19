@@ -382,7 +382,7 @@
   -webkit-hyphens: auto;
 }
 
-/* GitHub-style callouts: > [!NOTE] / [!WARNING] / [!DANGER] (see scripts/rehype-markdown-callouts.mjs) */
+/* GitHub-style callouts: > [!NOTE] / [!WARNING] / [!DANGER] (see scripts/rehype-markdown-callouts.mjs). Warning uses orange, not amber/yellow. */
 /* !important beats Tailwind Typography `prose-blockquote:*` on topic/glossary wrappers */
 .prose blockquote.callout {
   margin: 1.25em 0 !important;
@@ -430,6 +430,7 @@
   margin-bottom: 0;
 }
 
+/* Callout surfaces: info = sky (brand-adjacent), tip = teal, warning = orange (not amber/yellow), danger = rose */
 .prose blockquote.callout.callout-info {
   border-left-color: rgb(2 132 199) !important;
   background-color: rgb(240 249 255) !important;
@@ -437,45 +438,78 @@
 }
 
 .dark .prose blockquote.callout.callout-info {
-  background-color: rgb(12 74 110 / 0.22) !important;
-  border-color: rgb(56 189 248 / 0.35) !important;
+  background-color: rgb(12 74 110 / 0.28) !important;
+  border-color: rgb(14 165 233 / 0.4) !important;
   border-left-color: rgb(56 189 248) !important;
 }
 
+.prose blockquote.callout.callout-info .callout-label strong {
+  color: rgb(3 105 161) !important;
+}
+
+.dark .prose blockquote.callout.callout-info .callout-label strong {
+  color: rgb(125 211 252) !important;
+}
+
 .prose blockquote.callout.callout-tip {
-  border-left-color: rgb(5 150 105) !important;
-  background-color: rgb(236 253 245) !important;
-  border-color: rgb(167 243 208) !important;
+  border-left-color: rgb(13 148 136) !important;
+  background-color: rgb(240 253 250) !important;
+  border-color: rgb(153 246 228) !important;
 }
 
 .dark .prose blockquote.callout.callout-tip {
-  background-color: rgb(6 78 59 / 0.22) !important;
-  border-color: rgb(52 211 153 / 0.35) !important;
-  border-left-color: rgb(52 211 153) !important;
+  background-color: rgb(17 94 89 / 0.28) !important;
+  border-color: rgb(45 212 191 / 0.38) !important;
+  border-left-color: rgb(45 212 191) !important;
 }
 
+.prose blockquote.callout.callout-tip .callout-label strong {
+  color: rgb(15 118 110) !important;
+}
+
+.dark .prose blockquote.callout.callout-tip .callout-label strong {
+  color: rgb(94 234 212) !important;
+}
+
+/* Orange reads as “caution” without the highlighter-yellow of amber-50 / yellow-200 */
 .prose blockquote.callout.callout-warning {
-  border-left-color: rgb(217 119 6) !important;
-  background-color: rgb(255 251 235) !important;
-  border-color: rgb(253 230 138) !important;
+  border-left-color: rgb(234 88 12) !important;
+  background-color: rgb(255 247 237) !important;
+  border-color: rgb(254 215 170) !important;
 }
 
 .dark .prose blockquote.callout.callout-warning {
-  background-color: rgb(120 53 15 / 0.22) !important;
-  border-color: rgb(251 191 36 / 0.35) !important;
-  border-left-color: rgb(251 191 36) !important;
+  background-color: rgb(124 45 18 / 0.28) !important;
+  border-color: rgb(249 115 22 / 0.42) !important;
+  border-left-color: rgb(251 146 60) !important;
+}
+
+.prose blockquote.callout.callout-warning .callout-label strong {
+  color: rgb(194 65 12) !important;
+}
+
+.dark .prose blockquote.callout.callout-warning .callout-label strong {
+  color: rgb(253 186 116) !important;
 }
 
 .prose blockquote.callout.callout-danger {
-  border-left-color: rgb(220 38 38) !important;
-  background-color: rgb(254 242 242) !important;
-  border-color: rgb(252 165 165) !important;
+  border-left-color: rgb(225 29 72) !important;
+  background-color: rgb(255 241 242) !important;
+  border-color: rgb(254 205 211) !important;
 }
 
 .dark .prose blockquote.callout.callout-danger {
-  background-color: rgb(127 29 29 / 0.22) !important;
-  border-color: rgb(248 113 113 / 0.35) !important;
-  border-left-color: rgb(248 113 113) !important;
+  background-color: rgb(136 19 55 / 0.3) !important;
+  border-color: rgb(251 113 133 / 0.42) !important;
+  border-left-color: rgb(251 113 133) !important;
+}
+
+.prose blockquote.callout.callout-danger .callout-label strong {
+  color: rgb(190 18 60) !important;
+}
+
+.dark .prose blockquote.callout.callout-danger .callout-label strong {
+  color: rgb(253 164 175) !important;
 }
 
 .prose a {
