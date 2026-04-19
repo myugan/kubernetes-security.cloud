@@ -46,7 +46,9 @@ A caller sends a `TokenRequest` body specifying how long the token should live a
 
 The `spec` also accepts an optional `boundObjectRef` field that ties the resulting token to the lifetime of a specific pod or Secret. Without it the token is unbound: it remains valid until `exp` regardless of whether the requesting workload still exists.
 
-A caller with `create` on the `serviceaccounts/token` subresource can call this endpoint for any service account the RBAC rule covers, not just its own. The token is generated in memory and never written to etcd. No Secret object is created and the credential cannot be retrieved after the API response is returned. The API server has no requirement that the requester and the target be the same identity, which means any over-permissive grant of the subresource becomes an impersonation primitive.
+A caller with `create` on the `serviceaccounts/token` subresource can call this endpoint for any service account the RBAC rule covers, not just its own. The token is generated in memory and never written to etcd. Old-style service account tokens were auto-created as Secret objects and persisted in etcd, which meant they survived restarts, appeared in etcd backups, and were visible to anyone with read access to Secrets. 
+
+The TokenRequest API was introduced to replace that model. The API server signs the token using `--service-account-signing-key-file`, writes it into the HTTP response body, and performs no etcd write. No Secret object is created. The credential cannot be retrieved after the API response is returned, which means exfiltration at issuance time is the only window to capture it. The API server has no requirement that the requester and the target be the same identity, which means any over-permissive grant of the subresource becomes an impersonation primitive.
 
 ## RBAC permissions
 
