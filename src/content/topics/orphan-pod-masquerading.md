@@ -17,6 +17,12 @@ references: |
 
 An orphan pod is a pod without an owner reference, meaning it was created directly rather than by a controller like a **Deployment** or **DaemonSet**. Attackers can exploit this by creating orphan pods that mimic the naming conventions of controller-managed pods, making malicious workloads blend in during casual inspection.
 
+## The attack sequence
+
+The attacker creates an orphan pod with a name matching controller-managed naming conventions to hide malicious workloads.
+
+### Step 1: Identify the target naming pattern
+
 When a **Deployment** is created, Kubernetes generates a **ReplicaSet** with a **pod-template-hash**, then the **ReplicaSet** creates Pods. The hash is computed using the **32-bit FNV-1** against the **PodTemplateSpec**, then encoded using `SafeEncodeString` to produce a 9-10 character alphanumeric string. The resulting Pod name follows the pattern **[deployment-name]-[hash]-[random]**:
 
 ```
@@ -36,6 +42,8 @@ kubectl get pod nginx-5d6f7b8c9-x4k2m -o jsonpath='{.metadata.labels.pod-templat
 ```output
 5d6f7b8c9
 ```
+
+### Step 2: Create the masquerading pod
 
 An attacker can manually create a Pod that mimics this naming pattern:
 

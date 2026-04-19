@@ -39,7 +39,11 @@ Reading **etcd** data files from disk (as in the `/var/lib/etcd` **hostPath** ex
 
 The **kube-apiserver** also uses **`apiserver-etcd-client.crt`** and **`apiserver-etcd-client.key`**, but those files sit in the **parent** folder **`/etc/kubernetes/pki/`**, not inside **`etcd/`**. This walkthrough keeps the **hostPath** scoped to **`/etc/kubernetes/pki/etcd`** so you are not mounting the full cluster PKI (service account signing keys, front-proxy certs, and so on). Paths and filenames can differ if your distribution customized the control plane layout. See the upstream [certificates documentation](https://kubernetes.io/docs/setup/best-practices/certificates/).
 
-## Prerequisites you are chaining together
+## The attack sequence
+
+The attacker creates a pod on a control plane node, mounts the etcd PKI directory, and uses the certificates to authenticate directly to etcd.
+
+### Step 1: Verify prerequisites
 
 1. **Permission to create pods** (or workloads that become pods) in a namespace that allows the dangerous fields you need.
 2. A **control plane node** you can schedule onto, typically via **nodeSelector** / **affinity** and **tolerations** for `node-role.kubernetes.io/control-plane` (or legacy `master`) **NoSchedule** taints, as shown in [Weaponizing Pod Creation Access](/topics/weaponizing-pod-creation/).

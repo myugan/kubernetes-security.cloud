@@ -26,7 +26,19 @@ Kyverno v1.17 deprecates `ClusterPolicy` and shifts new policy authoring to CEL-
 
 Mutation runs in the admission path. If an identity can write mutation policy objects, it can rewrite future pods as they are created. That scales far beyond editing individual Deployments and can blend into normal rollout traffic.
 
-## What access enables
+## The attack sequence
+
+The attacker creates a malicious MutatingPolicy that injects backdoor containers into new pods across the cluster.
+
+### Step 1: Verify MutatingPolicy access
+
+Check if you can create or update MutatingPolicy objects:
+
+```bash
+kubectl auth can-i create mutatingpolicies --all-namespaces
+```
+
+### Step 2: Create the malicious policy
 
 Write access to `MutatingPolicy` lets an attacker change pod fields at creation time. The specific outcome depends on what the policy matches and what it mutates, but common categories are adding containers, changing images, adding env vars, and adding volumes or mounts. If that scope is broad, the effect spreads through normal deploys, restarts, and autoscaling.
 
