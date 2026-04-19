@@ -20,9 +20,15 @@ references: |
   - [Events in Kubernetes](https://kubernetes.io/docs/reference/kubectl/generated/kubectl_events/)
 ---
 
-After gaining access to a cluster, an attacker may have already collected sensitive data: a mounted service account token, a database credential from a Secret, an AWS key from an environment variable. The next step is moving that data out without triggering network egress alerts or leaving obvious traces. Kubernetes Events serve as a built-in staging area. The control plane stores and serves the events without any content inspection, and the same API access retrieves the data from any session with `get` on `events`.
+After gaining access to a cluster, an attacker may have already collected sensitive data: a mounted service account token, a database credential from a Secret, an AWS key from an environment variable. The next step is moving that data out without triggering network egress alerts or leaving obvious traces.
 
-## RBAC permissions
+## The attack sequence
+
+The attacker encodes stolen data and embeds it in Kubernetes Events, then retrieves it from outside the cluster.
+
+### Step 1: Acquire event creation permissions
+
+The minimum RBAC required:
 
 ```yaml
 rules:
@@ -31,11 +37,11 @@ rules:
     verbs: ["create", "get"]
 ```
 
-## Spoofing the event source
+### Step 2: Spoof the event source
 
 The `source.component`, `source.host`, `reportingComponent`, and `reportingInstance` fields are set by the creator. The API server stores whatever value is submitted without validating it against the requesting identity. Setting them to `kubelet` and a real node name makes the event indistinguishable from kubelet output in `kubectl get events`.
 
-## Exfiltrating a service account token
+### Step 3: Encode and exfiltrate the data
 
 A service account token for `system:serviceaccount:production:deployer` is a JWT. Mounted at `/var/run/secrets/kubernetes.io/serviceaccount/token` inside any pod running with that account, it grants whatever RBAC permissions the account holds. An attacker hex-encodes the token and splits it across three events, each appearing as a routine image pull in the `production` namespace.
 
