@@ -21,9 +21,9 @@ kube-state-metrics is a service that converts Kubernetes object state into Prome
 
 This technique exploits the fact that kube-state-metrics exposes secret metadata as queryable metrics. An attacker inside the cluster can enumerate every secret name, namespace, and type across all namespaces without ever calling the Kubernetes API server, generating no audit events in the process.
 
-## Conditions
+## The attack sequence
 
-Impact depends on how kube-state-metrics is configured.
+The attacker discovers the `kube-state-metrics` endpoint and queries it to enumerate secrets without touching the Kubernetes API. Impact depends on how kube-state-metrics is configured.
 
 | Configuration | What is exposed | Notes |
 | --- | --- | --- |
