@@ -6,8 +6,6 @@ createdAt: 2026-01-14
 impact: Reduces the attack surface by hiding internal service endpoints from any pods
 mitigation:
   - Use DNS-based service discovery instead of environment variables
-mitreTechniques:
-  - T1613
 references: |
   - [Accessing the Service](https://kubernetes.io/docs/tutorials/services/connect-applications-service/#accessing-the-service)
   - [Disable enableServiceLinks by default](https://docs.aws.amazon.com/eks/latest/best-practices/scale-workloads.html)
