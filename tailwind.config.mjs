@@ -6,7 +6,7 @@ export default {
     extend: {
       fontFamily: {
         sans: [
-          'Geist Sans',
+          'DM Sans',
           'ui-sans-serif',
           'system-ui',
           '-apple-system',
@@ -18,14 +18,12 @@ export default {
           'sans-serif',
         ],
         mono: [
-          'Geist Mono',
+          'JetBrains Mono',
           'ui-monospace',
           'SFMono-Regular',
           'Menlo',
           'Monaco',
           'Consolas',
-          'Liberation Mono',
-          'Courier New',
           'monospace',
         ],
       },
