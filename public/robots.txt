@@ -2,3 +2,4 @@ User-agent: *
 Allow: /
 
 Sitemap: https://kubernetes-security.cloud/sitemap-index.xml
+LLM-Content: https://kubernetes-security.cloud/llms.txt
