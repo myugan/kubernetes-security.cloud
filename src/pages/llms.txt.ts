@@ -19,10 +19,11 @@ export const GET: APIRoute = async () => {
     '## Important URLs',
     `- Topics overview: ${toAbsoluteUrl('/topics')}`,
     `- Machine-readable topic index (JSON): ${toAbsoluteUrl('/topics.json')}`,
+    `- Raw markdown topic endpoint pattern: ${toAbsoluteUrl('/topics/<topic-slug>.md')}`,
     `- Sitemap: ${toAbsoluteUrl('/sitemap-index.xml')}`,
     '',
     '## Topic pages',
-    ...sortedTopics.map((topic) => `- ${toAbsoluteUrl(`/topics/${topic.slug}`)} | ${topic.data.title} | ${topic.data.description}`),
+    ...sortedTopics.map((topic) => `- ${toAbsoluteUrl(`/topics/${topic.slug}`)} | markdown: ${toAbsoluteUrl(`/topics/${topic.slug}.md`)} | ${topic.data.title} | ${topic.data.description}`),
     '',
   ];
 
