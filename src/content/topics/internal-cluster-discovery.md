@@ -2,7 +2,7 @@
 title: Internal Cluster Discovery
 description: Techniques for discovering available services, APIs, and potential attack vectors within a Kubernetes cluster
 category: offensive
-offensiveType: reconnaissance
+phase: reconnaissance
 createdAt: 2026-01-13
 impact: Reveals exposed APIs, misconfigurations, and internal services that can be leveraged for Lateral Movement
 mitigation:

@@ -2,7 +2,7 @@
 title: Weaponizing ArgoCD Application
 description: Abusing ArgoCD as a confused deputy to deploy disguised privileged workloads cluster-wide and maintain persistent access
 category: offensive
-offensiveType: privilege-escalation
+phase: privilege-escalation
 createdAt: 2026-04-10
 impact: Full cluster compromise through privileged workload deployment, host filesystem access, and persistent backdoor that survives pod deletion
 mitigation:

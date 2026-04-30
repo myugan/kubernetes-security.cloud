@@ -2,7 +2,7 @@
 title: ServiceAccount Token Theft
 description: Techniques for obtaining ServiceAccount tokens using legitimate Kubernetes features without exploiting vulnerabilities
 category: offensive
-offensiveType: credential-access
+phase: credential-access
 createdAt: 2026-01-18
 impact: ServiceAccount tokens provide API access that can be used for enumeration, privilege escalation, and lateral movement
 mitigation:

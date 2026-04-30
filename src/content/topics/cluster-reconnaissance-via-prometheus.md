@@ -2,7 +2,7 @@
 title: Cluster Reconnaissance via Prometheus
 description: Querying an unauthenticated Prometheus endpoint to map cluster topology without touching the Kubernetes API
 category: offensive
-offensiveType: reconnaissance
+phase: reconnaissance
 createdAt: 2026-04-11
 impact: Exposes namespace names, pod identities, container image versions, internal service IPs, and node details without generating any Kubernetes API audit events
 mitigation:

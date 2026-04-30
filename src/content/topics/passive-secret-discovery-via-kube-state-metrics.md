@@ -2,7 +2,7 @@
 title: Passive Secret Discovery via kube-state-metrics
 description: Passively discovering secret names, namespaces, and metadata cluster-wide by querying the unauthenticated kube-state-metrics endpoint
 category: offensive
-offensiveType: reconnaissance
+phase: reconnaissance
 createdAt: 2026-04-11
 impact: Exposes every secret name, namespace, and type across the cluster by default. When label exposure is enabled, leaks Vault paths, sensitivity classification, owning team, and rotation policy for each secret
 mitigation:

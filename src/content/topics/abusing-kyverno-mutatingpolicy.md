@@ -2,7 +2,7 @@
 title: Abusing Kyverno MutatingPolicy
 description: How MutatingPolicy access can be abused to change pods during admission in Kyverno
 category: offensive
-offensiveType: privilege-escalation
+phase: privilege-escalation
 createdAt: 2026-04-07
 impact: >-
   If an attacker can create or update Kyverno `MutatingPolicy` objects, they can change pod specs during admission without touching each workload directly. That can enable cluster-wide persistence, credential exposure, and unexpected runtime behavior across many namespaces, depending on match constraints.
