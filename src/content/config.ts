@@ -19,6 +19,14 @@ const topicsCollection = defineCollection({
     title: z.string(),
     description: z.string(),
     category: z.enum(['offensive', 'defensive', 'fundamental']),
+    phase: z.enum([
+      'reconnaissance',
+      'credential-access',
+      'privilege-escalation',
+      'persistence',
+      'defense-evasion',
+      'exfiltration',
+    ]).optional(),
     offensiveType: z.enum([
       'reconnaissance',
       'credential-access',
