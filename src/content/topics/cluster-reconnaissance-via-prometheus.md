@@ -2,6 +2,7 @@
 title: Cluster Reconnaissance via Prometheus
 description: Querying an unauthenticated Prometheus endpoint to map cluster topology without touching the Kubernetes API
 category: offensive
+offensiveType: reconnaissance
 createdAt: 2026-04-11
 impact: Exposes namespace names, pod identities, container image versions, internal service IPs, and node details without generating any Kubernetes API audit events
 mitigation:
@@ -23,7 +24,13 @@ Prometheus ships with **no authentication enabled by default**. The HTTP query A
 
 The critical characteristic of this technique is that **it requires zero Kubernetes API calls**. Every discovery action goes directly to the Prometheus HTTP API. The Kubernetes API server audit log, which defenders rely on to detect reconnaissance (see: `SelfSubjectRulesReview` abuse), records nothing.
 
-## What Prometheus Exposes
+## The attack sequence
+
+The attacker discovers the Prometheus endpoint and queries its API to map the cluster without touching the Kubernetes API.
+
+### Step 1: Discover the Prometheus endpoint
+
+From inside a compromised pod, locate Prometheus using environment variables or DNS probes.
 
 Prometheus collects metrics from three sources that together produce a complete cluster map:
 

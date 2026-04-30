@@ -3,6 +3,7 @@ title: Compromising etcd via Pod Creation
 description: >-
   Steal etcd TLS via pod hostPath on the control plane
 category: offensive
+offensiveType: credential-access
 createdAt: 2026-04-05
 impact: >-
   With etcd TLS material from the control plane’s etcd certificate directory (for example kubeadm’s **server.crt** / **server.key** plus the etcd **CA**), an attacker can authenticate to etcd directly, list and export every Secret and object in the datastore, and in many configurations modify RBAC or persist backdoors. That level of access is often beyond what Kubernetes audit logs attribute to a normal API user.

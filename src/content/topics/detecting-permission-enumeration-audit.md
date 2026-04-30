@@ -10,9 +10,6 @@ mitigation:
   - Send audit logs to central storage and keep enough retention for incident response.
   - Treat bumps in SelfSubjectRulesReview as one signal among many. On their own they do not prove malicious intent.
   - Limit who can read audit data and who can edit the audit policy.
-mitreTechniques:
-  - T1069
-  - T1613
 tools:
   - kubectl
 references: |
@@ -58,8 +55,6 @@ curl --cacert "$CACERT" \
 The response body includes `status` with the rule lists, which is the same material `kubectl` prints for `--list`. If you are testing impersonation, add the usual `Impersonate-User` and `Impersonate-Group` headers and keep them inside what your RBAC allows.
 
 ## Does audit logging record it?
-
-In most setups, yes, as long as auditing is on and your policy records `create` on `selfsubjectrulesreviews` or matches it through a broader rule. If the policy never names that resource, you will not see these events.
 
 ### Policy sketch
 
