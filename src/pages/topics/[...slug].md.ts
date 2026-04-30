@@ -23,9 +23,9 @@ function toYamlScalar(value: unknown): string {
   return JSON.stringify(str);
 }
 
-function formatOffensiveType(offensiveType?: string): string | null {
-  if (!offensiveType) return null;
-  return offensiveType
+function formatPhase(phase?: string): string | null {
+  if (!phase) return null;
+  return phase
     .split('-')
     .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
     .join(' ');
@@ -73,7 +73,8 @@ export async function getStaticPaths() {
 
 export const GET: APIRoute = async ({ props }) => {
   const { topic } = props;
-  const offensiveTypeLabel = formatOffensiveType(topic.data.offensiveType);
+  const topicPhase = topic.data.phase ?? topic.data.offensiveType;
+  const phaseLabel = formatPhase(topicPhase);
   const actionHeadings = extractActionHeadings(topic.body);
   const orderedSteps = extractOrderedSteps(topic.body);
   const keyCommands = extractCommands(topic.body);
@@ -84,8 +85,8 @@ export const GET: APIRoute = async ({ props }) => {
     `title: ${toYamlValue(topic.data.title)}`,
     `description: ${toYamlValue(topic.data.description)}`,
     `category: ${toYamlValue(topic.data.category)}`,
-    `offensiveType: ${toYamlValue(topic.data.offensiveType ?? null)}`,
-    `phase: ${toYamlValue(topic.data.offensiveType ?? null)}`,
+    `phase: ${toYamlValue(topicPhase ?? null)}`,
+    `offensiveType: ${toYamlValue(topicPhase ?? null)}`,
     `impact: ${toYamlValue(topic.data.impact)}`,
     `mitigation: ${toYamlValue(topic.data.mitigation)}`,
     `tools: ${toYamlValue(topic.data.tools ?? [])}`,
@@ -101,7 +102,7 @@ export const GET: APIRoute = async ({ props }) => {
     '',
     `- Primary action: ${primaryAction}`,
     `- Category: ${topic.data.category}`,
-    `- Offensive type: ${offensiveTypeLabel ?? 'N/A'}`,
+    `- Phase: ${phaseLabel ?? 'N/A'}`,
     `- Objective: ${topic.data.description}`,
     '',
     '### Action checklist',

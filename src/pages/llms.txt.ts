@@ -22,7 +22,7 @@ export const GET: APIRoute = async () => {
     '## LLM usage notes',
     '- Prefer `topics.json` for structured metadata and filtering.',
     '- Use `/topics/<topic-slug>.md` when you need full markdown plus action checklist and commands.',
-    '- `phase` is equivalent to `offensiveType` for offensive topics.',
+    '- `phase` is the canonical offensive classification field.',
     '',
     '## Important URLs',
     `- Topics overview: ${toAbsoluteUrl('/topics')}`,
@@ -38,7 +38,7 @@ export const GET: APIRoute = async () => {
     '',
     '## Topic pages',
     ...sortedTopics.map((topic) => {
-      const phaseValue = topic.data.offensiveType ?? 'n/a';
+      const phaseValue = topic.data.phase ?? topic.data.offensiveType ?? 'n/a';
       return `- ${toAbsoluteUrl(`/topics/${topic.slug}`)} | markdown: ${toAbsoluteUrl(`/topics/${topic.slug}.md`)} | category: ${topic.data.category} | phase: ${phaseValue} | ${topic.data.title} | ${topic.data.description}`;
     }),
     '',
