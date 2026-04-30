@@ -19,6 +19,14 @@ const topicsCollection = defineCollection({
     title: z.string(),
     description: z.string(),
     category: z.enum(['offensive', 'defensive', 'fundamental']),
+    offensiveType: z.enum([
+      'reconnaissance',
+      'credential-access',
+      'privilege-escalation',
+      'persistence',
+      'defense-evasion',
+      'exfiltration',
+    ]).optional(),
     impact: z.union([z.string(), z.array(z.string())]),
     mitigation: z.union([z.string(), z.array(z.string())]),
     tools: z.array(z.string()).optional(), // Tool names (referenced from src/data/tools.ts)
