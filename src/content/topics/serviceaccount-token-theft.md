@@ -2,6 +2,7 @@
 title: ServiceAccount Token Theft
 description: Techniques for obtaining ServiceAccount tokens using legitimate Kubernetes features without exploiting vulnerabilities
 category: offensive
+offensiveType: credential-access
 createdAt: 2026-01-18
 impact: ServiceAccount tokens provide API access that can be used for enumeration, privilege escalation, and lateral movement
 mitigation:
@@ -25,7 +26,20 @@ In most real Kubernetes breaches, attackers follow a common pattern: compromise 
 > [!NOTE]
 > This content is based on research by [Mohammad Bilal](https://www.linkedin.com/feed/update/urn:li:activity:7416365841073508352/).
 
-## Reading Tokens via kubectl exec
+## The attack sequence
+
+An attacker with access to a pod or the ability to create workloads can obtain ServiceAccount tokens through multiple paths.
+
+### Step 1: Identify available access methods
+
+The attacker determines which permissions they have for accessing tokens:
+
+- `pods/exec` — execute commands inside existing pods
+- `pods/ephemeralcontainers` — attach debug containers
+- `pods/cp` — copy files from pods
+- `pods/create` — create new pods with target ServiceAccounts
+
+### Step 2: Read the token
 
 If an attacker can exec into a pod, they can read any file inside the container, including mounted ServiceAccount tokens.
 

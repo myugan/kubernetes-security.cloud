@@ -2,6 +2,7 @@
 title: Privilege Escalation via serviceaccounts/token Permission
 description: How create permission on the serviceaccounts/token subresource enables acquiring tokens for more privileged service accounts without pods or Secrets
 category: offensive
+offensiveType: privilege-escalation
 createdAt: 2026-04-12
 impact: >-
   An attacker with create on serviceaccounts/token in any namespace can generate a valid, usable token for any service account in that namespace, including ones bound to powerful cluster roles. No pod needs to exist. No Secret is created. The operation leaves only an audit log entry.

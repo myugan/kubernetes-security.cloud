@@ -3,6 +3,7 @@ title: Weaponizing kubectl debug
 description: >-
   Why kubectl debug is a privilege escalation path, not just a troubleshooting tool
 category: offensive
+offensiveType: privilege-escalation
 createdAt: 2026-04-05
 impact: >-
   Ephemeral debug inherits the pod's network namespace, service account, and volume mounts. Node debug mounts the host filesystem at `/host`, `chroot /host` gives full host root access.
@@ -26,6 +27,21 @@ references: |
 ---
 
 `kubectl debug` is for break-glass work. You either attach an ephemeral debugger to a pod that is already running, or you start a node debugger whose profile controls how close you get to the host.
+
+## The attack sequence
+
+The attacker uses `kubectl debug` to access running containers or nodes with elevated privileges.
+
+### Step 1: Verify RBAC permissions
+
+Check which debug-related permissions are available:
+
+```bash
+kubectl auth can-i get pods
+kubectl auth can-i patch pods/ephemeralcontainers
+kubectl auth can-i create pods
+kubectl auth can-i get nodes
+```
 
 ## RBAC for kubectl debug access
 

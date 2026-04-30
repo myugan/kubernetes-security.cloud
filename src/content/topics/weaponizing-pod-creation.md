@@ -2,6 +2,7 @@
 title: Weaponizing Pod Creation Access
 description: How pod creation permissions can be leveraged to escalate privileges and escape to the underlying node
 category: offensive
+offensiveType: privilege-escalation
 createdAt: 2026-01-16
 impact: An attacker with pod creation access can potentially gain node-level access, steal credentials, or achieve cluster-admin privileges
 mitigation:
@@ -17,7 +18,20 @@ references: |
 
 In Kubernetes, the ability to create pods is one of the most powerful permissions an attacker can obtain. While it may seem like a basic workload operation, pod creation provides direct control over what runs on cluster nodes, including access to host resources, privileged capabilities, and service account tokens.
 
-## Mounting the Host Filesystem
+## The attack sequence
+
+An attacker with `pods/create` permissions crafts malicious pod specs to escape container boundaries and access node or cluster-level resources.
+
+### Step 1: Identify available node access methods
+
+The attacker determines which pod capabilities are not blocked by admission controllers:
+
+- `hostPath` volumes — mount node filesystem
+- `privileged: true` — full device access
+- `hostPID`, `hostNetwork` — host namespace sharing
+- `nodeSelector` — target specific nodes
+
+### Step 2: Create the malicious pod
 
 The most direct path to node compromise is mounting the host filesystem into a pod. With access to the host's root filesystem, an attacker can read sensitive files, modify system configurations, or inject malicious code.
 

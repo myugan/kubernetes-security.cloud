@@ -2,6 +2,7 @@
 title: Persistence via Unbound Service Account Tokens
 description: Using unbound tokens from the TokenRequest API to maintain cluster access after deleting the attacking pod
 category: offensive
+offensiveType: persistence
 createdAt: 2026-04-14
 impact: >-
   An attacker can request an unbound token for a privileged service account, delete the attacking pod to eliminate the only visible in-cluster artifact, and continue using the token from outside the cluster until it expires. The token is not tied to any pod lifecycle and leaves no persistent object in etcd. Detection relies entirely on audit logs.
