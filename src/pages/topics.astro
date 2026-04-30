@@ -25,6 +25,43 @@ const offensiveCount = topics.filter((topic) =>
 const defensiveCount = topics.filter((topic) =>
   topic.data.category.toLowerCase() === 'defensive'
 ).length;
+const availableOffensivePhases = [...new Set(
+  topics
+    .filter((topic) => topic.data.category === 'offensive' && topic.data.offensiveType)
+    .map((topic) => topic.data.offensiveType as string)
+)].sort();
+
+function formatPhase(phase?: string): string {
+  if (!phase) return '';
+  return phase
+    .split('-')
+    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+    .join(' ');
+}
+
+function getPhaseBadgeClass(phase?: string): string {
+  const styles: Record<string, string> = {
+    reconnaissance: 'border-violet-200 bg-violet-50 text-violet-700 dark:border-violet-800/70 dark:bg-violet-950/30 dark:text-violet-300',
+    'credential-access': 'border-amber-200 bg-amber-50 text-amber-700 dark:border-amber-800/70 dark:bg-amber-950/30 dark:text-amber-300',
+    'privilege-escalation': 'border-red-200 bg-red-50 text-red-700 dark:border-red-800/70 dark:bg-red-950/30 dark:text-red-300',
+    persistence: 'border-fuchsia-200 bg-fuchsia-50 text-fuchsia-700 dark:border-fuchsia-800/70 dark:bg-fuchsia-950/30 dark:text-fuchsia-300',
+    'defense-evasion': 'border-cyan-200 bg-cyan-50 text-cyan-700 dark:border-cyan-800/70 dark:bg-cyan-950/30 dark:text-cyan-300',
+    exfiltration: 'border-orange-200 bg-orange-50 text-orange-700 dark:border-orange-800/70 dark:bg-orange-950/30 dark:text-orange-300',
+  };
+  return styles[phase ?? ''] ?? 'border-rose-200 bg-rose-50 text-rose-700 dark:border-rose-800/70 dark:bg-rose-950/30 dark:text-rose-300';
+}
+
+function getPhaseIconPath(phase?: string): string {
+  const paths: Record<string, string> = {
+    reconnaissance: 'M15 15l5 5M10.5 16a5.5 5.5 0 110-11 5.5 5.5 0 010 11z',
+    'credential-access': 'M7 11a5 5 0 019.9-1M8 11h8v8H8z',
+    'privilege-escalation': 'M12 19V5m0 0l-4 4m4-4l4 4',
+    persistence: 'M12 8v8m-4-4h8M5 12a7 7 0 1114 0 7 7 0 01-14 0z',
+    'defense-evasion': 'M3 3l18 18M10.7 5.1A9 9 0 0121 12M3 12a9 9 0 003.5 7.1',
+    exfiltration: 'M7 17l10-10M7 7h10v10',
+  };
+  return paths[phase ?? ''] ?? 'M12 5v14M5 12h14';
+}
 ---
 
 <BaseLayout
@@ -108,6 +145,8 @@ const defensiveCount = topics.filter((topic) =>
           <ul class="mt-3 space-y-0.5">
             {recentTopics.map((topic) => {
               const categoryColors = getCategoryColors(topic.data.category);
+              const recentPhaseLabel = formatPhase(topic.data.offensiveType);
+              const recentPhaseClass = getPhaseBadgeClass(topic.data.offensiveType);
               return (
                 <li>
                   <a
@@ -128,6 +167,14 @@ const defensiveCount = topics.filter((topic) =>
                       {topic.data.title}
                     </span>
                     <span class="flex shrink-0 items-center gap-2.5 text-xs tabular-nums sm:justify-end">
+                      {topic.data.category === 'offensive' && recentPhaseLabel && (
+                        <span class={`inline-flex items-center gap-1 rounded-md border px-2 py-0.5 text-xs font-medium ${recentPhaseClass}`}>
+                          <svg class="w-3 h-3 opacity-90" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d={getPhaseIconPath(topic.data.offensiveType)} />
+                          </svg>
+                          {recentPhaseLabel}
+                        </span>
+                      )}
                       <span
                         class={`rounded-md px-2 py-0.5 capitalize ring-1 ring-inset ring-black/[0.06] dark:ring-app-border/50 ${categoryColors.bg} ${categoryColors.text}`}
                       >
@@ -192,7 +239,7 @@ const defensiveCount = topics.filter((topic) =>
               <svg class="w-3.5 h-3.5 text-gray-500 dark:text-zinc-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
               </svg>
-              <span>Filter by category</span>
+              <span>Filters</span>
               <span id="filter-selected-count" class="hidden items-center justify-center min-w-5 h-5 px-1.5 rounded-full bg-blue-100 text-blue-800 text-[11px] font-semibold dark:bg-blue-950/70 dark:text-blue-200 border border-blue-300 dark:border-blue-700"></span>
               <svg id="filter-toggle-icon" class="w-3.5 h-3.5 text-gray-500 dark:text-zinc-500 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
@@ -200,7 +247,7 @@ const defensiveCount = topics.filter((topic) =>
             </button>
             <div id="filter-tags-content" class="hidden pt-2">
               <div class="rounded-lg border border-app-border/80 bg-app-surface-muted/60 p-2.5">
-                <p class="text-[11px] text-gray-500 dark:text-zinc-400 mb-1.5">Choose one or more categories</p>
+                <p class="text-[11px] text-gray-500 dark:text-zinc-400 mb-1.5">Choose one or more categories and phases</p>
                 <div class="flex flex-wrap gap-1.5">
                 {availableCategories.map(category => {
                   const categoryColors = getCategoryColors(category);
@@ -218,6 +265,30 @@ const defensiveCount = topics.filter((topic) =>
                   );
                 })}
                 </div>
+                {availableOffensivePhases.length > 0 && (
+                  <div class="mt-2.5">
+                    <p class="text-[11px] text-gray-500 dark:text-zinc-400 mb-1.5">Offensive phases</p>
+                    <div class="flex flex-wrap gap-1.5">
+                      {availableOffensivePhases.map((phase) => {
+                        const phaseClass = getPhaseBadgeClass(phase);
+                        return (
+                          <button
+                            type="button"
+                            class={`tag-filter-btn inline-flex items-center gap-1 rounded-md border px-2 py-1 text-[10px] font-semibold uppercase tracking-[0.06em] transition-colors ${phaseClass}`}
+                            data-tag-type="phase"
+                            data-tag-value={phase}
+                            data-tag-label={formatPhase(phase)}
+                          >
+                            <svg class="h-3 w-3 opacity-90" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d={getPhaseIconPath(phase)} />
+                            </svg>
+                            {formatPhase(phase)}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
           </div>
@@ -284,6 +355,8 @@ const defensiveCount = topics.filter((topic) =>
     <div id="topics-container" class="grid sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5 lg:gap-6">
       {sortedTopics.map((topic) => {
         const categoryColors = getCategoryColors(topic.data.category);
+        const phaseLabel = formatPhase(topic.data.offensiveType);
+        const phaseClass = getPhaseBadgeClass(topic.data.offensiveType);
         return (
           <a 
             href={`/topics/${topic.slug}`} 
@@ -296,10 +369,20 @@ const defensiveCount = topics.filter((topic) =>
               <CardHeader class="topic-card-header">
                 <div class="topic-card-content">
                   <div class="topic-card-meta flex items-center justify-between gap-3 mb-2">
-                    <span class={`inline-flex items-center gap-1 px-2 py-0.5 text-xs font-medium rounded border ${categoryColors.bg} ${categoryColors.text} ${categoryColors.border}`}>
-                      <CategoryIcon category={topic.data.category} class={`w-3 h-3 ${categoryColors.icon}`} />
-                      {topic.data.category}
-                    </span>
+                    <div class="flex flex-wrap items-center gap-1.5">
+                      <span class={`inline-flex items-center gap-1 px-2 py-0.5 text-xs font-medium rounded border ${categoryColors.bg} ${categoryColors.text} ${categoryColors.border}`}>
+                        <CategoryIcon category={topic.data.category} class={`w-3 h-3 ${categoryColors.icon}`} />
+                        {topic.data.category}
+                      </span>
+                      {topic.data.category === 'offensive' && phaseLabel && (
+                        <span class={`inline-flex items-center gap-1 px-2 py-0.5 text-xs font-medium rounded border ${phaseClass}`}>
+                          <svg class="w-3 h-3 opacity-90" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d={getPhaseIconPath(topic.data.offensiveType)} />
+                          </svg>
+                          {phaseLabel}
+                        </span>
+                      )}
+                    </div>
                     <svg class="topic-card-corner-arrow w-4 h-4 text-gray-400 dark:text-zinc-600 transition-colors shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
                     </svg>
@@ -309,7 +392,7 @@ const defensiveCount = topics.filter((topic) =>
                 </div>
                 <div class="topic-card-cta hidden mt-4">
                   <span class="inline-flex items-center gap-1.5 rounded-md border border-gray-200 bg-gray-50 px-3 py-1.5 text-sm font-medium text-gray-700 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-200">
-                    Read topic
+                    Read more
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
                     </svg>

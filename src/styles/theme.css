@@ -1,24 +1,5 @@
 :root {
-  --ks-bg-gradient: radial-gradient(1200px 420px at 50% -220px, #eef5ff 0%, #ffffff 52%);
-  --ks-bg: 255 255 255;
-  --ks-surface: 255 255 255;
-  --ks-surface-muted: 249 250 251;
-  --ks-border: 229 231 235;
-  --ks-border-strong: 209 213 219;
-  --ks-text-primary: 17 24 39;
-  --ks-text-secondary: 75 85 99;
-  --ks-text-muted: 107 114 128;
-  --ks-link: 2 132 199;
-  --ks-link-hover: 147 197 253;
-  --ks-inline-code-bg: 243 244 246;
-  --ks-inline-code-text: 17 24 39;
-  --ks-inline-code-border: 229 231 235;
-  --ks-pre-bg: 17 24 39;
-  --ks-pre-text: 243 244 246;
-  --ks-pre-border: 31 41 55;
-}
-
-.dark {
+  /* mem0.ai inspired dark-first design */
   --ks-bg-gradient: radial-gradient(1200px 560px at 50% -260px, rgba(59, 130, 246, 0.06) 0%, #18181b 48%, #09090b 100%);
   --ks-bg: 9 9 11;
   --ks-surface: 24 24 27;
@@ -28,14 +9,34 @@
   --ks-text-primary: 244 244 245;
   --ks-text-secondary: 212 212 216;
   --ks-text-muted: 161 161 170;
-  --ks-link: 56 189 248;
-  --ks-link-hover: 29 78 216;
+  --ks-link: 59 130 246;
+  --ks-link-hover: 96 165 250;
   --ks-inline-code-bg: 39 39 42;
   --ks-inline-code-text: 228 228 231;
   --ks-inline-code-border: 63 63 70;
   --ks-pre-bg: 24 24 27;
   --ks-pre-text: 228 228 231;
   --ks-pre-border: 39 39 42;
+}
+
+:root:not(.dark) {
+  --ks-bg-gradient: radial-gradient(1200px 420px at 50% -220px, #eef5ff 0%, #ffffff 52%);
+  --ks-bg: 255 255 255;
+  --ks-surface: 255 255 255;
+  --ks-surface-muted: 249 250 251;
+  --ks-border: 229 231 235;
+  --ks-border-strong: 209 213 219;
+  --ks-text-primary: 17 24 39;
+  --ks-text-secondary: 75 85 99;
+  --ks-text-muted: 107 114 128;
+  --ks-link: 59 130 246;
+  --ks-link-hover: 37 99 235;
+  --ks-inline-code-bg: 243 244 246;
+  --ks-inline-code-text: 17 24 39;
+  --ks-inline-code-border: 229 231 235;
+  --ks-pre-bg: 17 24 39;
+  --ks-pre-text: 243 244 246;
+  --ks-pre-border: 31 41 55;
 }
 
 body.ks-theme {
@@ -45,7 +46,7 @@ body.ks-theme {
 
 .ds-surface {
   background-color: rgb(var(--ks-surface) / 0.95);
-  border-color: rgb(var(--ks-border) / 0.9);
+  border-color: rgb(var(--ks-border-strong) / 0.9);
 }
 
 .ds-surface-muted {
@@ -85,17 +86,12 @@ body.ks-theme {
 
 .ks-header {
   background-color: rgb(var(--ks-surface) / 0.95);
-  border-color: rgb(var(--ks-border-strong) / 0.9);
-  box-shadow: 0 12px 28px -14px rgb(0 0 0 / 0.12);
-}
-
-.dark .ks-header {
-  box-shadow: 0 12px 28px -14px rgb(0 0 0 / 0.78);
+  border-color: rgb(var(--ks-border-strong) / 0.52);
 }
 
 .ks-footer {
   background-color: rgb(var(--ks-surface) / 0.9);
-  border-color: rgb(var(--ks-border-strong) / 0.9);
+  border-color: rgb(var(--ks-border-strong) / 0.52);
 }
 
 .ks-nav-link {

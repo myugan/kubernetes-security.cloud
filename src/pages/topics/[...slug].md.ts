@@ -23,6 +23,46 @@ function toYamlScalar(value: unknown): string {
   return JSON.stringify(str);
 }
 
+function formatOffensiveType(offensiveType?: string): string | null {
+  if (!offensiveType) return null;
+  return offensiveType
+    .split('-')
+    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+    .join(' ');
+}
+
+function uniqueTrimmed(items: string[], max = 8): string[] {
+  const unique = new Set<string>();
+  for (const raw of items) {
+    const item = raw.trim();
+    if (!item) continue;
+    if (!unique.has(item)) {
+      unique.add(item);
+    }
+    if (unique.size >= max) break;
+  }
+  return [...unique];
+}
+
+function extractActionHeadings(body: string): string[] {
+  const matches = [...body.matchAll(/^###\s+(.+)$/gm)];
+  return uniqueTrimmed(matches.map((match) => match[1]));
+}
+
+function extractOrderedSteps(body: string): string[] {
+  const matches = [...body.matchAll(/^\d+\.\s+(.+)$/gm)];
+  return uniqueTrimmed(matches.map((match) => match[1]));
+}
+
+function extractCommands(body: string): string[] {
+  const blocks = [...body.matchAll(/```(?:bash|sh|shell)\n([\s\S]*?)```/gm)];
+  const lines = blocks
+    .flatMap((block) => block[1].split('\n'))
+    .map((line) => line.trim())
+    .filter((line) => line && !line.startsWith('#'));
+  return uniqueTrimmed(lines, 10);
+}
+
 export async function getStaticPaths() {
   const topics = await getCollection('topics');
   return topics.map((topic) => ({
@@ -33,12 +73,19 @@ export async function getStaticPaths() {
 
 export const GET: APIRoute = async ({ props }) => {
   const { topic } = props;
+  const offensiveTypeLabel = formatOffensiveType(topic.data.offensiveType);
+  const actionHeadings = extractActionHeadings(topic.body);
+  const orderedSteps = extractOrderedSteps(topic.body);
+  const keyCommands = extractCommands(topic.body);
+  const primaryAction = actionHeadings[0] ?? topic.data.title;
 
   const frontmatterLines = [
     '---',
     `title: ${toYamlValue(topic.data.title)}`,
     `description: ${toYamlValue(topic.data.description)}`,
     `category: ${toYamlValue(topic.data.category)}`,
+    `offensiveType: ${toYamlValue(topic.data.offensiveType ?? null)}`,
+    `phase: ${toYamlValue(topic.data.offensiveType ?? null)}`,
     `impact: ${toYamlValue(topic.data.impact)}`,
     `mitigation: ${toYamlValue(topic.data.mitigation)}`,
     `tools: ${toYamlValue(topic.data.tools ?? [])}`,
@@ -49,7 +96,27 @@ export const GET: APIRoute = async ({ props }) => {
     '',
   ];
 
-  const markdown = `${frontmatterLines.join('\n')}${topic.body}\n`;
+  const actionFocusLines = [
+    '## LLM Action Focus',
+    '',
+    `- Primary action: ${primaryAction}`,
+    `- Category: ${topic.data.category}`,
+    `- Offensive type: ${offensiveTypeLabel ?? 'N/A'}`,
+    `- Objective: ${topic.data.description}`,
+    '',
+    '### Action checklist',
+    ...(orderedSteps.length > 0
+      ? orderedSteps.map((step) => `- ${step}`)
+      : actionHeadings.map((heading) => `- ${heading}`)),
+    '',
+    '### Key commands',
+    ...(keyCommands.length > 0 ? keyCommands.map((command) => `- \`${command}\``) : ['- No direct shell command extracted']),
+    '',
+    '---',
+    '',
+  ];
+
+  const markdown = `${frontmatterLines.join('\n')}${actionFocusLines.join('\n')}${topic.body}\n`;
 
   return new Response(markdown, {
     status: 200,
