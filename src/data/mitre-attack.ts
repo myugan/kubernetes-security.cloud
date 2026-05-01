@@ -57,6 +57,14 @@ export const mitreTechniques: Record<string, MitreTechnique> = {
       'Adversaries may use remote services to move between systems and access remote resources.',
     url: 'https://attack.mitre.org/techniques/T1021',
   },
+  T1090: {
+    id: 'T1090',
+    name: 'Connection Proxy',
+    tactic: 'Command and Control',
+    description:
+      'Adversaries may use a connection proxy to direct network traffic between systems or act as an intermediary for network communications.',
+    url: 'https://attack.mitre.org/techniques/T1090',
+  },
   T1055: {
     id: 'T1055',
     name: 'Process Injection',

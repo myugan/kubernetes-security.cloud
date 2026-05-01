@@ -119,6 +119,22 @@
   word-break: break-word;
 }
 
+/* Topic body override: keep inline code subtle (no pill) */
+.topic-article-prose :not(pre) > code {
+  background-color: rgb(var(--ks-inline-code-bg) / 0.32);
+  border: 1px solid rgb(var(--ks-inline-code-border) / 0.4);
+  padding: 0.05rem 0.3rem;
+  border-radius: 0.2rem;
+  color: rgb(var(--ks-inline-code-text));
+  font-size: 0.9em;
+  font-weight: 500;
+}
+
+.topic-article-prose :not(pre) > code::before,
+.topic-article-prose :not(pre) > code::after {
+  content: "";
+}
+
 .prose pre {
   background-color: rgb(var(--ks-pre-bg));
   color: rgb(var(--ks-pre-text));

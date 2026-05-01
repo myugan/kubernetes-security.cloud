@@ -42,6 +42,7 @@ function formatPhase(phase?: string): string {
 function getPhaseBadgeClass(phase?: string): string {
   const styles: Record<string, string> = {
     reconnaissance: 'border-violet-200 bg-violet-50 text-violet-700 dark:border-violet-800/70 dark:bg-violet-950/30 dark:text-violet-300',
+    'lateral-movement': 'border-indigo-200 bg-indigo-50 text-indigo-700 dark:border-indigo-800/70 dark:bg-indigo-950/30 dark:text-indigo-300',
     'credential-access': 'border-amber-200 bg-amber-50 text-amber-700 dark:border-amber-800/70 dark:bg-amber-950/30 dark:text-amber-300',
     'privilege-escalation': 'border-red-200 bg-red-50 text-red-700 dark:border-red-800/70 dark:bg-red-950/30 dark:text-red-300',
     persistence: 'border-fuchsia-200 bg-fuchsia-50 text-fuchsia-700 dark:border-fuchsia-800/70 dark:bg-fuchsia-950/30 dark:text-fuchsia-300',
@@ -54,6 +55,7 @@ function getPhaseBadgeClass(phase?: string): string {
 function getPhaseIconPath(phase?: string): string {
   const paths: Record<string, string> = {
     reconnaissance: 'M15 15l5 5M10.5 16a5.5 5.5 0 110-11 5.5 5.5 0 010 11z',
+    'lateral-movement': 'M8 16l8-8M8 8h8v8',
     'credential-access': 'M7 11a5 5 0 019.9-1M8 11h8v8H8z',
     'privilege-escalation': 'M12 19V5m0 0l-4 4m4-4l4 4',
     persistence: 'M12 8v8m-4-4h8M5 12a7 7 0 1114 0 7 7 0 01-14 0z',

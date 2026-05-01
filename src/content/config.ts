@@ -21,6 +21,7 @@ const topicsCollection = defineCollection({
     category: z.enum(['offensive', 'defensive', 'fundamental']),
     phase: z.enum([
       'reconnaissance',
+      'lateral-movement',
       'credential-access',
       'privilege-escalation',
       'persistence',
@@ -29,6 +30,7 @@ const topicsCollection = defineCollection({
     ]).optional(),
     offensiveType: z.enum([
       'reconnaissance',
+      'lateral-movement',
       'credential-access',
       'privilege-escalation',
       'persistence',
