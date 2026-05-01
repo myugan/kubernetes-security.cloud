@@ -17,11 +17,29 @@ function toList(value: string | string[]): string[] {
 export const GET: APIRoute = async () => {
   const topics = await getCollection('topics');
   const sortedTopics = [...topics].sort((a, b) => a.data.title.localeCompare(b.data.title));
+  const offensiveTopics = sortedTopics.filter((topic) => topic.data.category === 'offensive');
+  const offensivePhases = [...new Set(
+    offensiveTopics
+      .map((topic) => topic.data.phase ?? topic.data.offensiveType)
+      .filter((phase): phase is string => Boolean(phase))
+  )].sort();
 
   const payload = {
     site: SITE_URL,
     generatedAt: new Date().toISOString(),
     totalTopics: sortedTopics.length,
+    llmGuide: {
+      primaryFilterOrder: ['category', 'phase', 'title'],
+      offensivePhaseField: 'phase',
+      offensivePhases,
+    },
+    offensiveTopicsByPhase: offensivePhases.map((phase) => ({
+      phase,
+      total: offensiveTopics.filter((topic) => (topic.data.phase ?? topic.data.offensiveType) === phase).length,
+      slugs: offensiveTopics
+        .filter((topic) => (topic.data.phase ?? topic.data.offensiveType) === phase)
+        .map((topic) => topic.slug),
+    })),
     topics: sortedTopics.map((topic) => ({
       slug: topic.slug,
       url: toAbsoluteUrl(`/topics/${topic.slug}`),

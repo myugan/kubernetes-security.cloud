@@ -13,6 +13,11 @@ export const GET: APIRoute = async () => {
   const offensiveTopics = sortedTopics.filter((topic) => topic.data.category === 'offensive');
   const defensiveTopics = sortedTopics.filter((topic) => topic.data.category === 'defensive');
   const fundamentalTopics = sortedTopics.filter((topic) => topic.data.category === 'fundamental');
+  const offensivePhases = [...new Set(
+    offensiveTopics
+      .map((topic) => topic.data.phase ?? topic.data.offensiveType)
+      .filter((phase): phase is string => Boolean(phase))
+  )].sort();
 
   const lines: string[] = [
     '# kubernetes-security.cloud',
@@ -21,6 +26,7 @@ export const GET: APIRoute = async () => {
     '',
     '## LLM usage notes',
     '- Prefer `topics.json` for structured metadata and filtering.',
+    '- For offensive techniques, filter `category=offensive` then group/order by `phase`.',
     '- Use `/topics/<topic-slug>.md` when you need full markdown plus action checklist and commands.',
     '- `phase` is the canonical offensive classification field.',
     '',
@@ -35,6 +41,12 @@ export const GET: APIRoute = async () => {
     `- Offensive topics: ${offensiveTopics.length}`,
     `- Defensive topics: ${defensiveTopics.length}`,
     `- Fundamental topics: ${fundamentalTopics.length}`,
+    '',
+    '## Offensive phase index',
+    ...offensivePhases.map((phase) => {
+      const phaseTopics = offensiveTopics.filter((topic) => (topic.data.phase ?? topic.data.offensiveType) === phase);
+      return `- ${phase}: ${phaseTopics.length} topic(s)`;
+    }),
     '',
     '## Topic pages',
     ...sortedTopics.map((topic) => {
