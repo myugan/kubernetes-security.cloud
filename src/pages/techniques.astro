@@ -8,7 +8,8 @@ import CardDescription from '../components/ui/CardDescription.astro';
 import { getAllMitreTechniques } from '../data/mitre-attack';
 
 const topics = await getCollection('topics');
-const techniques = getAllMitreTechniques();
+const allTechniques = getAllMitreTechniques();
+const techniqueById = new Map(allTechniques.map((technique) => [technique.id, technique]));
 
 const topicMap = new Map<string, { slug: string; title: string; category: string }[]>();
 for (const topic of topics) {
@@ -24,6 +25,21 @@ for (const topic of topics) {
   }
 }
 
+const mappedTechniqueIds = [...topicMap.keys()].sort();
+const techniques = mappedTechniqueIds.map((id) => {
+  const known = techniqueById.get(id);
+  if (known) return known;
+
+  // Keep topic-provided technique IDs visible even if not in local MITRE catalog yet.
+  return {
+    id,
+    name: `Technique ${id}`,
+    tactic: 'Uncategorized',
+    description: 'Mapped from topics; add to local MITRE technique catalog for full metadata.',
+    url: `https://attack.mitre.org/techniques/${id}`,
+  };
+});
+
 const totalMappedTechniques = techniques.filter((t) => (topicMap.get(t.id)?.length ?? 0) > 0).length;
 const totalMappings = Array.from(topicMap.values()).reduce((sum, items) => sum + items.length, 0);
 
@@ -33,13 +49,6 @@ const groupedByPrimaryTactic = techniques.reduce((acc, technique) => {
   acc.get(primaryTactic)?.push(technique);
   return acc;
 }, new Map<string, typeof techniques>());
-
-const tacticStats = Array.from(groupedByPrimaryTactic.entries())
-  .map(([tactic, items]) => {
-    const mappedCount = items.filter((item) => (topicMap.get(item.id)?.length ?? 0) > 0).length;
-    return { tactic, total: items.length, mapped: mappedCount };
-  })
-  .sort((a, b) => b.mapped - a.mapped || a.tactic.localeCompare(b.tactic));
 
 const tacticOrder = [
   'Initial Access',
@@ -147,29 +156,6 @@ const techniqueDetailsJson = JSON.stringify(techniqueDetails);
         <p class="mt-1 text-2xl font-semibold text-gray-900 dark:text-zinc-100">{totalMappings}</p>
       </Card>
     </div>
-
-    <Card class="mb-8">
-      <CardHeader>
-        <CardTitle>Tactic Coverage</CardTitle>
-        <CardDescription>Quick visualization of mapped techniques by primary tactic.</CardDescription>
-      </CardHeader>
-      <div class="px-6 pb-6 space-y-3">
-        {tacticStats.map((item) => {
-          const pct = item.total > 0 ? Math.round((item.mapped / item.total) * 100) : 0;
-          return (
-            <div>
-              <div class="flex items-center justify-between text-sm mb-1">
-                <span class="text-gray-700 dark:text-zinc-300">{item.tactic}</span>
-                <span class="text-gray-500 dark:text-zinc-500">{item.mapped}/{item.total}</span>
-              </div>
-              <div class="h-2 rounded-full bg-gray-100 dark:bg-zinc-800 overflow-hidden">
-                <div class="h-full bg-primary-600 dark:bg-primary-400" style={`width: ${pct}%`}></div>
-              </div>
-            </div>
-          );
-        })}
-      </div>
-    </Card>
 
     <Card class="mb-8">
       <CardHeader>
