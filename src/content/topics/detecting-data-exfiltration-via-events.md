@@ -27,7 +27,7 @@ Both events share `reason: Pulled` and the same image name. The malicious one re
 
 Detection depends on two independent signals. The audit log answers who created an event. The event content answers what was written. At `Metadata` level the audit log captures the creator identity but not the message or numeric field values.
 
-**Signal 1: Creator identity (audit log, Metadata level)**
+## Signal 1: Creator Identity
 
 Every event creation produces a `ResponseComplete` audit entry. An alert fires when an event is created by an identity outside the known controller allowlist. This works at `Metadata` level and requires no special audit policy changes.
 
@@ -65,7 +65,7 @@ Every event creation produces a `ResponseComplete` audit entry. An alert fires w
 
 The `user.username` is `jane`, not a controller service account. That is the trigger. The `source.component: kubelet` value inside the event object is not visible here and carries no weight. The API server stores whatever the creator submits.
 
-**Signal 2: Event content (two paths)**
+## Signal 2: Event Content
 
 The first path is to query events directly via the API. This shows the full content of every event currently in etcd:
 
@@ -140,11 +140,24 @@ With this policy, the audit record includes `requestObject` containing the full 
 
 A SIEM rule scanning `requestObject.message` for numeric values outside the plausible container image size range catches A1Z26-encoded payloads without knowing the cipher.
 
-## Detecting Image Digest and `reportingInstance` Channels
+### Numeric anomalies in message
 
-Two other covert channels are harder to spot from the message field alone.
+Attackers may encode data using A1Z26 or similar ciphers within numeric values in the `message` field:
 
-### Image digest
+```json
+{
+  "requestObject": {
+    "reason": "Pulled",
+    "message": "Successfully pulled image \"nginx:1.21.6\" in 1.565s (1.565s including waiting). Image size: 190503180520 bytes.",
+    "source": { "component": "kubelet", "host": "worker-node-1" },
+    "type": "Normal"
+  }
+}
+```
+
+The value `190503180520` is far outside the plausible range for a container image size and contains encoded data.
+
+### Image digest channel
 
 An attacker encodes a credential such as an AWS access key ID as hex and embeds it in the `sha256:` position of a pinned image digest:
 
@@ -154,15 +167,17 @@ Successfully pulled image "nginx:1.21.6@sha256:414b4941494f53464f444e4e374558414
 
 The digest `414b4941494f53464f444e4e374558414d504c45000000000000000000000000` hex-decodes to `AKIAIOSFODNN7EXAMPLE` padded with null bytes. The message format, image size, and digest length are all correct. Detection at `Request` level requires extracting the digest from `requestObject.message` and comparing it against the known real digest for that image tag. Any mismatch is the signal.
 
-### `reportingInstance`
+### Hex-encoded data in reportingInstance
 
 This field is not displayed by `kubectl get events`. In `-o wide` output it appears in the **SOURCE** column as `kubelet, <value>` alongside the component name, but the hex string blends into the wide table and is easy to overlook. Only `-o json` surfaces it cleanly as a dedicated field. An attacker stores a hex-encoded service account token fragment here while the visible event message remains a normal pull result:
 
 ```json
 {
-  "message": "Successfully pulled image \"order-service:v2.4.1\" in 2.103s (2.103s including waiting). Image size: 134469729 bytes.",
-  "reportingComponent": "kubelet",
-  "reportingInstance": "65794a68624763694f694a53557a49314e694973496d74705a434936496b4e4b596e6857566b4a5a626a45336444464d513052334f4863774e6c6c5a52454e7a4d304e55634846785a30316b53456b7453453835646c6b6966512e65794a68645751694f6c73696148523063484d364c79397264574a..."
+  "requestObject": {
+    "message": "Successfully pulled image \"order-service:v2.4.1\" in 2.103s (2.103s including waiting). Image size: 134469729 bytes.",
+    "reportingComponent": "kubelet",
+    "reportingInstance": "65794a68624763694f694a53557a49314e694973496d74705a434936496b4e4b596e6857566b4a5a626a45336444464d513052334f4863774e6c6c5a52454e7a4d304e55634846785a30316b53456b7453453835646c6b6966512e65794a68645751694f6c73696148523063484d364c79397264574a..."
+  }
 }
 ```
 
@@ -185,6 +200,38 @@ grep '"resource":"events"' /var/log/kubernetes/audit.log \
   | jq 'select((.requestObject.reportingInstance // "" | length) > 253) | {user: .user.username, name: .objectRef.name, reportingInstance: .requestObject.reportingInstance}'
 ```
 
+## Detection Queries
+
+Assuming API server audit logs are shipped to Loki with the label `{job="k8s-audit"}`.
+
+### Detect non-controller event creation
+
+Filter for event creation by identities outside the known controller allowlist:
+
+```bash
+logcli query '{job="k8s-audit"} |= "resource":"events" |= "verb":"create" !~ "username":"system:serviceaccount:kube-system:"' \
+  --output=jsonl \
+  | jq -r '.line | fromjson | {user: .user.username, event: .objectRef.name, timestamp: .requestReceivedTimestamp}'
+```
+
+```output
+{
+  "user": "jane",
+  "event": "nginx-7d9b4c-xk9p2.18a45e7e41549f71",
+  "timestamp": "2026-04-11T16:39:18.982281Z"
+}
+```
+
+### Detect anomalous reportingInstance length
+
+Monitor for `reportingInstance` values exceeding the hostname length limit of 253 characters:
+
+```bash
+logcli query '{job="k8s-audit"} |= "resource":"events" |= "verb":"create"' \
+  --output=jsonl \
+  | jq -r '.line | fromjson | select((.requestObject.reportingInstance // "" | length) > 253) | {user: .user.username, event: .objectRef.name, reportingInstance: .requestObject.reportingInstance}'
+```
+
 ## Known Legitimate Event Writers
 
 Any event creation from an identity outside this list warrants investigation:
@@ -200,14 +247,23 @@ Any event creation from an identity outside this list warrants investigation:
 | `system:serviceaccount:kube-system:horizontal-pod-autoscaler` | HPA scaling decisions |
 | `system:serviceaccount:kube-system:node-controller` | Node lifecycle |
 
-## Querying the Audit Log
+## Audit Policy Requirements
 
-Filter event creation by non-system identities on the control plane node:
+A minimal audit policy that captures both creator identity and event content:
 
-```bash
-grep '"resource":"events"' /var/log/kubernetes/audit.log \
-  | grep '"verb":"create"' \
-  | grep -v '"username":"system:'
+```yaml
+apiVersion: audit.k8s.io/v1
+kind: Policy
+rules:
+  - level: Metadata
+    resources:
+      - group: ""
+        resources: ["events"]
+  - level: Request
+    verbs: ["create", "patch"]
+    resources:
+      - group: ""
+        resources: ["events"]
 ```
 
-Any line remaining was created by a user or non-system service account. A burst of event creations from the same identity across multiple namespaces in a short window is a secondary signal. Legitimate controllers write events scoped to their own namespace and object lifecycle.
+`Metadata` level captures the creator identity. `Request` level is required to inspect `requestObject` for encoded data in the `message` or `reportingInstance` fields.

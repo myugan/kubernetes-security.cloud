@@ -151,17 +151,18 @@ rules:
 Parse the audit log for Application creation events and extract the repository URL to check against an approved list:
 
 ```bash
-logcli query '{service_name="kube-apiserver"} | json
-  | stage="ResponseComplete"
-  | verb="create"
-  | objectRef_resource="applications"
-  | objectRef_apiGroup="argoproj.io"
-  | line_format "time={{.requestReceivedTimestamp}} user={{.user_username}} name={{.objectRef_name}} repo={{.requestObject_spec_source_repoURL}}"' \
-  --no-labels
+logcli query '{job="k8s-audit"} |= "resource":"applications" |= "verb":"create" |= "argoproj.io"' \
+  --output=jsonl \
+  | jq -r '.line | fromjson | {user: .user.username, name: .objectRef.name, repo: .requestObject.spec.source.repoURL, timestamp: .requestReceivedTimestamp}'
 ```
 
 ```output
-time=2026-04-20T03:01:06.011346Z user=attacker@example.com name=filebeat repo=https://github.com/attacker-org/helm-charts
+{
+  "user": "attacker@example.com",
+  "name": "filebeat",
+  "repo": "https://github.com/attacker-org/helm-charts",
+  "timestamp": "2026-04-20T03:01:06.011346Z"
+}
 ```
 
 ## Detecting selfHeal Persistence
@@ -171,13 +172,9 @@ An attacker who successfully creates a malicious Application with `selfHeal: tru
 The signal is a workload being recreated by the `argocd-application-controller` service account shortly after deletion. Check the audit log for the recreating actor:
 
 ```bash
-logcli query '{service_name="kube-apiserver"} | json
-  | stage="ResponseComplete"
-  | verb="create"
-  | objectRef_resource="daemonsets"
-  | user_username="system:serviceaccount:argocd:argocd-application-controller"
-  | line_format "time={{.requestReceivedTimestamp}} name={{.objectRef_name}} namespace={{.objectRef_namespace}}"' \
-  --no-labels
+logcli query '{job="k8s-audit"} |= "resource":"daemonsets" |= "verb":"create" |= "system:serviceaccount:argocd:argocd-application-controller"' \
+  --output=jsonl \
+  | jq -r '.line | fromjson | {name: .objectRef.name, namespace: .objectRef.namespace, timestamp: .requestReceivedTimestamp}'
 ```
 
 If the audit log shows repeated `argocd-application-controller` creates on the same resource after it was deleted, the source is an Application with selfHeal enabled. List all Applications across the cluster to find it:

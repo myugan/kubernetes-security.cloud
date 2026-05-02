@@ -23,13 +23,15 @@ Attackers and insiders often want to know what their current identity can do bef
 > [!NOTE]
 > Kubernetes audit logging must be enabled on the API server, with an audit policy that records `selfsubjectrulesreviews` and `subjectrulesreviews` (or still matches these requests).
 
-## How the request shows up
+## Signal 1: SelfSubjectRulesReview Creation
 
-`kubectl auth can-i --list` creates a `SelfSubjectRulesReview`. On current Kubernetes APIs that is a `POST` to `/apis/authorization.k8s.io/v1/selfsubjectrulesreviews` with `spec.namespace` set to the namespace you care about (from `-n` or your current context). The audit entry usually shows `verb` set to `create`, the `user` and `groups` fields, and `objectRef` pointing at `selfsubjectrulesreviews`.
+`kubectl auth can-i --list` creates a `SelfSubjectRulesReview`. On current Kubernetes APIs that is a `POST` to `/apis/authorization.k8s.io/v1/selfsubjectrulesreviews` with `spec.namespace` set to the namespace you care about. The audit entry shows `verb` set to `create`, the `user` and `groups` fields, and `objectRef` pointing at `selfsubjectrulesreviews`.
+
+### How the request shows up
 
 If you run the command with `--as` or `--as-group`, check whether the audit payload shows impersonation the way you expect. Behavior depends on how auditing is configured.
 
-### How impersonation is logged
+#### How impersonation is logged
 
 Audit events are written after the API server has authenticated and authorized the request. The caller that actually authenticated (the bearer token, client cert, or whatever your cluster uses) is recorded under `user` with `username` and `groups`.
 
@@ -54,9 +56,9 @@ curl --cacert "$CACERT" \
 
 The response body includes `status` with the rule lists, which is the same material `kubectl` prints for `--list`. If you are testing impersonation, add the usual `Impersonate-User` and `Impersonate-Group` headers and keep them inside what your RBAC allows.
 
-## Does audit logging record it?
+### Does audit logging record it?
 
-### Policy sketch
+#### Policy sketch
 
 Use something your security standards allow. This only shows the rough shape of a rule aimed at that resource:
 
@@ -139,7 +141,58 @@ Example audit event (abbreviated) showing both the authenticated caller and impe
 - `responseStatus.code` is the HTTP-style status from the API server (for example `201` or `200` when things worked).
 - `stageTimestamp` (or `requestReceivedTimestamp`) is when the stage was recorded on the event.
 
-Admins and CI run `--list` for good reasons all the time. Treat this as one clue next to other signals, not as a smoking gun on its own.
+## Detection Queries
+
+Assuming API server audit logs are shipped to Loki with the label `{job="k8s-audit"}`.
+
+### Search for permission enumeration
+
+Filter for `SelfSubjectRulesReview` creation events:
+
+```bash
+logcli query '{job="k8s-audit"} |= "resource":"selfsubjectrulesreviews" |= "verb":"create"' \
+  --output=jsonl \
+  | jq -r '.line | fromjson | {user: .user.username, timestamp: .requestReceivedTimestamp}'
+```
+
+### Detect enumeration combined with impersonation
+
+Filter for events where both `selfsubjectrulesreviews` and `impersonatedUser` are present:
+
+```bash
+logcli query '{job="k8s-audit"} |= "resource":"selfsubjectrulesreviews" |= "verb":"create" |= "impersonatedUser"' \
+  --output=jsonl \
+  | jq -r '.line | fromjson | {user: .user.username, impersonated: .impersonatedUser.username, timestamp: .requestReceivedTimestamp}'
+```
+
+## Known Legitimate Enumeration Patterns
+
+Admins and CI run `--list` for good reasons all the time. The following are common authorized uses:
+
+| Source | Typical use |
+| --- | --- |
+| Cluster operators | Debugging RBAC for another user |
+| CI/CD pipelines | Verifying deployment permissions |
+| Developers | Checking their own access before running commands |
+
+Treat this as one clue next to other signals, not as a smoking gun on its own. A burst of `SelfSubjectRulesReview` requests from the same identity across multiple namespaces in a short window is a secondary signal.
+
+## Audit Policy Requirements
+
+A minimal audit policy that captures permission enumeration:
+
+```yaml
+apiVersion: audit.k8s.io/v1
+kind: Policy
+rules:
+  - level: Metadata
+    verbs: ["create"]
+    resources:
+      - group: "authorization.k8s.io"
+        resources: ["selfsubjectrulesreviews"]
+```
+
+`Metadata` level is often enough to detect and triage. `Request` and `RequestResponse` add more payload detail and more noise.
 
 If you never turned on auditing or the backend, enumeration will not show up in the Kubernetes audit trail. You might still have provider control-plane logs. That depends on the platform. Busy clusters sometimes aggregate or sample logs. Make sure your pipeline is not dropping the lines you need.
 
