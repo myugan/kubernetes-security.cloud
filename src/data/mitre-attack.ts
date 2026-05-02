@@ -25,6 +25,14 @@ export const mitreTechniques: Record<string, MitreTechnique> = {
       'Adversaries may abuse command and script interpreters to execute commands, scripts, or binaries.',
     url: 'https://attack.mitre.org/techniques/T1059',
   },
+  'T1059.004': {
+    id: 'T1059.004',
+    name: 'Unix Shell',
+    tactic: 'Execution',
+    description:
+      'Adversaries may abuse Unix shell interpreters (such as sh or bash) to execute commands, scripts, or binaries.',
+    url: 'https://attack.mitre.org/techniques/T1059/004',
+  },
   T1078: {
     id: 'T1078',
     name: 'Valid Accounts',
@@ -72,6 +80,14 @@ export const mitreTechniques: Record<string, MitreTechnique> = {
     description:
       'Adversaries may inject code into processes in order to evade process-based defenses as well as possibly elevate privileges.',
     url: 'https://attack.mitre.org/techniques/T1055',
+  },
+  'T1055.009': {
+    id: 'T1055.009',
+    name: 'Proc Memory',
+    tactic: 'Defense Evasion, Privilege Escalation',
+    description:
+      'Adversaries may inject code by writing directly to process memory interfaces (for example /proc/*/mem) to alter execution without using traditional binary execution paths.',
+    url: 'https://attack.mitre.org/techniques/T1055/009',
   },
   T1543: {
     id: 'T1543',
@@ -168,6 +184,22 @@ export const mitreTechniques: Record<string, MitreTechnique> = {
     description:
       'Adversaries may attempt to exploit a weakness in an Internet-facing host or system to initially access a network.',
     url: 'https://attack.mitre.org/techniques/T1190',
+  },
+  T1218: {
+    id: 'T1218',
+    name: 'System Binary Proxy Execution',
+    tactic: 'Defense Evasion',
+    description:
+      'Adversaries may abuse trusted system binaries to proxy execution of malicious code while blending with legitimate activity.',
+    url: 'https://attack.mitre.org/techniques/T1218',
+  },
+  T1620: {
+    id: 'T1620',
+    name: 'Reflective Code Loading',
+    tactic: 'Defense Evasion',
+    description:
+      'Adversaries may load payloads directly into memory at runtime to execute code without relying on standard file-backed execution.',
+    url: 'https://attack.mitre.org/techniques/T1620',
   },
   T1611: {
     id: 'T1611',
