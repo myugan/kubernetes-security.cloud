@@ -7,15 +7,8 @@ import { TOPIC_OG_HEIGHT, TOPIC_OG_WIDTH } from '../config/topic-og';
 const OG_WIDTH = TOPIC_OG_WIDTH;
 const OG_HEIGHT = TOPIC_OG_HEIGHT;
 
-/** Body / meta font for OG PNGs (Google Fonts via Fontsource). */
-const OG_FONT_FAMILY = 'Inter';
-
-/** Title: Space Grotesk. Description + category/phase labels: DM Sans. Footer: Inter. */
-const TITLE_FONT_FAMILY = 'Space Grotesk';
-const TITLE_FONT_WEIGHT = 700;
-const DESCRIPTION_FONT_FAMILY = 'DM Sans';
-const DESCRIPTION_FONT_WEIGHT = 400;
-const LABEL_FONT_WEIGHT = 600;
+const SANS = 'Space Grotesk';
+const MONO = 'Space Mono';
 
 type SatoriNode = {
   type: string;
@@ -26,151 +19,83 @@ type SatoriNode = {
   };
 };
 
-const categoryOgStyle: Record<
-  string,
-  {
-    pillBg: string;
-    pillText: string;
-    accent: string;
-    glow: string;
-    canvasBg: string;
-    stripe: string;
-    footerBorder: string;
-    descriptionColor: string;
-  }
-> = {
+type OgCategory = 'offensive' | 'defensive' | 'fundamental';
+
+type OgPalette = {
+  canvas: string;
+  gradientFrom: string;
+  gradientTo: string;
+  accent: string;
+};
+
+const palettes: Record<OgCategory, OgPalette> = {
   offensive: {
-    pillBg: 'rgba(220, 38, 38, 0.22)',
-    pillText: '#fecaca',
-    accent: '#ef4444',
-    glow: 'rgba(239, 68, 68, 0.32)',
-    canvasBg: '#0c0a0a',
-    stripe: 'rgba(248, 113, 113, 0.065)',
-    footerBorder: '1px solid rgba(248, 113, 113, 0.28)',
-    descriptionColor: '#fecdd3',
+    canvas: '#1c0d0d',
+    gradientFrom: '#2a1113',
+    gradientTo: '#120809',
+    accent: '#e0574a',
   },
   defensive: {
-    pillBg: 'rgba(37, 99, 235, 0.28)',
-    pillText: '#bfdbfe',
-    accent: '#3b82f6',
-    glow: 'rgba(59, 130, 246, 0.34)',
-    canvasBg: '#020617',
-    stripe: 'rgba(56, 189, 248, 0.075)',
-    footerBorder: '1px solid rgba(56, 189, 248, 0.3)',
-    descriptionColor: '#bae6fd',
+    canvas: '#0d1b33',
+    gradientFrom: '#122745',
+    gradientTo: '#091426',
+    accent: '#4d9bf0',
   },
   fundamental: {
-    pillBg: 'rgba(113, 113, 122, 0.35)',
-    pillText: '#e4e4e7',
-    accent: '#a78bfa',
-    glow: 'rgba(167, 139, 250, 0.22)',
-    canvasBg: '#09090b',
-    stripe: 'rgba(196, 181, 253, 0.065)',
-    footerBorder: '1px solid rgba(167, 139, 250, 0.28)',
-    descriptionColor: '#d4d4d8',
+    canvas: '#121316',
+    gradientFrom: '#1c1e24',
+    gradientTo: '#0c0d10',
+    accent: '#a1a1aa',
   },
 };
 
-const defaultCategoryStyle = categoryOgStyle.fundamental;
+type OgFontEntry = { name: string; data: Buffer; weight: number; style: 'normal' };
 
-function normalizeCategory(category: string): 'offensive' | 'defensive' | 'fundamental' {
+let ogFonts: OgFontEntry[] | null = null;
+
+function getOgFonts(): OgFontEntry[] {
+  if (ogFonts) return ogFonts;
+
+  const grotesk = join(process.cwd(), 'node_modules/@fontsource/space-grotesk/files');
+  const mono = join(process.cwd(), 'node_modules/@fontsource/space-mono/files');
+  ogFonts = [
+    { name: SANS, data: readFileSync(join(grotesk, 'space-grotesk-latin-400-normal.woff')), weight: 400, style: 'normal' },
+    { name: SANS, data: readFileSync(join(grotesk, 'space-grotesk-latin-500-normal.woff')), weight: 500, style: 'normal' },
+    { name: SANS, data: readFileSync(join(grotesk, 'space-grotesk-latin-600-normal.woff')), weight: 600, style: 'normal' },
+    { name: SANS, data: readFileSync(join(grotesk, 'space-grotesk-latin-700-normal.woff')), weight: 700, style: 'normal' },
+    { name: MONO, data: readFileSync(join(mono, 'space-mono-latin-400-normal.woff')), weight: 400, style: 'normal' },
+  ];
+  return ogFonts;
+}
+
+function normalizeCategory(category: string): OgCategory {
   if (category === 'offensive' || category === 'defensive' || category === 'fundamental') {
     return category;
   }
   return 'fundamental';
 }
 
-/** Full-bleed background stack tuned per topic category (offensive vs defensive vs fundamental). */
-function categoryBackgroundImage(category: 'offensive' | 'defensive' | 'fundamental', glow: string): string {
-  if (category === 'offensive') {
-    return [
-      `radial-gradient(ellipse 94% 76% at 100% -6%, ${glow} 0%, transparent 55%)`,
-      'radial-gradient(ellipse 64% 52% at -10% 108%, rgba(251, 146, 60, 0.14) 0%, transparent 56%)',
-      'radial-gradient(ellipse 54% 46% at 76% 98%, rgba(127, 29, 29, 0.35) 0%, transparent 60%)',
-      'linear-gradient(118deg, transparent 34%, rgba(255, 255, 255, 0.045) 46%, transparent 58%)',
-      'linear-gradient(158deg, #0a0505 0%, #1a0a0e 28%, #2a1218 52%, #1a0c10 78%, #080505 100%)',
-    ].join(', ');
-  }
-  if (category === 'defensive') {
-    return [
-      `radial-gradient(ellipse 94% 76% at 100% -6%, ${glow} 0%, transparent 55%)`,
-      'radial-gradient(ellipse 66% 54% at -10% 108%, rgba(34, 211, 238, 0.16) 0%, transparent 56%)',
-      'radial-gradient(ellipse 56% 46% at 74% 98%, rgba(30, 64, 175, 0.38) 0%, transparent 60%)',
-      'linear-gradient(118deg, transparent 34%, rgba(255, 255, 255, 0.05) 46%, transparent 58%)',
-      'linear-gradient(162deg, #020617 0%, #082f49 26%, #0c4a6e 52%, #082f49 78%, #020617 100%)',
-    ].join(', ');
-  }
-  return [
-    `radial-gradient(ellipse 90% 72% at 100% -5%, ${glow} 0%, transparent 52%)`,
-    'radial-gradient(ellipse 58% 48% at -8% 104%, rgba(161, 161, 170, 0.14) 0%, transparent 54%)',
-    'radial-gradient(ellipse 52% 42% at 72% 96%, rgba(99, 102, 241, 0.2) 0%, transparent 58%)',
-    'linear-gradient(115deg, transparent 36%, rgba(255, 255, 255, 0.04) 48%, transparent 58%)',
-    'linear-gradient(162deg, #09090b 0%, #12101f 34%, #1a1530 60%, #0c0c12 100%)',
-  ].join(', ');
-}
-
-type OgFontEntry = { name: string; data: Buffer; weight: number; style: 'normal' };
-
-type OgFontBundle = {
-  fonts: OgFontEntry[];
-  titleFontFamily: string;
-  titleFontWeight: number;
-};
-
-let ogFontBundle: OgFontBundle | null = null;
-
-function getOgFontBundle(): OgFontBundle {
-  if (ogFontBundle) return ogFontBundle;
-
-  const cwd = process.cwd();
-  const interBase = join(cwd, 'node_modules/@fontsource/inter/files');
-  const spaceGroteskBase = join(cwd, 'node_modules/@fontsource/space-grotesk/files');
-  const dmSansBase = join(cwd, 'node_modules/@fontsource/dm-sans/files');
-
-  const fonts: OgFontEntry[] = [
-    { name: OG_FONT_FAMILY, data: readFileSync(join(interBase, 'inter-latin-400-normal.woff')), weight: 400, style: 'normal' },
-    { name: OG_FONT_FAMILY, data: readFileSync(join(interBase, 'inter-latin-600-normal.woff')), weight: 600, style: 'normal' },
-    { name: OG_FONT_FAMILY, data: readFileSync(join(interBase, 'inter-latin-700-normal.woff')), weight: 700, style: 'normal' },
-    {
-      name: DESCRIPTION_FONT_FAMILY,
-      data: readFileSync(join(dmSansBase, 'dm-sans-latin-400-normal.woff')),
-      weight: DESCRIPTION_FONT_WEIGHT,
-      style: 'normal',
-    },
-    {
-      name: DESCRIPTION_FONT_FAMILY,
-      data: readFileSync(join(dmSansBase, 'dm-sans-latin-600-normal.woff')),
-      weight: LABEL_FONT_WEIGHT,
-      style: 'normal',
-    },
-    {
-      name: TITLE_FONT_FAMILY,
-      data: readFileSync(join(spaceGroteskBase, 'space-grotesk-latin-700-normal.woff')),
-      weight: TITLE_FONT_WEIGHT,
-      style: 'normal',
-    },
-  ];
-
-  ogFontBundle = {
-    fonts,
-    titleFontFamily: TITLE_FONT_FAMILY,
-    titleFontWeight: TITLE_FONT_WEIGHT,
-  };
-  return ogFontBundle;
-}
-
-function formatPhase(phase?: string | null): string | null {
-  if (!phase) return null;
-  return phase
-    .split('-')
-    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
-    .join(' ');
-}
-
 function truncate(text: string, max: number): string {
-  const t = text.trim();
+  const t = text.replace(/\s+/g, ' ').trim();
   if (t.length <= max) return t;
-  return `${t.slice(0, max - 1).trimEnd()}…`;
+  const cut = t.slice(0, max);
+  const lastSpace = cut.lastIndexOf(' ');
+  const base = lastSpace > max * 0.6 ? cut.slice(0, lastSpace) : cut;
+  return `${base.trimEnd()}…`;
+}
+
+function formatTactic(phase?: string | null): string | null {
+  if (!phase) return null;
+  return phase.replace(/-/g, ' ').toUpperCase();
+}
+
+function el(
+  type: string,
+  style: Record<string, unknown>,
+  children?: SatoriNode['props']['children'],
+  extra: Record<string, unknown> = {},
+): SatoriNode {
+  return { type, props: { style, children, ...extra } };
 }
 
 function buildTree(input: {
@@ -179,207 +104,161 @@ function buildTree(input: {
   category: string;
   phase?: string | null;
 }): SatoriNode {
-  const { titleFontFamily, titleFontWeight } = getOgFontBundle();
   const cat = normalizeCategory(input.category);
-  const style = categoryOgStyle[cat] ?? defaultCategoryStyle;
-  const phaseLabel = formatPhase(input.phase ?? undefined);
+  const palette = palettes[cat];
+  const tactic = cat === 'offensive' ? formatTactic(input.phase) : null;
+  const titleSize = input.title.trim().length > 36 ? 74 : 82;
+  const grid = [
+    `repeating-linear-gradient(90deg, rgba(255,255,255,0.035) 0px, rgba(255,255,255,0.035) 1px, transparent 1px, transparent 64px)`,
+    `repeating-linear-gradient(0deg, rgba(255,255,255,0.035) 0px, rgba(255,255,255,0.035) 1px, transparent 1px, transparent 64px)`,
+  ].join(', ');
 
-  const headerChildren: (SatoriNode | string)[] = [
+  return el(
+    'div',
     {
-      type: 'div',
-      props: {
-        style: {
-          display: 'flex',
-          flexDirection: 'row',
-          alignItems: 'center',
-          gap: 14,
-          fontFamily: DESCRIPTION_FONT_FAMILY,
-        },
-        children: [
-          {
-            type: 'div',
-            props: {
-              style: {
-                backgroundColor: style.pillBg,
-                color: style.pillText,
-                padding: '10px 18px',
-                borderRadius: 10,
-                fontSize: 22,
-                fontWeight: LABEL_FONT_WEIGHT,
-                fontFamily: DESCRIPTION_FONT_FAMILY,
-                textTransform: 'capitalize' as const,
-              },
-              children: input.category,
-            },
-          },
-          ...(phaseLabel
-            ? [
-                {
-                  type: 'div',
-                  props: {
-                    style: {
-                      backgroundColor: 'rgba(255, 255, 255, 0.06)',
-                      color: '#d4d4d8',
-                      padding: '10px 18px',
-                      borderRadius: 10,
-                      fontSize: 20,
-                      fontWeight: LABEL_FONT_WEIGHT,
-                      fontFamily: DESCRIPTION_FONT_FAMILY,
-                    },
-                    children: phaseLabel,
-                  },
-                } as SatoriNode,
-              ]
-            : []),
-        ],
-      },
+      display: 'flex',
+      width: `${OG_WIDTH}px`,
+      height: `${OG_HEIGHT}px`,
+      backgroundColor: palette.canvas,
+      position: 'relative',
+      overflow: 'hidden',
+      fontFamily: SANS,
     },
-  ];
-
-  return {
-    type: 'div',
-    props: {
-      style: {
-        display: 'flex',
-        flexDirection: 'column',
-        justifyContent: 'space-between',
+    [
+      el('div', {
+        position: 'absolute',
+        top: 0,
+        left: 0,
         width: `${OG_WIDTH}px`,
         height: `${OG_HEIGHT}px`,
-        backgroundColor: style.canvasBg,
-        backgroundImage: categoryBackgroundImage(cat, style.glow),
-        padding: 56,
-        position: 'relative' as const,
-      },
-      children: [
+        backgroundImage: `linear-gradient(160deg, ${palette.gradientFrom} 0%, ${palette.canvas} 52%, ${palette.gradientTo} 100%)`,
+      }),
+      el('div', {
+        position: 'absolute',
+        top: 0,
+        left: 0,
+        width: `${OG_WIDTH}px`,
+        height: `${OG_HEIGHT}px`,
+        backgroundImage: grid,
+      }),
+      el('div', {
+        position: 'absolute',
+        top: 0,
+        left: 0,
+        width: `${OG_WIDTH}px`,
+        height: 5,
+        backgroundColor: palette.accent,
+      }),
+      el('div', {
+        position: 'absolute',
+        top: 0,
+        left: 0,
+        width: 5,
+        height: `${OG_HEIGHT}px`,
+        backgroundColor: palette.accent,
+        opacity: 0.35,
+      }),
+      el(
+        'div',
         {
-          type: 'div',
-          props: {
-            style: {
-              position: 'absolute',
-              top: 0,
-              left: 0,
-              width: `${OG_WIDTH}px`,
-              height: `${OG_HEIGHT}px`,
-              zIndex: 0,
-              opacity: 0.45,
-              backgroundImage: `repeating-linear-gradient(-12deg, transparent, transparent 104px, ${style.stripe} 104px, ${style.stripe} 105px)`,
-            },
-          },
+          display: 'flex',
+          flexDirection: 'column',
+          justifyContent: 'space-between',
+          width: `${OG_WIDTH}px`,
+          height: `${OG_HEIGHT}px`,
+          padding: '52px 56px 44px',
+          position: 'relative',
         },
-        {
-          type: 'div',
-          props: {
-            style: {
-              position: 'absolute',
-              top: 0,
-              left: 0,
-              right: 0,
-              height: 6,
-              zIndex: 2,
-              backgroundColor: style.accent,
-            },
-          },
-        },
-        {
-          type: 'div',
-          props: {
-            style: {
+        [
+          el(
+            'div',
+            {
               display: 'flex',
               flexDirection: 'column',
+              justifyContent: 'center',
               flex: 1,
-              position: 'relative' as const,
-              zIndex: 1,
-              paddingTop: 12,
-              gap: 28,
+              gap: 22,
+              maxWidth: 1000,
             },
-            children: [
-              ...headerChildren,
-              {
-                type: 'div',
-                props: {
-                  style: {
-                    display: 'flex',
-                    flexDirection: 'column',
-                    gap: 20,
-                    flex: 1,
-                    justifyContent: 'center',
-                  },
-                  children: [
-                    {
-                      type: 'div',
-                      props: {
-                        style: {
-                          color: '#fafafa',
-                          fontSize: 56,
-                          fontWeight: titleFontWeight,
-                          lineHeight: 1.08,
-                          letterSpacing: -1.4,
-                          fontFamily: titleFontFamily,
-                          maxWidth: 1080,
-                          textShadow:
-                            cat === 'offensive'
-                              ? '0 2px 28px rgba(0, 0, 0, 0.6), 0 0 40px rgba(239, 68, 68, 0.12)'
-                              : cat === 'defensive'
-                                ? '0 2px 28px rgba(0, 0, 0, 0.6), 0 0 40px rgba(56, 189, 248, 0.1)'
-                                : '0 2px 28px rgba(0, 0, 0, 0.55), 0 0 40px rgba(167, 139, 250, 0.1)',
-                        },
-                        children: truncate(input.title, 120),
-                      },
-                    },
-                    {
-                      type: 'div',
-                      props: {
-                        style: {
-                          color: style.descriptionColor,
-                          fontSize: 28,
-                          lineHeight: 1.45,
-                          letterSpacing: 0.15,
-                          fontWeight: DESCRIPTION_FONT_WEIGHT,
-                          fontFamily: DESCRIPTION_FONT_FAMILY,
-                          maxWidth: 1040,
-                        },
-                        children: truncate(input.description, 220),
-                      },
-                    },
-                  ],
+            [
+              el(
+                'div',
+                {
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: tactic ? 14 : 0,
                 },
-              },
+                [
+                  ...(tactic
+                    ? [
+                        el(
+                          'div',
+                          {
+                            color: palette.accent,
+                            fontSize: 13,
+                            fontWeight: 400,
+                            letterSpacing: 1.56,
+                            fontFamily: MONO,
+                          },
+                          tactic,
+                        ),
+                      ]
+                    : []),
+                  el(
+                    'div',
+                    {
+                      color: '#ffffff',
+                      fontSize: titleSize,
+                      fontWeight: 600,
+                      lineHeight: 1.02,
+                      letterSpacing: titleSize * -0.04,
+                      fontFamily: SANS,
+                    },
+                    truncate(input.title, 90),
+                  ),
+                ],
+              ),
+              el(
+                'div',
+                {
+                  color: '#aab4c1',
+                  fontSize: 23,
+                  lineHeight: 1.45,
+                  fontWeight: 400,
+                  fontFamily: SANS,
+                  maxWidth: 920,
+                },
+                truncate(input.description, 280),
+              ),
             ],
-          },
-        },
-        {
-          type: 'div',
-          props: {
-            style: {
+          ),
+          el(
+            'div',
+            {
               display: 'flex',
               flexDirection: 'row',
               justifyContent: 'flex-end',
-              alignItems: 'center',
-              position: 'relative' as const,
-              zIndex: 1,
-              borderTop: style.footerBorder,
-              paddingTop: 24,
-              marginTop: 8,
+              alignItems: 'flex-end',
+              borderTop: '1px solid rgba(255,255,255,0.12)',
+              paddingTop: 22,
             },
-            children: [
-              {
-                type: 'div',
-                props: {
-                  style: {
-                    color: '#a1a1aa',
-                    fontSize: 22,
-                    fontWeight: 600,
-                    fontFamily: OG_FONT_FAMILY,
-                  },
-                  children: 'kubernetes-security.cloud',
+            [
+              el(
+                'div',
+                {
+                  color: '#6f7b8a',
+                  fontSize: 16,
+                  fontWeight: 400,
+                  fontFamily: MONO,
                 },
-              },
+                'kubernetes-security.cloud',
+              ),
             ],
-          },
-        },
-      ],
-    },
-  };
+          ),
+        ],
+      ),
+    ],
+  );
 }
 
 export async function renderTopicOgPng(input: {
@@ -388,7 +267,7 @@ export async function renderTopicOgPng(input: {
   category: string;
   phase?: string | null;
 }): Promise<Uint8Array> {
-  const { fonts } = getOgFontBundle();
+  const fonts = getOgFonts();
   const svg = await satori(buildTree(input) as Parameters<typeof satori>[0], {
     width: OG_WIDTH,
     height: OG_HEIGHT,
