@@ -7,6 +7,42 @@
   line-height: 1.7;
   overflow-wrap: break-word;
   word-wrap: break-word;
+  --tw-prose-body: rgb(var(--ks-text-secondary));
+  --tw-prose-headings: rgb(var(--ks-text-primary));
+  --tw-prose-lead: rgb(var(--ks-text-muted));
+  --tw-prose-links: rgb(var(--ks-link));
+  --tw-prose-bold: rgb(var(--ks-text-primary));
+  --tw-prose-counters: rgb(var(--ks-text-muted));
+  --tw-prose-bullets: rgb(var(--ks-border-strong));
+  --tw-prose-hr: rgb(var(--ks-border));
+  --tw-prose-quotes: rgb(var(--ks-text-secondary));
+  --tw-prose-quote-borders: rgb(var(--ks-link));
+  --tw-prose-captions: rgb(var(--ks-text-muted));
+  --tw-prose-kbd: rgb(var(--ks-text-primary));
+  --tw-prose-kbd-shadows: var(--ks-border);
+  --tw-prose-code: rgb(var(--ks-inline-code-text));
+  --tw-prose-pre-code: rgb(var(--ks-pre-text));
+  --tw-prose-pre-bg: rgb(var(--ks-pre-bg));
+  --tw-prose-th-borders: rgb(var(--ks-border-strong));
+  --tw-prose-td-borders: rgb(var(--ks-border));
+  --tw-prose-invert-body: rgb(var(--ks-text-secondary));
+  --tw-prose-invert-headings: rgb(var(--ks-text-primary));
+  --tw-prose-invert-lead: rgb(var(--ks-text-muted));
+  --tw-prose-invert-links: rgb(var(--ks-link));
+  --tw-prose-invert-bold: rgb(var(--ks-text-primary));
+  --tw-prose-invert-counters: rgb(var(--ks-text-muted));
+  --tw-prose-invert-bullets: rgb(var(--ks-border-strong));
+  --tw-prose-invert-hr: rgb(var(--ks-border));
+  --tw-prose-invert-quotes: rgb(var(--ks-text-secondary));
+  --tw-prose-invert-quote-borders: rgb(var(--ks-link));
+  --tw-prose-invert-captions: rgb(var(--ks-text-muted));
+  --tw-prose-invert-kbd: rgb(var(--ks-text-primary));
+  --tw-prose-invert-kbd-shadows: var(--ks-border);
+  --tw-prose-invert-code: rgb(var(--ks-inline-code-text));
+  --tw-prose-invert-pre-code: rgb(var(--ks-pre-text));
+  --tw-prose-invert-pre-bg: rgb(var(--ks-pre-bg));
+  --tw-prose-invert-th-borders: rgb(var(--ks-border-strong));
+  --tw-prose-invert-td-borders: rgb(var(--ks-border));
 }
 
 .prose h1,
@@ -27,6 +63,29 @@
 .topic-article-prose h3[id],
 .topic-article-prose h4[id] {
   scroll-margin-top: 5.75rem;
+}
+
+.topic-article-prose.prose {
+  font-size: 1rem;
+  line-height: 1.7;
+}
+
+.topic-article-prose.prose h2 {
+  font-size: 1.625rem;
+  font-weight: 600;
+  letter-spacing: -0.025em;
+  line-height: 1.15;
+  margin-top: 2.25em;
+}
+
+.topic-article-prose.prose h2:first-child {
+  margin-top: 0;
+}
+
+.topic-article-prose.prose h3 {
+  font-size: 1.0625rem;
+  font-weight: 600;
+  letter-spacing: -0.01em;
 }
 
 .prose h1 {
@@ -106,12 +165,12 @@
 }
 
 /* Fixed rem so code size stays stable when .prose font-size changes */
-.prose code {
+.prose :not(pre) > code {
   font-size: 0.8125rem;
   background-color: rgb(var(--ks-inline-code-bg));
-  padding: 0.125rem 0.375rem;
+  padding: 0.125rem 0.4rem;
   border-radius: 0.25rem;
-  font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-family: 'Space Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
   color: rgb(var(--ks-inline-code-text));
   font-weight: 500;
   border: 1px solid rgb(var(--ks-inline-code-border));
@@ -119,23 +178,13 @@
   word-break: break-word;
 }
 
-/* Topic body override: keep inline code subtle (no pill) */
-.topic-article-prose :not(pre) > code {
-  background-color: rgb(var(--ks-inline-code-bg) / 0.32);
-  border: 1px solid rgb(var(--ks-inline-code-border) / 0.4);
-  padding: 0.05rem 0.3rem;
-  border-radius: 0.2rem;
-  color: rgb(var(--ks-inline-code-text));
-  font-size: 0.9em;
-  font-weight: 500;
-}
-
-.topic-article-prose :not(pre) > code::before,
-.topic-article-prose :not(pre) > code::after {
-  content: "";
+.prose :not(pre) > code::before,
+.prose :not(pre) > code::after {
+  content: none;
 }
 
 .prose pre {
+  position: relative;
   background-color: rgb(var(--ks-pre-bg));
   color: rgb(var(--ks-pre-text));
   border-radius: 0.5rem;
@@ -154,104 +203,117 @@
   font-size: 0.8125rem;
   font-weight: 400;
   border: none;
-  font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-family: 'Space Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
   overflow-wrap: normal;
   word-break: normal;
 }
 
-/* Shell blocks: Dracula-style terminal (readable; Shiki inline colors — override with !important) */
-
+/* Shell: same chrome as other fenced code; right padding for top-right copy control */
 .prose pre.astro-code[data-language="bash"],
 .prose pre.astro-code[data-language="shell"],
 .prose pre.astro-code[data-language="sh"] {
   margin-top: 1.25em;
   margin-bottom: 1.25em;
-  padding: 1rem;
+  padding: 1rem 2.75rem 1rem 1rem;
   line-height: 1.625;
   border-radius: 0.5rem;
   overflow-x: auto;
-  background-color: rgb(40 42 54) !important;
-  color: rgb(248 248 242) !important;
-  border: 1px solid rgb(68 71 90) !important;
-  box-shadow:
-    inset 0 1px 0 rgb(248 248 242 / 0.06),
-    0 0 0 1px rgb(0 0 0 / 0.2),
-    0 12px 28px -14px rgb(0 0 0 / 0.45) !important;
-}
-
-.dark .prose pre.astro-code[data-language="bash"],
-.dark .prose pre.astro-code[data-language="shell"],
-.dark .prose pre.astro-code[data-language="sh"] {
-  background-color: rgb(34 36 48) !important;
-  color: rgb(248 248 242) !important;
-  border-color: rgb(98 114 164 / 0.55) !important;
-  box-shadow:
-    inset 0 1px 0 rgb(248 248 242 / 0.05),
-    0 0 0 1px rgb(0 0 0 / 0.35),
-    0 14px 32px -14px rgb(0 0 0 / 0.55) !important;
+  overflow-y: visible;
+  background-color: rgb(var(--ks-pre-bg)) !important;
+  color: rgb(var(--ks-pre-text)) !important;
+  border: 1px solid rgb(var(--ks-pre-border)) !important;
+  box-shadow: none !important;
 }
 
 .prose pre[data-language="bash"] code,
 .prose pre[data-language="shell"] code,
 .prose pre[data-language="sh"] code {
   color: inherit !important;
-  font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-family: 'Space Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
   font-size: 0.8125rem;
   line-height: 1.625;
-  text-shadow: 0 0 20px rgb(139 233 253 / 0.04);
 }
 
-/* Flatten Shiki tokens to one calm foreground (easy on the eyes) */
-.prose pre[data-language="bash"] span[style],
-.prose pre[data-language="shell"] span[style],
-.prose pre[data-language="sh"] span[style] {
-  color: rgb(241 242 248) !important;
-}
-
-.dark .prose pre[data-language="bash"] span[style],
-.dark .prose pre[data-language="shell"] span[style],
-.dark .prose pre[data-language="sh"] span[style] {
-  color: rgb(248 248 242) !important;
-}
-
-
-/* Command output: same terminal chrome as shell (Shiki inline styles — !important) */
-.prose pre.astro-code[data-language="text"],
-.prose pre[data-language="text"] {
+/* Command output: deeper than ```bash``` blocks (stdout / stderr) */
+.prose pre.astro-code[data-language="output"],
+.prose pre[data-language="output"],
+.prose pre.astro-code[data-language="console"],
+.prose pre[data-language="console"] {
   position: relative;
-  overflow: hidden;
-  margin-top: 0.65rem;
+  overflow-x: auto;
+  overflow-y: visible;
+  margin-top: 0.75rem;
   margin-bottom: 1.25em;
   padding: 1rem;
   border-radius: 0.5rem;
-  background-color: rgb(40 42 54) !important;
-  color: rgb(203 205 220) !important;
-  border: 1px solid rgb(68 71 90) !important;
-  box-shadow:
-    inset 0 1px 0 rgb(248 248 242 / 0.05),
-    0 0 0 1px rgb(0 0 0 / 0.2),
-    0 12px 28px -14px rgb(0 0 0 / 0.45) !important;
+  background-color: color-mix(in srgb, rgb(var(--ks-pre-bg)) 45%, #000) !important;
+  color: rgb(var(--ks-pre-text)) !important;
+  border: 1px solid color-mix(in srgb, rgb(var(--ks-pre-border)) 55%, #000) !important;
+  box-shadow: none !important;
+}
+
+.dark .prose pre.astro-code[data-language="output"],
+.dark .prose pre[data-language="output"],
+.dark .prose pre.astro-code[data-language="console"],
+.dark .prose pre[data-language="console"] {
+  background-color: color-mix(in srgb, rgb(var(--ks-pre-bg)) 40%, #000) !important;
+  color: rgb(var(--ks-pre-text)) !important;
+  border-color: color-mix(in srgb, rgb(var(--ks-pre-border)) 50%, #000) !important;
+}
+
+.prose pre[data-language="output"] code,
+.prose pre[data-language="console"] code {
+  color: inherit !important;
+  background-color: transparent !important;
+  font-size: 0.8125rem;
+  line-height: 1.625;
+  font-family: 'Space Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.prose pre[data-language="output"] span[style],
+.prose pre[data-language="console"] span[style],
+.dark .prose pre[data-language="output"] span[style],
+.dark .prose pre[data-language="console"] span[style] {
+  color: inherit !important;
+}
+
+.prose pre[data-language="output"] .copy-button,
+.prose pre[data-language="console"] .copy-button {
+  display: none !important;
+}
+
+/* Plain ```text: match output — deeper transcript surface, no copy */
+.prose pre.astro-code[data-language="text"],
+.prose pre[data-language="text"] {
+  position: relative;
+  overflow-x: auto;
+  overflow-y: visible;
+  margin-top: 0.75rem;
+  margin-bottom: 1.25em;
+  padding: 1rem;
+  border-radius: 0.5rem;
+  background-color: color-mix(in srgb, rgb(var(--ks-pre-bg)) 45%, #000) !important;
+  color: rgb(var(--ks-pre-text)) !important;
+  border: 1px solid color-mix(in srgb, rgb(var(--ks-pre-border)) 55%, #000) !important;
+  box-shadow: none !important;
 }
 
 .dark .prose pre.astro-code[data-language="text"],
 .dark .prose pre[data-language="text"] {
-  background-color: rgb(34 36 48) !important;
-  color: rgb(210 212 226) !important;
-  border-color: rgb(98 114 164 / 0.55) !important;
-  box-shadow:
-    inset 0 1px 0 rgb(248 248 242 / 0.04),
-    0 0 0 1px rgb(0 0 0 / 0.35),
-    0 14px 32px -14px rgb(0 0 0 / 0.55) !important;
+  background-color: color-mix(in srgb, rgb(var(--ks-pre-bg)) 40%, #000) !important;
+  color: rgb(var(--ks-pre-text)) !important;
+  border-color: color-mix(in srgb, rgb(var(--ks-pre-border)) 50%, #000) !important;
 }
 
 .prose pre[data-language="text"] code {
   color: inherit !important;
   font-size: 0.8125rem;
   line-height: 1.625;
-  font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-family: 'Space Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
   white-space: pre-wrap;
   word-break: break-word;
-  text-shadow: 0 0 20px rgb(139 233 253 / 0.03);
 }
 
 .prose pre[data-language="text"] span[style],
@@ -263,23 +325,29 @@
   display: none !important;
 }
 
-/* ```bash``` then ```output``` with no blank line: stacked with subtle divider on slate */
+/* ```bash``` then ```output``` (or ```text```): stack flush, no extra top padding */
+.prose pre[data-language="bash"] + pre[data-language="output"],
+.prose pre[data-language="shell"] + pre[data-language="output"],
+.prose pre[data-language="sh"] + pre[data-language="output"],
+.prose pre[data-language="bash"] + pre[data-language="console"],
+.prose pre[data-language="shell"] + pre[data-language="console"],
+.prose pre[data-language="sh"] + pre[data-language="console"],
 .prose pre[data-language="bash"] + pre[data-language="text"],
 .prose pre[data-language="shell"] + pre[data-language="text"],
 .prose pre[data-language="sh"] + pre[data-language="text"] {
   margin-top: 0;
-  padding-top: 0.75rem;
-  border-top: 1px solid rgb(68 71 90);
+  padding-top: 1rem;
+  border-top: 1px solid rgb(255 255 255 / 0.1);
   border-top-left-radius: 0;
   border-top-right-radius: 0;
 }
 
-.dark .prose pre[data-language="bash"] + pre[data-language="text"],
-.dark .prose pre[data-language="shell"] + pre[data-language="text"],
-.dark .prose pre[data-language="sh"] + pre[data-language="text"] {
-  border-top-color: rgb(98 114 164 / 0.45);
-}
-
+.prose pre[data-language="bash"]:has(+ pre[data-language="output"]),
+.prose pre[data-language="shell"]:has(+ pre[data-language="output"]),
+.prose pre[data-language="sh"]:has(+ pre[data-language="output"]),
+.prose pre[data-language="bash"]:has(+ pre[data-language="console"]),
+.prose pre[data-language="shell"]:has(+ pre[data-language="console"]),
+.prose pre[data-language="sh"]:has(+ pre[data-language="console"]),
 .prose pre[data-language="bash"]:has(+ pre[data-language="text"]),
 .prose pre[data-language="shell"]:has(+ pre[data-language="text"]),
 .prose pre[data-language="sh"]:has(+ pre[data-language="text"]) {
@@ -288,14 +356,43 @@
   border-bottom-right-radius: 0;
 }
 
-.prose pre {
-  position: relative;
+/* YAML / JSON: same as default pre + room for top-right copy (see BaseLayout.astro) */
+.prose pre.astro-code[data-language="yaml"],
+.prose pre.astro-code[data-language="json"] {
+  padding-right: 2.75rem;
+}
+
+.prose pre.astro-code:not([data-language="bash"]):not([data-language="shell"]):not([data-language="sh"]):not([data-language="output"]):not([data-language="console"]):not([data-language="text"]) code {
+  font-weight: 400;
+}
+
+/*
+ * Shiki line mode: trailing empty `.line` fallback (rehype also strips these in HTML).
+ * Use `:last-of-type` so a trailing whitespace text node after the last span does not
+ * break `:last-child`.
+ */
+.prose pre.astro-code code > span.line:empty:last-of-type {
+  display: none;
+}
+
+.prose pre.astro-code code > span.line:last-of-type:has(> span:only-child:empty) {
+  display: none;
+}
+
+/* Topic + prose-lg: keep code blocks readable (do not scale pre with article text) */
+.topic-article-prose.prose-lg pre,
+.topic-article-prose.prose-lg pre code,
+.topic-article-prose pre,
+.topic-article-prose pre code {
+  font-size: 0.8125rem;
+  line-height: 1.625;
 }
 
 .copy-button {
   position: absolute;
-  bottom: 0.5rem;
+  top: 0.5rem;
   right: 0.5rem;
+  bottom: auto;
   z-index: 2;
   display: flex;
   align-items: center;
@@ -304,26 +401,27 @@
   height: 1.75rem;
   padding: 0;
   margin: 0;
-  color: rgb(107 114 128);
+  color: rgb(161 161 170);
   cursor: pointer;
-  border: 1px solid rgb(209 213 219);
-  border-radius: 0.25rem;
-  background-color: rgba(255, 255, 255, 0.9);
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+  border: 1px solid rgb(63 63 70);
+  border-radius: 0.375rem;
+  background-color: rgb(24 24 27 / 0.88);
+  box-shadow: none;
   opacity: 0;
   pointer-events: none;
   transition:
-    opacity 0.2s ease,
+    opacity 0.15s ease,
     background-color 0.15s ease,
     border-color 0.15s ease,
     color 0.15s ease;
 }
 
-.dark .copy-button {
+.dark .copy-button,
+.prose pre .copy-button {
   color: rgb(161 161 170);
   border-color: rgb(63 63 70);
-  background-color: rgba(39, 39, 42, 0.92);
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+  background-color: rgb(24 24 27 / 0.88);
+  box-shadow: none;
 }
 
 .prose pre:hover .copy-button,
@@ -335,36 +433,36 @@
 .copy-button:focus-visible {
   opacity: 1;
   pointer-events: auto;
-  outline: 2px solid rgb(14 165 233);
-  outline-offset: 2px;
+  outline: 2px solid rgb(59 130 246 / 0.45);
+  outline-offset: 1px;
 }
 
 .dark .copy-button:focus-visible {
-  outline-color: rgb(56 189 248);
+  outline-color: rgb(59 130 246 / 0.45);
 }
 
 .copy-button:hover {
-  color: rgb(55 65 81);
-  border-color: rgb(156 163 175);
-  background-color: rgb(243 244 246);
+  color: rgb(244 244 245);
+  border-color: rgb(82 82 91);
+  background-color: rgb(39 39 42);
 }
 
 .dark .copy-button:hover {
-  color: rgb(228 228 231);
+  color: rgb(244 244 245);
   border-color: rgb(82 82 91);
-  background-color: rgb(52 52 56);
+  background-color: rgb(39 39 42);
 }
 
 .copy-button.copied {
-  color: rgb(22 163 74);
-  border-color: rgb(134 239 172);
-  background-color: rgb(240 253 244);
+  color: rgb(134 239 172);
+  border-color: rgb(22 101 52);
+  background-color: rgb(20 83 45 / 0.45);
 }
 
 .dark .copy-button.copied {
   color: rgb(134 239 172);
   border-color: rgb(22 101 52);
-  background-color: rgba(20 83 45 / 0.35);
+  background-color: rgb(20 83 45 / 0.45);
 }
 
 .copy-button .hidden {
@@ -557,32 +655,38 @@
 /* Scroll + frame for markdown tables (see scripts/rehype-wrap-tables.mjs) */
 .prose .prose-table-wrap {
   width: 100%;
+  max-width: 100%;
+  min-width: 0;
   margin-top: 1.75em;
   margin-bottom: 1.75em;
   overflow-x: auto;
   overflow-y: hidden;
   -webkit-overflow-scrolling: touch;
-  border-radius: 0.625rem;
-  border: 1px solid rgb(229 231 235);
-  background-color: rgb(255 255 255);
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+  border-radius: 0.75rem;
+  border: 1px solid rgb(226 232 240);
+  background: linear-gradient(to bottom, rgb(255 255 255), rgb(249 250 251));
+  box-shadow:
+    0 0 0 1px rgb(15 23 42 / 0.04),
+    0 2px 8px rgb(15 23 42 / 0.06);
 }
 
 .dark .prose .prose-table-wrap {
-  border-color: rgb(39 39 42);
-  background-color: rgb(24 24 27);
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.35);
+  border-color: rgb(52 52 56);
+  background: linear-gradient(to bottom, rgb(30 30 33), rgb(24 24 27));
+  box-shadow:
+    0 0 0 1px rgb(0 0 0 / 0.35),
+    0 4px 16px rgb(0 0 0 / 0.35);
 }
 
 .prose table {
   width: 100%;
-  min-width: 42rem;
+  min-width: 0;
   margin-top: 2em;
   margin-bottom: 2em;
-  border-collapse: separate;
-  border-spacing: 0;
+  border-collapse: collapse;
   font-size: 0.875rem;
-  line-height: 1.5;
+  line-height: 1.6;
+  table-layout: auto;
 }
 
 .prose .prose-table-wrap table {
@@ -590,28 +694,51 @@
   margin-bottom: 0;
 }
 
+/* Typical “label | long description” tables: narrow first column, roomy second */
+.prose table:has(thead tr th:nth-child(2):last-child) {
+  table-layout: fixed;
+}
+
+.prose table:has(thead tr th:nth-child(2):last-child) th:first-child,
+.prose table:has(thead tr th:nth-child(2):last-child) td:first-child {
+  width: 8.5rem;
+  min-width: 6.5rem;
+  max-width: 36%;
+  hyphens: none;
+  -webkit-hyphens: none;
+}
+
+/* Body label column only — keeps header row typography unified */
+.prose table:has(thead tr th:nth-child(2):last-child) tbody td:first-child {
+  font-family: 'Space Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  color: rgb(31 41 55);
+  background-color: rgb(248 250 252 / 0.85);
+}
+
+.dark .prose table:has(thead tr th:nth-child(2):last-child) tbody td:first-child {
+  color: rgb(228 228 231);
+  background-color: rgb(39 39 42 / 0.55);
+}
+
 .prose th,
 .prose td {
-  border-right: 1px solid rgb(229 231 235);
-  border-bottom: 1px solid rgb(229 231 235);
-  padding: 0.625rem 0.875rem;
+  border: 1px solid rgb(226 232 240);
+  padding: 0.875rem 1.05rem;
   text-align: left;
   overflow-wrap: break-word;
   word-break: break-word;
   vertical-align: top;
   text-wrap: pretty;
-}
-
-.prose thead th:last-child,
-.prose tbody td:last-child,
-.prose tr th:last-child,
-.prose tr td:last-child {
-  border-right: none;
+  hyphens: none;
+  -webkit-hyphens: none;
 }
 
 .dark .prose th,
 .dark .prose td {
-  border-color: rgb(39 39 42);
+  border-color: rgb(52 52 56);
 }
 
 .prose thead th {
@@ -619,33 +746,47 @@
   top: 0;
   z-index: 1;
   font-weight: 600;
-  font-size: 0.8125rem;
-  letter-spacing: 0.02em;
-  background-color: rgb(249 250 251);
-  color: rgb(17 24 39);
-  border-bottom: 2px solid rgb(209 213 219);
+  font-size: 0.6875rem;
+  line-height: 1.35;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: rgb(100 116 139);
+  background-color: rgb(241 245 249 / 0.92);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border-bottom: 1px solid rgb(203 213 225);
+  box-shadow: 0 1px 0 rgb(255 255 255 / 0.6) inset;
 }
 
 .dark .prose thead th {
-  background-color: rgb(30 30 33);
-  color: rgb(244 244 245);
+  color: rgb(161 161 170);
+  background-color: rgb(39 39 42 / 0.92);
   border-bottom-color: rgb(63 63 70);
+  box-shadow: 0 1px 0 rgb(255 255 255 / 0.04) inset;
 }
 
 .prose tbody tr:nth-child(even) td {
-  background-color: rgb(249 250 251 / 0.65);
+  background-color: rgb(248 250 252 / 0.55);
 }
 
 .dark .prose tbody tr:nth-child(even) td {
-  background-color: rgb(39 39 42 / 0.35);
+  background-color: rgb(39 39 42 / 0.28);
+}
+
+.prose table:has(thead tr th:nth-child(2):last-child) tbody tr:nth-child(even) td:first-child {
+  background-color: rgb(241 245 249 / 0.95);
+}
+
+.dark .prose table:has(thead tr th:nth-child(2):last-child) tbody tr:nth-child(even) td:first-child {
+  background-color: rgb(52 52 56 / 0.42);
 }
 
 .prose tbody tr:hover td {
-  background-color: rgb(243 244 246 / 0.9);
+  background-color: rgb(241 245 249 / 0.95);
 }
 
 .dark .prose tbody tr:hover td {
-  background-color: rgb(52 52 56 / 0.45);
+  background-color: rgb(52 52 56 / 0.4);
 }
 
 .prose td {
@@ -658,12 +799,12 @@
 
 .prose th:not(thead th) {
   font-weight: 600;
-  background-color: rgb(249 250 251);
+  background-color: rgb(241 245 249);
   color: rgb(17 24 39);
 }
 
 .dark .prose th:not(thead th) {
-  background-color: rgb(30 30 33);
+  background-color: rgb(39 39 42);
   color: rgb(244 244 245);
 }
 
@@ -677,16 +818,9 @@
 
 .prose table code {
   font-size: 0.8125rem;
+  font-weight: 500;
   overflow-wrap: anywhere;
   word-break: break-word;
-}
-
-@media (max-width: 1024px) {
-  .topic-article-prose .prose-table-wrap {
-    width: calc(100% + 0.75rem);
-    margin-left: -0.375rem;
-    margin-right: -0.375rem;
-  }
 }
 
 .prose > *:first-child {

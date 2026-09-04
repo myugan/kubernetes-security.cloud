@@ -1,0 +1,17 @@
+---
+import { glossaryTypeKey } from '../lib/taxonomy';
+
+interface Props {
+  category: string;
+  size?: 'sm' | 'md';
+  class?: string;
+}
+
+const { category, size = 'md', class: className = '' } = Astro.props;
+---
+
+<span
+  class:list={['ks-type-dot', size === 'sm' && 'ks-type-dot-sm', className]}
+  data-type={glossaryTypeKey(category)}
+  aria-hidden="true"
+></span>

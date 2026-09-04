@@ -1,0 +1,12 @@
+---
+import TacticIcon from './TacticIcon.astro';
+
+interface Props {
+  phase?: string;
+  class?: string;
+}
+
+const { phase, class: className = 'h-4 w-4' } = Astro.props;
+---
+
+<TacticIcon phase={phase} class={className} />

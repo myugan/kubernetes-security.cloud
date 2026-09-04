@@ -1,25 +1,33 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
 import { getCollection } from 'astro:content';
-import Card from '../components/ui/Card.astro';
-import CardHeader from '../components/ui/CardHeader.astro';
-import CardTitle from '../components/ui/CardTitle.astro';
-import CardDescription from '../components/ui/CardDescription.astro';
+import TacticIcon from '../components/TacticIcon.astro';
 import { getAllMitreTechniques } from '../data/mitre-attack';
+import { LANDING_TACTICS, pad2 } from '../lib/taxonomy';
 
 const topics = await getCollection('topics');
+const offensiveTopics = topics.filter((t) => t.data.category === 'offensive');
 const allTechniques = getAllMitreTechniques();
 const techniqueById = new Map(allTechniques.map((technique) => [technique.id, technique]));
 
-const topicMap = new Map<string, { slug: string; title: string; category: string }[]>();
-for (const topic of topics) {
-  const ids = topic.data.mitreTechniques ?? [];
-  for (const id of ids) {
+type MappedTopic = {
+  slug: string;
+  title: string;
+  description: string;
+  category: string;
+  phase?: string;
+};
+
+const topicMap = new Map<string, MappedTopic[]>();
+for (const topic of offensiveTopics) {
+  for (const id of topic.data.mitreTechniques ?? []) {
     const list = topicMap.get(id) ?? [];
     list.push({
       slug: topic.slug,
       title: topic.data.title,
+      description: topic.data.description,
       category: topic.data.category,
+      phase: topic.data.phase ?? topic.data.offensiveType,
     });
     topicMap.set(id, list);
   }
@@ -29,8 +37,6 @@ const mappedTechniqueIds = [...topicMap.keys()].sort();
 const techniques = mappedTechniqueIds.map((id) => {
   const known = techniqueById.get(id);
   if (known) return known;
-
-  // Keep topic-provided technique IDs visible even if not in local MITRE catalog yet.
   return {
     id,
     name: `Technique ${id}`,
@@ -40,393 +46,256 @@ const techniques = mappedTechniqueIds.map((id) => {
   };
 });
 
-const totalMappedTechniques = techniques.filter((t) => (topicMap.get(t.id)?.length ?? 0) > 0).length;
+const totalMappedTechniques = techniques.length;
 const totalMappings = Array.from(topicMap.values()).reduce((sum, items) => sum + items.length, 0);
 
-const groupedByPrimaryTactic = techniques.reduce((acc, technique) => {
-  const primaryTactic = technique.tactic.split(',')[0].trim();
-  if (!acc.has(primaryTactic)) acc.set(primaryTactic, []);
-  acc.get(primaryTactic)?.push(technique);
-  return acc;
-}, new Map<string, typeof techniques>());
-
-const tacticOrder = [
-  'Initial Access',
-  'Execution',
-  'Persistence',
-  'Privilege Escalation',
-  'Defense Evasion',
-  'Credential Access',
-  'Discovery',
-  'Lateral Movement',
+const MATRIX_TACTICS = [
+  ...LANDING_TACTICS,
   'Collection',
   'Command and Control',
   'Exfiltration',
-  'Impact',
-];
+  'Reconnaissance',
+] as const;
 
-const orderedTacticEntries = Array.from(groupedByPrimaryTactic.entries()).sort((a, b) => {
-  const ai = tacticOrder.indexOf(a[0]);
-  const bi = tacticOrder.indexOf(b[0]);
-  if (ai !== -1 && bi !== -1) return ai - bi;
-  if (ai !== -1) return -1;
-  if (bi !== -1) return 1;
-  return a[0].localeCompare(b[0]);
-});
+type MatrixCell = {
+  id: string;
+  name: string;
+  url: string;
+  description: string;
+  tactic: string;
+  topics: MappedTopic[];
+};
 
-const graphNodes: Array<{ data: { id: string; label: string; type: string; href?: string; techniqueId?: string } }> = [];
-const graphEdges: Array<{ data: { id: string; source: string; target: string; type?: string } }> = [];
-const techniqueDetails = Object.fromEntries(
-  techniques.map((t) => [t.id, { ...t, topics: topicMap.get(t.id) ?? [] }])
-);
+function tacticColumnsForField(tacticField: string): Set<string> {
+  const parts = tacticField.split(/[,;]/).map((s) => s.trim()).filter(Boolean);
+  const cols = new Set<string>();
+  for (const p of parts) {
+    const hit = MATRIX_TACTICS.find((c) => c.toLowerCase() === p.toLowerCase());
+    if (hit) cols.add(hit);
+  }
+  return cols;
+}
 
-for (const [tactic, list] of orderedTacticEntries) {
-  const tacticId = `tactic:${tactic}`;
-  graphNodes.push({ data: { id: tacticId, label: tactic, type: 'tactic' } });
+const matrixByTactic = new Map<string, MatrixCell[]>();
 
-  for (const technique of list) {
-    const techniqueId = `tech:${technique.id}`;
-    graphNodes.push({
-      data: {
-        id: techniqueId,
-        label: `${technique.id}\n${technique.name}`,
-        type: 'technique',
-        href: technique.url,
-        techniqueId: technique.id,
-      },
-    });
-    graphEdges.push({
-      data: {
-        id: `${tacticId}->${techniqueId}`,
-        source: tacticId,
-        target: techniqueId,
-      },
-    });
-
+for (const technique of techniques) {
+  const topicsFor = topicMap.get(technique.id) ?? [];
+  const cell: MatrixCell = {
+    id: technique.id,
+    name: technique.name,
+    url: technique.url,
+    description: technique.description,
+    tactic: technique.tactic,
+    topics: topicsFor,
+  };
+  const cols = tacticColumnsForField(technique.tactic);
+  if (cols.size === 0) {
+    const list = matrixByTactic.get('Other') ?? [];
+    if (!list.some((c) => c.id === technique.id)) list.push(cell);
+    matrixByTactic.set('Other', list);
+    continue;
+  }
+  for (const col of cols) {
+    const list = matrixByTactic.get(col) ?? [];
+    if (!list.some((c) => c.id === technique.id)) list.push(cell);
+    matrixByTactic.set(col, list);
   }
 }
 
-for (let i = 0; i < orderedTacticEntries.length - 1; i++) {
-  const from = `tactic:${orderedTacticEntries[i][0]}`;
-  const to = `tactic:${orderedTacticEntries[i + 1][0]}`;
-  graphEdges.push({
-    data: {
-      id: `${from}->${to}:order`,
-      source: from,
-      target: to,
-      type: 'ordering',
-    },
-  });
+const matrixColumns = [
+  ...MATRIX_TACTICS.filter((t) => (matrixByTactic.get(t)?.length ?? 0) > 0),
+  ...((matrixByTactic.get('Other')?.length ?? 0) > 0 ? (['Other'] as const) : []),
+];
+
+function tacticAnchorId(tactic: string): string {
+  const slug = tactic
+    .toLowerCase()
+    .normalize('NFKD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '');
+  return `tactic-${slug || 'section'}`;
 }
 
-const graphDataJson = JSON.stringify({ nodes: graphNodes, edges: graphEdges });
-const techniqueDetailsJson = JSON.stringify(techniqueDetails);
+const matrixPayload = Object.fromEntries(
+  techniques.map((technique) => [
+    technique.id,
+    {
+      id: technique.id,
+      name: technique.name,
+      url: technique.url,
+      description: technique.description,
+      tactic: technique.tactic,
+      topics: topicMap.get(technique.id) ?? [],
+    },
+  ])
+);
 ---
 
 <BaseLayout
   title="ATT&CK Map - Kubernetes Security"
-  description="A single-page visualization of MITRE ATT&CK techniques mapped across Kubernetes security topics."
+  description="MITRE ATT&CK techniques mapped to offensive Kubernetes security topics, grouped by tactic with topic links."
 >
-  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-    <div class="mb-8">
-      <div class="flex items-center gap-3 mb-4">
-        <div class="text-primary-600">
-          <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7h18M3 12h18M3 17h18" />
-          </svg>
-        </div>
-        <h1 class="text-3xl sm:text-4xl font-bold text-gray-900 dark:text-zinc-100">ATT&amp;CK Map</h1>
+  <div class="max-w-7xl mx-auto min-w-0 px-7 lg:px-12 py-12">
+    <div class="mb-8 grid gap-10 lg:grid-cols-[1fr_420px] lg:items-end border-b border-app-border pb-8">
+      <div class="flex flex-col gap-3.5">
+        <p class="ks-kicker ks-kicker-attack">ATT&amp;CK Map</p>
+        <h1 class="ks-display">ATT&amp;CK Map</h1>
+        <p class="ks-lede max-w-[56ch]">
+          One page that visualizes all MITRE ATT&amp;CK techniques and where they are covered across topics.
+          See also the
+          <a href="https://kubernetes-threat-matrix.redguard.ch/" class="ds-link" target="_blank" rel="noopener noreferrer">Kubernetes Threat Matrix</a>.
+        </p>
       </div>
-      <p class="text-base sm:text-lg text-gray-600 dark:text-zinc-400 max-w-3xl">
-        One page that visualizes all MITRE ATT&CK techniques and where they are covered across topics.
-      </p>
-    </div>
-
-    <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-8">
-      <Card class="p-4">
-        <p class="text-xs font-semibold tracking-wide text-gray-500 dark:text-zinc-500">Total techniques</p>
-        <p class="mt-1 text-2xl font-semibold text-gray-900 dark:text-zinc-100">{techniques.length}</p>
-      </Card>
-      <Card class="p-4">
-        <p class="text-xs font-semibold tracking-wide text-gray-500 dark:text-zinc-500">Mapped techniques</p>
-        <p class="mt-1 text-2xl font-semibold text-gray-900 dark:text-zinc-100">{totalMappedTechniques}</p>
-      </Card>
-      <Card class="p-4">
-        <p class="text-xs font-semibold tracking-wide text-gray-500 dark:text-zinc-500">Total topic mappings</p>
-        <p class="mt-1 text-2xl font-semibold text-gray-900 dark:text-zinc-100">{totalMappings}</p>
-      </Card>
-    </div>
-
-    <Card class="mb-8">
-      <CardHeader>
-        <CardTitle>Interactive Technique Graph</CardTitle>
-        <CardDescription>
-          Simplified animated flow: Tactic → Technique. Click a technique to see related topics in the panel.
-        </CardDescription>
-      </CardHeader>
-      <div class="px-6 pb-6">
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
-          <div class="lg:col-span-2">
-            <div id="techniques-graph" class="w-full h-[720px] rounded-xl border border-app-border bg-app-surface"></div>
-          </div>
-          <div class="rounded-xl border border-app-border bg-app-surface p-4">
-            <p class="text-xs font-semibold tracking-wide text-gray-500 dark:text-zinc-500 mb-2">Technique Details</p>
-            <h3 id="technique-panel-title" class="text-lg font-semibold text-gray-900 dark:text-zinc-100">Select a technique</h3>
-            <p id="technique-panel-desc" class="mt-2 text-sm text-gray-600 dark:text-zinc-400">
-              Click any red technique node to view mapped topics and open the MITRE reference.
-            </p>
-            <div id="technique-panel-topics" class="mt-4 space-y-2"></div>
-            <a id="technique-panel-link" href="#" target="_blank" rel="noopener noreferrer" class="hidden mt-4 inline-flex items-center gap-1 text-sm text-primary-600 dark:text-primary-400 hover:text-primary-700 dark:hover:text-primary-300">
-              Open on MITRE
-              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
-              </svg>
-            </a>
-          </div>
+      <div class="ks-stat-grid" style="grid-template-columns: repeat(3, 1fr);">
+        <div class="ks-stat-cell">
+          <span class="ks-stat-n">{allTechniques.length}</span>
+          <span class="ks-stat-label">Catalog techniques</span>
+        </div>
+        <div class="ks-stat-cell">
+          <span class="ks-stat-n">{totalMappedTechniques}</span>
+          <span class="ks-stat-label">Mapped techniques</span>
+        </div>
+        <div class="ks-stat-cell">
+          <span class="ks-stat-n">{totalMappings}</span>
+          <span class="ks-stat-label">Topic mappings</span>
         </div>
       </div>
-    </Card>
+    </div>
+
+    {matrixColumns.length === 0 ? (
+      <div class="ks-card px-4 py-10 text-center">
+        <p class="text-sm ds-text-secondary">No mapped techniques on offensive topics yet.</p>
+      </div>
+    ) : (
+      <>
+        <div class="ks-matrix-legend -mx-7 lg:-mx-12 px-7 lg:px-12">
+          <span class="ks-kicker">Tactics</span>
+          <span class="font-mono text-[11.5px] ds-text-primary">{matrixColumns.length}</span>
+          <span class="w-px h-[18px] bg-app-border" aria-hidden="true"></span>
+          <span class="inline-flex items-center gap-1.5 text-xs ds-text-muted">
+            <span class="ks-matrix-swatch bg-offensive-bg border border-offensive-border"></span>
+            Mapped to topics
+          </span>
+          <span class="inline-flex items-center gap-1.5 text-xs ds-text-muted">
+            <span class="ks-matrix-swatch bg-offensive"></span>
+            Selected
+          </span>
+          <span class="ml-auto font-mono text-[11px] ds-text-muted">Phase order →</span>
+        </div>
+
+        <div class="overflow-x-auto py-6">
+          <div class="grid gap-2 items-start" style={`grid-template-columns: repeat(${matrixColumns.length}, minmax(118px, 1fr)); min-width: ${matrixColumns.length * 128}px`}>
+            {matrixColumns.map((tactic, index) => {
+              const cells = matrixByTactic.get(tactic) ?? [];
+              return (
+                <div id={tacticAnchorId(tactic)} class="flex flex-col gap-2 scroll-mt-24">
+                  <div class="flex flex-col gap-1.5 pb-2 border-b border-app-border min-h-[58px]">
+                    <div class="flex items-center gap-1.5">
+                      <TacticIcon tactic={tactic} class="h-3.5 w-3.5 text-offensive" />
+                      <span class="font-mono text-[9.5px] ds-text-muted">{pad2(index + 1)}</span>
+                      <span class="ml-auto font-mono text-[9.5px] ds-text-muted">{cells.length}</span>
+                    </div>
+                    <span class="text-xs font-semibold leading-tight tracking-tight ds-text-primary">{tactic}</span>
+                  </div>
+                  {cells.map((cell) => (
+                    <button
+                      type="button"
+                      class="ks-matrix-cell"
+                      data-technique-id={cell.id}
+                      aria-pressed="false"
+                    >
+                      <span class="id">{cell.id}</span>
+                      <span class="name">{cell.name}</span>
+                    </button>
+                  ))}
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      </>
+    )}
   </div>
 
-  <script define:vars={{ graphDataJson, techniqueDetailsJson }}>
-    async function loadScript(src) {
-      return new Promise((resolve, reject) => {
-        const script = document.createElement('script');
-        script.src = src;
-        script.onload = resolve;
-        script.onerror = reject;
-        document.head.appendChild(script);
-      });
-    }
-
-    async function initTechniquesGraph() {
-      const container = document.getElementById('techniques-graph');
-      if (!container) return;
-
-      try {
-        if (typeof cytoscape === 'undefined') {
-          await Promise.all([
-            loadScript('https://cdn.jsdelivr.net/npm/cytoscape@3.27.0/dist/cytoscape.min.js'),
-            loadScript('https://cdn.jsdelivr.net/npm/dagre@0.8.5/dist/dagre.min.js'),
-            loadScript('https://cdn.jsdelivr.net/npm/cytoscape-dagre@2.5.0/cytoscape-dagre.min.js'),
-          ]);
-        }
-        if (typeof cytoscape !== 'undefined' && typeof cytoscapeDagre !== 'undefined') {
-          cytoscape.use(cytoscapeDagre);
-        }
-
-        const graph = JSON.parse(graphDataJson);
-        const detailsMap = JSON.parse(techniqueDetailsJson);
-        const panelTitle = document.getElementById('technique-panel-title');
-        const panelDesc = document.getElementById('technique-panel-desc');
-        const panelTopics = document.getElementById('technique-panel-topics');
-        const panelLink = document.getElementById('technique-panel-link');
-        function getGraphColors() {
-          const isDark = document.documentElement.classList.contains('dark');
-          return isDark
-            ? {
-                nodeBg: '#27272a',
-                nodeBorder: '#52525b',
-                nodeText: '#e4e4e7',
-                tacticBg: '#312e81',
-                tacticBorder: '#818cf8',
-                techniqueBg: '#7f1d1d',
-                techniqueBorder: '#f87171',
-                edge: '#71717a',
-                pulse: '#fbbf24',
-              }
-            : {
-                nodeBg: '#f3f4f6',
-                nodeBorder: '#9ca3af',
-                nodeText: '#111827',
-                tacticBg: '#ddd6fe',
-                tacticBorder: '#7c3aed',
-                techniqueBg: '#fee2e2',
-                techniqueBorder: '#dc2626',
-                edge: '#9ca3af',
-                pulse: '#f59e0b',
-              };
-        }
-
-        const colors = getGraphColors();
-
-        const cy = cytoscape({
-          container,
-          elements: {
-            nodes: graph.nodes,
-            edges: graph.edges,
-          },
-          style: [
-            {
-              selector: 'node',
-              style: {
-                label: 'data(label)',
-                width: 'label',
-                height: 'label',
-                shape: 'roundrectangle',
-                'background-color': colors.nodeBg,
-                'border-width': 2,
-                'border-color': colors.nodeBorder,
-                color: colors.nodeText,
-                'text-valign': 'center',
-                'text-halign': 'center',
-                'text-wrap': 'wrap',
-                'text-max-width': '200px',
-                'font-size': '12px',
-                'font-weight': 600,
-                padding: '10px',
-              },
-            },
-            {
-              selector: 'node[type = "tactic"]',
-              style: {
-                'background-color': colors.tacticBg,
-                'border-color': colors.tacticBorder,
-              },
-            },
-            {
-              selector: 'node[type = "technique"]',
-              style: {
-                'background-color': colors.techniqueBg,
-                'border-color': colors.techniqueBorder,
-              },
-            },
-            {
-              selector: 'node.pulse',
-              style: {
-                'border-width': 4,
-                'border-color': colors.pulse,
-                'shadow-blur': 20,
-                'shadow-color': colors.pulse,
-                'shadow-opacity': 0.6,
-              },
-            },
-            {
-              selector: 'edge',
-              style: {
-                width: 1.8,
-                'line-color': colors.edge,
-                'target-arrow-color': colors.edge,
-                'target-arrow-shape': 'triangle',
-                'curve-style': 'bezier',
-              },
-            },
-            {
-              selector: 'edge[type = "ordering"]',
-              style: {
-                width: 0,
-                opacity: 0,
-                'target-arrow-shape': 'none',
-              },
-            },
-          ],
-          layout: {
-            name: 'dagre',
-            rankDir: 'LR',
-            nodeSep: 30,
-            rankSep: 120,
-            edgeSep: 10,
-          },
-          minZoom: 0.15,
-          maxZoom: 2.5,
-          wheelSensitivity: 0.2,
-        });
-
-        cy.fit(undefined, 10);
-        cy.zoom({
-          level: Math.max(cy.zoom() * 2.2, 1.15),
-          renderedPosition: { x: cy.width() / 2, y: cy.height() / 2 },
-        });
-
-        function applyGraphColors() {
-          const nextColors = getGraphColors();
-          cy.style()
-            .selector('node')
-            .style({
-              'background-color': nextColors.nodeBg,
-              'border-color': nextColors.nodeBorder,
-              color: nextColors.nodeText,
-            })
-            .selector('node[type = "tactic"]')
-            .style({
-              'background-color': nextColors.tacticBg,
-              'border-color': nextColors.tacticBorder,
-            })
-            .selector('node[type = "technique"]')
-            .style({
-              'background-color': nextColors.techniqueBg,
-              'border-color': nextColors.techniqueBorder,
-            })
-            .selector('node.pulse')
-            .style({
-              'border-color': nextColors.pulse,
-              'shadow-color': nextColors.pulse,
-            })
-            .selector('edge')
-            .style({
-              'line-color': nextColors.edge,
-              'target-arrow-color': nextColors.edge,
-            })
-            .update();
-        }
-
-        document.querySelectorAll('.theme-toggle-btn').forEach((button) => {
-          button.addEventListener('click', () => {
-            window.setTimeout(applyGraphColors, 0);
-          });
-        });
-        document.addEventListener('astro:after-swap', applyGraphColors);
-
-        cy.on('tap', 'node', (evt) => {
-          const nodeType = evt.target.data('type');
-          if (nodeType !== 'technique') return;
-          const techniqueId = evt.target.data('techniqueId');
-          if (!techniqueId || !detailsMap[techniqueId]) return;
-
-          const info = detailsMap[techniqueId];
-          if (panelTitle) panelTitle.textContent = `${info.id} — ${info.name}`;
-          if (panelDesc) panelDesc.textContent = info.description;
-
-          if (panelTopics) {
-            panelTopics.innerHTML = '';
-            if (info.topics.length === 0) {
-              panelTopics.innerHTML = '<p class="text-sm text-amber-700 dark:text-amber-300">Not mapped to topics yet.</p>';
-            } else {
-              info.topics.forEach((topic) => {
-                const a = document.createElement('a');
-                a.href = `/topics/${topic.slug}`;
-                a.className = 'block rounded-md border border-app-border px-3 py-2 text-sm text-app-text-secondary hover:bg-app-surface-muted/70';
-                a.textContent = topic.title;
-                panelTopics.appendChild(a);
-              });
-            }
-          }
-
-          if (panelLink) {
-            panelLink.href = info.url;
-            panelLink.classList.remove('hidden');
-          }
-        });
-
-        // Subtle loop animation: pulse random mapped techniques.
-        setInterval(() => {
-          const techniqueNodes = cy.nodes('node[type = "technique"]');
-          if (techniqueNodes.length === 0) return;
-          cy.nodes().removeClass('pulse');
-          const randomNode = techniqueNodes[Math.floor(Math.random() * techniqueNodes.length)];
-          randomNode.addClass('pulse');
-          setTimeout(() => randomNode.removeClass('pulse'), 1200);
-        }, 1800);
-      } catch (error) {
-        console.error('Failed to render techniques graph:', error);
-        container.innerHTML = '<div class="p-4 text-center text-gray-500 dark:text-zinc-500">Unable to load graph. Refresh and try again.</div>';
-      }
-    }
-
-    if (document.readyState === 'loading') {
-      document.addEventListener('DOMContentLoaded', initTechniquesGraph);
-    } else {
-      initTechniquesGraph();
-    }
-  </script>
+  <div id="matrix-detail" class="ks-matrix-detail">
+    <div id="matrix-placeholder" class="max-w-7xl mx-auto px-7 lg:px-12">
+      <p class="ks-kicker mb-2">Selected technique</p>
+      <p class="text-sm ds-text-muted max-w-[52ch]">Select a technique on the map to see its description and the topics that cover it.</p>
+    </div>
+    <div id="matrix-detail-body" class="hidden max-w-7xl mx-auto px-7 lg:px-12 grid gap-10 lg:grid-cols-[340px_1fr] lg:gap-11 items-start">
+      <div class="flex flex-col gap-3">
+        <p class="ks-kicker">Selected technique</p>
+        <div class="flex items-baseline gap-2.5 flex-wrap">
+          <span id="detail-id" class="font-mono text-[15px] font-semibold text-offensive"></span>
+          <h2 id="detail-name" class="m-0 text-2xl font-semibold tracking-tight leading-tight ds-text-primary"></h2>
+        </div>
+        <p id="detail-meta" class="text-[12.5px] ds-text-muted"></p>
+        <p id="detail-desc" class="text-sm leading-relaxed ds-text-secondary"></p>
+        <a id="detail-mitre" href="https://attack.mitre.org/" class="ks-btn ks-btn-primary self-start text-[12.5px] !px-3.5 !py-2" hidden target="_blank" rel="noopener noreferrer">
+          Open on MITRE ↗
+        </a>
+      </div>
+      <div class="flex flex-col gap-2.5">
+        <p class="ks-kicker">Covered by</p>
+        <div id="detail-topics" class="grid sm:grid-cols-2 lg:grid-cols-3 gap-2.5"></div>
+      </div>
+    </div>
+  </div>
 </BaseLayout>
+
+<script define:vars={{ matrixPayload }}>
+  const payload = matrixPayload;
+  const placeholder = document.getElementById('matrix-placeholder');
+  const detailBody = document.getElementById('matrix-detail-body');
+  const idEl = document.getElementById('detail-id');
+  const nameEl = document.getElementById('detail-name');
+  const metaEl = document.getElementById('detail-meta');
+  const descEl = document.getElementById('detail-desc');
+  const mitreEl = document.getElementById('detail-mitre');
+  const topicsEl = document.getElementById('detail-topics');
+  const cells = document.querySelectorAll('[data-technique-id]');
+
+  function escapeHtml(value) {
+    return String(value)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;');
+  }
+
+  function selectTechnique(id) {
+    const data = payload[id];
+    if (!data) return;
+    cells.forEach((cell) => {
+      const selected = cell.getAttribute('data-technique-id') === id;
+      cell.classList.toggle('is-selected', selected);
+      cell.setAttribute('aria-pressed', selected ? 'true' : 'false');
+    });
+    placeholder?.classList.add('hidden');
+    detailBody?.classList.remove('hidden');
+    if (idEl) idEl.textContent = data.id;
+    if (nameEl) nameEl.textContent = data.name;
+    if (metaEl) metaEl.textContent = `${data.tactic.split(',')[0].trim()} / ${data.topics.length} topic${data.topics.length === 1 ? '' : 's'} mapped`;
+    if (descEl) descEl.textContent = data.description;
+    if (mitreEl) {
+      mitreEl.setAttribute('href', data.url);
+      mitreEl.hidden = false;
+    }
+    if (topicsEl) {
+      topicsEl.innerHTML = data.topics
+        .map((topic) => {
+          const phase = topic.phase ? ` · ${String(topic.phase).replace(/-/g, ' ').toUpperCase()}` : '';
+          return `<a href="/topics/${escapeHtml(topic.slug)}" class="ks-card p-3.5 flex flex-col gap-1.5 border-offensive-border"><span class="ks-stance ks-stance-offensive">${escapeHtml(topic.category.toUpperCase())}${escapeHtml(phase)}</span><span class="text-sm font-semibold leading-snug ds-text-primary">${escapeHtml(topic.title)}</span><span class="text-xs leading-snug ds-text-muted">${escapeHtml(topic.description)}</span></a>`;
+        })
+        .join('');
+    }
+  }
+
+  cells.forEach((cell) => {
+    cell.addEventListener('click', () => selectTechnique(cell.getAttribute('data-technique-id')));
+  });
+
+  const hash = window.location.hash.replace(/^#/, '');
+  if (hash && payload[hash]) selectTechnique(hash);
+</script>

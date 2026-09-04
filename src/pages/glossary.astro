@@ -1,63 +1,164 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
+import TypeDot from '../components/TypeDot.astro';
 import { getCollection } from 'astro:content';
-import Card from '../components/ui/Card.astro';
-import CardHeader from '../components/ui/CardHeader.astro';
-import CardTitle from '../components/ui/CardTitle.astro';
-import CardDescription from '../components/ui/CardDescription.astro';
-import CategoryIcon from '../components/CategoryIcon.astro';
-import { getCategoryColors } from '../components/CategoryColors.astro';
+import {
+  GLOSSARY_TYPE_ORDER,
+  GLOSSARY_TYPE_FACET_LABEL,
+  glossaryTypeKey,
+  glossaryTypeLabel,
+} from '../lib/taxonomy';
 
 const glossaryEntries = await getCollection('glossary');
 const sortedEntries = glossaryEntries.sort((a, b) => a.data.title.localeCompare(b.data.title));
+
+const typeFacets = GLOSSARY_TYPE_ORDER
+  .map((type) => ({
+    type,
+    label: GLOSSARY_TYPE_FACET_LABEL[type],
+    count: sortedEntries.filter((entry) => glossaryTypeKey(entry.data.category) === type).length,
+  }))
+  .filter((facet) => facet.count > 0);
+
+const extraTypes = [...new Set(sortedEntries.map((entry) => glossaryTypeKey(entry.data.category)))]
+  .filter((type) => !GLOSSARY_TYPE_ORDER.includes(type as (typeof GLOSSARY_TYPE_ORDER)[number]))
+  .map((type) => ({
+    type,
+    label: GLOSSARY_TYPE_FACET_LABEL[type] ?? type.charAt(0).toUpperCase() + type.slice(1),
+    count: sortedEntries.filter((entry) => glossaryTypeKey(entry.data.category) === type).length,
+  }));
+
+const allFacets = [...typeFacets, ...extraTypes];
+
+const letters = [...new Set(sortedEntries.map((entry) => entry.data.title[0].toUpperCase()))].sort();
+const letterGroups = letters.map((letter) => {
+  const items = sortedEntries.filter((entry) => entry.data.title[0].toUpperCase() === letter);
+  return { letter, count: items.length, items };
+});
 ---
 
 <BaseLayout
   title="Glossary - Kubernetes Security"
   description="Simple definitions and explanations of Kubernetes components, concepts, and security terms."
 >
-  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-    <div class="mb-10">
-      <div class="flex items-center gap-3 mb-4">
-        <div class="ds-link">
-          <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
-          </svg>
-        </div>
-        <h1 class="text-3xl sm:text-4xl font-bold ds-text-primary">Glossary</h1>
+  <div class="border-b border-app-border">
+    <div class="max-w-7xl mx-auto px-7 lg:px-12 py-12 lg:py-14 grid gap-10 lg:grid-cols-[1fr_420px] lg:items-end">
+      <div class="flex flex-col gap-4">
+        <p class="ks-kicker ks-kicker-accent">Glossary</p>
+        <h1 class="ks-display">Glossary</h1>
+        <p class="ks-lede max-w-[52ch]">Simple definitions and explanations of Kubernetes components, concepts, and security terms</p>
       </div>
-      <p class="text-lg ds-text-secondary max-w-3xl">
-        Simple definitions and explanations of Kubernetes components, concepts, and security terms
-      </p>
-    </div>
-
-    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
-      {sortedEntries.map((entry) => (
-        <a href={`/glossary/${entry.slug}`} class="block group">
-          <div class="bg-app-surface border border-app-border rounded-lg shadow-sm p-6 hover:shadow-md hover:border-app-border-strong transition-all h-full flex flex-col">
-            <div class="flex items-start justify-between mb-3">
-              {(() => {
-                const colors = getCategoryColors(entry.data.category);
-                return (
-                  <span class={`inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium rounded-full ${colors.bg} ${colors.text} border ${colors.border}`}>
-                    <CategoryIcon category={entry.data.category} class={`w-3.5 h-3.5 ${colors.icon}`} />
-                    {entry.data.category}
-                  </span>
-                );
-              })()}
-              <svg class="w-5 h-5 ds-text-muted group-hover:text-app-text-secondary transition-colors flex-shrink-0 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
-              </svg>
-            </div>
-            <h3 class="text-xl font-semibold ds-text-primary mb-2 group-hover:text-app-text-secondary transition-colors">
-              {entry.data.title}
-            </h3>
-            <p class="ds-text-secondary text-sm leading-relaxed line-clamp-3 flex-grow">
-              {entry.data.description}
-            </p>
-          </div>
-        </a>
-      ))}
+      <div class="flex flex-col gap-3.5">
+        <label class="flex items-center gap-3 border border-app-border-strong rounded-md px-4 py-3.5 bg-app-surface">
+          <span class="ks-search-glyph ds-text-muted" aria-hidden="true"></span>
+          <input
+            id="glossary-search"
+            type="search"
+            autocomplete="off"
+            placeholder={`Search ${sortedEntries.length} terms`}
+            class="flex-1 min-w-0 bg-transparent outline-none text-[15px] ds-text-primary placeholder:text-app-text-muted"
+          />
+        </label>
+        <div class="flex gap-1.5 flex-wrap">
+          {allFacets.map((facet) => (
+            <button
+              type="button"
+              class="ks-facet type-filter-btn"
+              data-type={facet.type}
+            >
+              <TypeDot category={facet.type} size="sm" />
+              <span>{facet.label}</span>
+              <span class="font-mono text-[11px] ds-text-muted">{facet.count}</span>
+            </button>
+          ))}
+        </div>
+      </div>
     </div>
   </div>
+
+  <div class="ks-letter-jump">
+    <span class="ks-kicker">Jump</span>
+    <div class="flex gap-0.5">
+      {letters.map((letter) => (
+        <a href={`#letter-${letter}`}>{letter}</a>
+      ))}
+    </div>
+    <span class="ml-auto font-mono text-[11.5px] ds-text-muted" id="glossary-count">{sortedEntries.length} TERMS</span>
+  </div>
+
+  <div id="glossary-groups">
+    {letterGroups.map((group) => (
+      <section id={`letter-${group.letter}`} class="letter-group grid grid-cols-1 md:grid-cols-[132px_1fr] border-b border-app-border" data-letter={group.letter}>
+        <div class="border-b md:border-b-0 md:border-r border-app-border bg-app-surface-muted/70 px-8 pt-8 pb-4 md:pb-8 flex flex-col gap-0.5">
+          <span class="font-mono text-[30px] font-semibold leading-none tracking-tight ds-text-primary">{group.letter}</span>
+          <span class="font-mono text-[11px] ds-text-muted letter-count">{group.count}</span>
+        </div>
+        <div class="px-7 lg:px-12 py-8 grid sm:grid-cols-2 gap-x-12 gap-y-7">
+          {group.items.map((entry) => (
+            <a
+              href={`/glossary/${entry.slug}`}
+              class="glossary-term flex flex-col gap-1.5 min-w-0"
+              data-title={entry.data.title.toLowerCase()}
+              data-description={entry.data.description.toLowerCase()}
+              data-type={glossaryTypeKey(entry.data.category)}
+            >
+              <div class="flex items-center gap-2.5 min-w-0">
+                <TypeDot category={entry.data.category} />
+                <span class="text-[16.5px] font-semibold tracking-tight leading-tight ds-text-primary truncate">{entry.data.title}</span>
+                <span class="font-mono text-[9.5px] tracking-widest ds-text-muted shrink-0">{glossaryTypeLabel(entry.data.category)}</span>
+              </div>
+              <span class="text-sm leading-relaxed ds-text-secondary max-w-[52ch]">{entry.data.description}</span>
+            </a>
+          ))}
+        </div>
+      </section>
+    ))}
+  </div>
+
+  <div id="glossary-empty" class="hidden max-w-7xl mx-auto px-7 py-16 text-center ds-text-muted">
+    No terms match those filters.
+  </div>
+
+  <script>
+    const search = document.getElementById('glossary-search') as HTMLInputElement | null;
+    const buttons = document.querySelectorAll<HTMLButtonElement>('.type-filter-btn');
+    const terms = document.querySelectorAll<HTMLElement>('.glossary-term');
+    const groups = document.querySelectorAll<HTMLElement>('.letter-group');
+    const empty = document.getElementById('glossary-empty');
+    const countEl = document.getElementById('glossary-count');
+    const active = new Set<string>();
+
+    function filter() {
+      const q = search?.value.trim().toLowerCase() ?? '';
+      let visible = 0;
+      terms.forEach((term) => {
+        const type = term.dataset.type ?? '';
+        const hay = `${term.dataset.title} ${term.dataset.description}`;
+        const matchType = active.size === 0 || active.has(type);
+        const matchQ = !q || hay.includes(q);
+        const show = matchType && matchQ;
+        term.style.display = show ? '' : 'none';
+        if (show) visible += 1;
+      });
+      groups.forEach((group) => {
+        const shown = [...group.querySelectorAll<HTMLElement>('.glossary-term')].filter((el) => el.style.display !== 'none');
+        group.style.display = shown.length ? '' : 'none';
+        const counter = group.querySelector('.letter-count');
+        if (counter) counter.textContent = String(shown.length);
+      });
+      if (countEl) countEl.textContent = `${visible} TERMS`;
+      empty?.classList.toggle('hidden', visible !== 0);
+      buttons.forEach((btn) => btn.classList.toggle('is-active', active.has(btn.dataset.type ?? '')));
+    }
+
+    search?.addEventListener('input', filter);
+    buttons.forEach((btn) => {
+      btn.addEventListener('click', () => {
+        const type = btn.dataset.type ?? '';
+        if (active.has(type)) active.delete(type);
+        else active.add(type);
+        filter();
+      });
+    });
+  </script>
 </BaseLayout>

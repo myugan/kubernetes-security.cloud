@@ -1,77 +1,117 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
-import Card from '../components/ui/Card.astro';
-import CardContent from '../components/ui/CardContent.astro';
+import TacticIcon from '../components/TacticIcon.astro';
+import { getCollection } from 'astro:content';
+import { getAllMitreTechniques } from '../data/mitre-attack';
+import { LANDING_TACTICS, pad2 } from '../lib/taxonomy';
+
+const [glossary, topics] = await Promise.all([
+  getCollection('glossary'),
+  getCollection('topics'),
+]);
+
+const offensiveTopics = topics.filter((topic) => topic.data.category === 'offensive');
+const techniqueById = new Map(getAllMitreTechniques().map((technique) => [technique.id, technique]));
+
+const topicMap = new Map<string, number>();
+for (const topic of offensiveTopics) {
+  for (const id of topic.data.mitreTechniques ?? []) {
+    topicMap.set(id, (topicMap.get(id) ?? 0) + 1);
+  }
+}
+
+const mappedTechniqueIds = [...topicMap.keys()];
+const totalMappings = [...topicMap.values()].reduce((sum, n) => sum + n, 0);
+
+function tacticColumns(tacticField: string): string[] {
+  return tacticField
+    .split(/[,;]/)
+    .map((part) => part.trim())
+    .filter(Boolean);
+}
+
+const tactics = LANDING_TACTICS.map((name, index) => {
+  const techs = mappedTechniqueIds
+    .map((id) => techniqueById.get(id))
+    .filter((technique): technique is NonNullable<typeof technique> => Boolean(technique))
+    .filter((technique) => tacticColumns(technique.tactic).some((col) => col.toLowerCase() === name.toLowerCase()))
+    .slice(0, 3)
+    .map((technique) => technique.name);
+  return {
+    name,
+    idx: pad2(index + 1),
+    count: String(
+      mappedTechniqueIds.filter((id) => {
+        const technique = techniqueById.get(id);
+        return technique && tacticColumns(technique.tactic).some((col) => col.toLowerCase() === name.toLowerCase());
+      }).length
+    ),
+    techs,
+  };
+});
 ---
 
-<BaseLayout title="About - Kubernetes Security Encyclopedia" description="An encyclopedia of Kubernetes security — terminology, attack patterns, defensive strategies, and tools.">
-  <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-    <div class="mb-12">
-      <h1 class="text-3xl sm:text-4xl md:text-5xl font-bold ds-text-primary mb-4">
-        About
-      </h1>
-      <p class="text-xl ds-text-secondary leading-relaxed">
-        An encyclopedia of Kubernetes security — terminology, attack patterns, defensive strategies, and tools.
-      </p>
-    </div>
-
-    <Card class="mb-8 shadow-sm dark:ring-1 dark:ring-zinc-700/70">
-      <CardContent class="p-8 md:p-10 lg:p-12">
-        <div class="prose prose-slate dark:prose-invert max-w-none 
-          prose-headings:font-bold prose-headings:text-gray-900 dark:prose-headings:text-zinc-100
-          prose-h2:text-xl prose-h2:mt-8 prose-h2:mb-4 prose-h2:font-semibold
-          prose-h3:text-lg prose-h3:mt-6 prose-h3:mb-3 prose-h3:font-semibold
-          prose-p:text-gray-700 dark:prose-p:text-zinc-300 prose-p:leading-relaxed prose-p:mb-4 prose-p:text-[0.9375rem]
-          prose-ul:list-disc prose-ul:ml-6 prose-ul:space-y-2
-          prose-ol:list-decimal prose-ol:ml-6 prose-ol:space-y-2
-          prose-li:text-gray-700 dark:prose-li:text-zinc-300 prose-li:leading-relaxed prose-li:text-[0.9375rem]
-          prose-strong:text-gray-900 dark:prose-strong:text-zinc-100 prose-strong:font-semibold
-          prose-code:text-xs prose-code:bg-gray-100 prose-code:text-gray-900 dark:prose-code:bg-zinc-800 dark:prose-code:text-zinc-200 prose-code:px-1.5 prose-code:py-0.5 prose-code:rounded prose-code:font-mono
-          prose-pre:text-xs prose-pre:bg-gray-900 prose-pre:text-gray-100 dark:prose-pre:bg-zinc-950 dark:prose-pre:text-zinc-100 prose-pre:rounded-lg prose-pre:p-4
-          prose-blockquote:border-l-4 prose-blockquote:border-gray-300 dark:prose-blockquote:border-zinc-600 prose-blockquote:pl-4 prose-blockquote:italic prose-blockquote:text-gray-600 dark:prose-blockquote:text-zinc-500
-          prose-a:text-primary-600 dark:prose-a:text-primary-400 prose-a:no-underline hover:prose-a:underline hover:prose-a:text-primary-700 dark:hover:prose-a:text-primary-300
-          prose-hr:border-gray-200 dark:prose-hr:border-zinc-800">
-          <h2>What is This Reference?</h2>
-          <p>
-            This reference provides a comprehensive collection of Kubernetes security knowledge, organized into focused sections:
-          </p>
-          
-          <h3 class="flex items-center gap-2">
-            <svg class="w-5 h-5 text-primary-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
-            </svg>
-            Glossary
-          </h3>
-          <p>
-            Browse the <a href="/glossary">Glossary</a> for definitions of Kubernetes security terms, concepts, and components. Each entry includes detailed explanations and related terms to help you understand the security landscape.
-          </p>
-          
-          <h3 class="flex items-center gap-2">
-            <svg class="w-5 h-5 text-primary-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 6h13M8 12h13M8 18h13M3.75 6.75h.01v.01h-.01V6.75zm0 5.25h.01v.01h-.01V12zm0 4.5h.01v.01h-.01v-.01z" />
-            </svg>
-            Topics
-          </h3>
-          <p>
-            Reference <a href="/topics">Topics</a> for detailed information on security concepts with impact and mitigation strategies. Topics cover both offensive and defensive security techniques, from fundamental concepts to advanced practices.
-          </p>
-
-          <h3 class="flex items-center gap-2">
-            <svg class="w-5 h-5 text-primary-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7h18M3 12h18M3 17h18" />
-            </svg>
-            Threat Matrix
-          </h3>
-          <p>
-            Explore the <a href="/techniques">Threat Matrix</a> to view mapped MITRE ATT&amp;CK techniques in phase order and quickly pivot into related Kubernetes topics.
-          </p>
-          
-          <h2>Purpose</h2>
-          <p>
-            This reference is designed to help security professionals, developers, and DevOps engineers understand Kubernetes security concepts, identify potential vulnerabilities, and implement effective defensive strategies.
-          </p>
+<BaseLayout
+  title="Kubernetes Security Encyclopedia"
+  description="Terminology, attack patterns, defensive strategies and tooling for Kubernetes — cross-linked against the MITRE ATT&CK container matrix."
+>
+  <div class="max-w-7xl mx-auto px-7 lg:px-12">
+    <section class="grid gap-14 py-16 lg:grid-cols-[1fr_300px] lg:gap-14 border-b border-app-border">
+      <div class="flex flex-col gap-5 max-w-3xl">
+        <p class="ks-kicker ks-kicker-accent">Encyclopedia</p>
+        <h1 class="ks-display max-w-[19ch]">Every way a cluster gets broken, and what stops it.</h1>
+        <p class="ks-lede max-w-[56ch]">
+          Terminology, attack patterns, defensive strategies and tooling for Kubernetes — cross-linked against the MITRE ATT&amp;CK container matrix.
+        </p>
+        <div class="flex flex-wrap gap-3 pt-1">
+          <a href="/glossary" class="ks-btn ks-btn-primary">Browse the glossary</a>
+          <a href="/techniques" class="ks-btn ks-btn-ghost">Open ATT&amp;CK map</a>
         </div>
-      </CardContent>
-    </Card>
+      </div>
+      <div class="ks-stat-grid self-start">
+        <div class="ks-stat-cell">
+          <div class="ks-stat-n">{glossary.length}</div>
+          <div class="ks-stat-label">Glossary terms</div>
+        </div>
+        <div class="ks-stat-cell">
+          <div class="ks-stat-n">{mappedTechniqueIds.length}</div>
+          <div class="ks-stat-label">ATT&amp;CK techniques mapped</div>
+        </div>
+        <div class="ks-stat-cell">
+          <div class="ks-stat-n">{totalMappings}</div>
+          <div class="ks-stat-label">Technique to topic links</div>
+        </div>
+      </div>
+    </section>
+
+    <section class="py-11 pb-16">
+      <div class="flex items-baseline justify-between gap-4 mb-5">
+        <h2 class="text-[19px] font-semibold tracking-tight ds-text-primary">The chain, left to right</h2>
+        <p class="font-mono text-xs ds-text-muted">
+          {mappedTechniqueIds.length} techniques · {totalMappings} topic mappings
+        </p>
+      </div>
+      <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-px bg-app-border border border-app-border rounded-md overflow-hidden">
+        {tactics.map((tactic) => (
+          <a href={`/techniques#tactic-${tactic.name.toLowerCase().replace(/[^a-z0-9]+/g, '-')}`} class="bg-app-surface-muted/80 p-[17px] min-h-[150px] flex flex-col gap-3 hover:bg-app-surface">
+            <div class="flex items-center gap-2">
+              <TacticIcon tactic={tactic.name} class="h-4 w-4 text-app-link" />
+              <span class="font-mono text-[10.5px] ds-text-muted">{tactic.idx}</span>
+              <span class="ml-auto font-mono text-[10.5px] text-app-link">{tactic.count}</span>
+            </div>
+            <div class="text-[15px] font-semibold leading-tight tracking-tight ds-text-primary">{tactic.name}</div>
+            <div class="mt-auto flex flex-col gap-1.5">
+              {tactic.techs.length === 0 ? (
+                <div class="text-[12.5px] leading-snug ds-text-muted">No mapped techniques yet</div>
+              ) : (
+                tactic.techs.map((tech) => (
+                  <div class="text-[12.5px] leading-snug ds-text-secondary border-l-[1.5px] border-app-link pl-2.5">{tech}</div>
+                ))
+              )}
+            </div>
+          </a>
+        ))}
+      </div>
+    </section>
   </div>
 </BaseLayout>

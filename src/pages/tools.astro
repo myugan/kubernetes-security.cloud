@@ -4,10 +4,8 @@ import { getAllTools, getToolTypes } from '../data/tools';
 import type { ToolType } from '../types';
 import type { ToolDefinition } from '../data/tools';
 
-// Get all tools from central config
 const allTools = getAllTools().sort((a, b) => a.name.localeCompare(b.name));
 
-// Group tools by type
 const toolsByType: Record<string, ToolDefinition[]> = {
   offensive: [],
   defensive: [],
@@ -15,25 +13,19 @@ const toolsByType: Record<string, ToolDefinition[]> = {
   compliance: [],
 };
 
-// Populate the groups
-allTools.forEach(tool => {
-  const types = getToolTypes(tool);
-  types.forEach(type => {
-    if (toolsByType[type]) {
-      // Avoid duplicates in the same category
-      if (!toolsByType[type].some(t => t.name === tool.name)) {
-        toolsByType[type].push(tool);
-      }
+allTools.forEach((tool) => {
+  getToolTypes(tool).forEach((type) => {
+    if (toolsByType[type] && !toolsByType[type].some((t) => t.name === tool.name)) {
+      toolsByType[type].push(tool);
     }
   });
 });
 
-// Category labels and order
 const categories: { key: ToolType; label: string; description: string }[] = [
-  { key: 'offensive', label: 'Offensive', description: 'Tools for penetration testing and security assessments' },
-  { key: 'defensive', label: 'Defensive', description: 'Tools for protecting and securing Kubernetes clusters' },
-  { key: 'audit', label: 'Audit', description: 'Tools for security auditing and vulnerability scanning' },
-  { key: 'compliance', label: 'Compliance', description: 'Tools for policy enforcement and best practices validation' },
+  { key: 'offensive', label: 'Offensive', description: 'Penetration testing and security assessments' },
+  { key: 'defensive', label: 'Defensive', description: 'Protecting and securing Kubernetes clusters' },
+  { key: 'audit', label: 'Audit', description: 'Security auditing and vulnerability scanning' },
+  { key: 'compliance', label: 'Compliance', description: 'Policy enforcement and best-practice validation' },
 ];
 ---
 
@@ -41,73 +33,63 @@ const categories: { key: ToolType; label: string; description: string }[] = [
   title="Tools - Kubernetes Security"
   description="Curated Kubernetes security tools for offensive testing, defense, auditing, and compliance — with links and categories."
 >
-  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-    <div class="mb-10">
-      <div class="flex items-center gap-3 mb-4">
-        <div class="text-primary-600">
-          <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-          </svg>
-        </div>
-        <h1 class="text-3xl sm:text-4xl font-bold text-gray-900 dark:text-zinc-100">Tools</h1>
+  <div class="border-b border-app-border">
+    <div class="max-w-7xl mx-auto px-7 lg:px-12 py-12 lg:py-14 grid gap-10 lg:grid-cols-[1fr_420px] lg:items-end">
+      <div class="flex flex-col gap-3.5">
+        <p class="ks-kicker ks-kicker-accent">Tools</p>
+        <h1 class="ks-display">Tools</h1>
+        <p class="ks-lede max-w-[54ch]">
+          Scanners, policy engines and runtime agents, with what each is actually good at.
+        </p>
       </div>
-      <p class="text-lg sm:text-xl text-gray-600 dark:text-zinc-400">
-        A collection of security tools for Kubernetes
-      </p>
+      <div class="ks-stat-grid" style="grid-template-columns: repeat(2, 1fr);">
+        <div class="ks-stat-cell">
+          <span class="ks-stat-n">{allTools.length}</span>
+          <span class="ks-stat-label">Tools</span>
+        </div>
+        <div class="ks-stat-cell">
+          <span class="ks-stat-n">{categories.filter((cat) => (toolsByType[cat.key]?.length || 0) > 0).length}</span>
+          <span class="ks-stat-label">Categories</span>
+        </div>
+      </div>
     </div>
+  </div>
 
-    <!-- Quick Navigation -->
-    <div class="flex flex-wrap gap-2 mb-8">
+  <div class="max-w-7xl mx-auto px-7 lg:px-12 py-10 lg:py-12">
+    <div class="flex flex-wrap gap-1.5 mb-10">
       {categories.map((cat) => {
         const count = toolsByType[cat.key]?.length || 0;
+        if (count === 0) return null;
         return (
-          <a
-            href={`#${cat.key}`}
-            class="inline-flex items-center gap-2 px-3 py-1.5 text-sm font-medium rounded-lg border border-app-border bg-app-surface text-app-text-secondary hover:bg-app-surface-muted/70 transition-colors"
-          >
-            {cat.label}
-            <span class="text-xs text-gray-500 dark:text-zinc-500">({count})</span>
+          <a href={`#${cat.key}`} class="ks-facet">
+            <span>{cat.label}</span>
+            <span class="font-mono text-[11px] ds-text-muted">{count}</span>
           </a>
         );
       })}
     </div>
 
-    <!-- Tool Sections by Type -->
-    <div class="space-y-12">
+    <div class="flex flex-col gap-12">
       {categories.map((cat) => {
         const tools = toolsByType[cat.key] || [];
-        
         if (tools.length === 0) return null;
-        
         return (
-          <section id={cat.key}>
-            <div class="mb-6">
-              <h2 class="text-xl sm:text-2xl font-bold text-gray-900 dark:text-zinc-100 mb-1">{cat.label}</h2>
-              <p class="text-sm sm:text-base text-gray-600 dark:text-zinc-400">{cat.description}</p>
+          <section id={cat.key} class="scroll-mt-24">
+            <div class="flex items-baseline justify-between gap-4 mb-4">
+              <div>
+                <h2 class="text-[19px] font-semibold tracking-tight ds-text-primary">{cat.label}</h2>
+                <p class="text-sm ds-text-muted mt-0.5">{cat.description}</p>
+              </div>
+              <span class="font-mono text-xs ds-text-muted">{tools.length}</span>
             </div>
-            
-            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
               {tools.map((tool) => (
-                <a 
-                  href={tool.url} 
-                  target="_blank" 
-                  rel="noopener noreferrer"
-                  class="block group"
-                >
-                  <div class="h-full rounded-lg border border-app-border bg-app-surface shadow-sm p-5 hover:border-app-border-strong transition-colors">
-                    <div class="flex items-start justify-between gap-3 mb-2">
-                      <h3 class="text-base font-semibold ds-text-primary group-hover:text-app-link transition-colors">
-                        {tool.name}
-                      </h3>
-                      <svg class="w-4 h-4 ds-text-muted group-hover:text-app-link transition-colors flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
-                      </svg>
-                    </div>
-                    {tool.description && (
-                      <p class="text-sm ds-text-secondary line-clamp-2">{tool.description}</p>
-                    )}
+                <a href={tool.url} target="_blank" rel="noopener noreferrer" class="ks-card p-4 flex flex-col gap-1.5 group">
+                  <div class="flex items-start justify-between gap-3">
+                    <h3 class="text-[14.5px] font-semibold tracking-tight ds-text-primary group-hover:text-app-link">{tool.name}</h3>
+                    <span class="font-mono text-[11px] ds-text-muted shrink-0">↗</span>
                   </div>
+                  {tool.description && <p class="text-[12.5px] leading-snug ds-text-muted line-clamp-2">{tool.description}</p>}
                 </a>
               ))}
             </div>
@@ -117,8 +99,8 @@ const categories: { key: ToolType; label: string; description: string }[] = [
     </div>
 
     {allTools.length === 0 && (
-      <div class="rounded-lg border border-app-border bg-app-surface shadow-sm p-12 text-center">
-        <p class="ds-text-muted text-lg">No tools have been added yet.</p>
+      <div class="ks-card p-12 text-center">
+        <p class="ds-text-muted">No tools have been added yet.</p>
       </div>
     )}
   </div>

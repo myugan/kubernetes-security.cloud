@@ -1,220 +1,555 @@
 ---
 import type { CytoscapeData } from './AttackPathVisualization';
+import {
+  ATTACK_STEP_LEGEND,
+  cytoscapeThemes,
+} from './attack-path-cytoscape-theme';
 
 interface Props {
   data: CytoscapeData;
   id: string;
+  /** `hero` = full-width detail page: taller canvas, prefers left-to-right flow on desktop */
+  variant?: 'default' | 'hero';
 }
 
-const { data, id } = Astro.props;
+const { data, id, variant = 'default' } = Astro.props;
 const containerId = `cytoscape-${id}`;
+const wrapperId = `cytoscape-wrapper-${id}`;
+const tooltipId = `cytoscape-tooltip-${id}`;
 const jsonData = JSON.stringify(data);
+const themeJson = JSON.stringify(cytoscapeThemes);
+const isHero = variant === 'hero';
 ---
 
-<div id={containerId} class="w-full h-[500px] border border-gray-200 dark:border-zinc-800 rounded-lg bg-white dark:bg-zinc-900"></div>
+<div
+  id={wrapperId}
+  class:list={[
+    'attack-path-diagram relative overflow-hidden rounded-2xl border border-app-border bg-app-surface shadow-md',
+    'ring-1 ring-black/[0.04] dark:ring-white/[0.06]',
+    isHero && 'attack-path-diagram-hero',
+  ]}
+  data-cy-wrapper
+  data-cy-variant={variant}
+  data-cy-container={containerId}
+  data-cy-tooltip={tooltipId}
+>
+  <div class="relative">
+    <div
+      class:list={[
+        'cy-loading absolute inset-0 z-10 flex flex-col items-center justify-center gap-3 bg-app-surface/92 backdrop-blur-sm',
+      ]}
+      aria-live="polite"
+      aria-busy="true"
+    >
+      <div class="cy-loading-spinner h-9 w-9 rounded-full border-2 border-app-border border-t-primary-500" />
+      <p class="text-sm font-medium text-app-text-muted">Loading attack map…</p>
+    </div>
 
-<script define:vars={{ jsonData, containerId }}>
-  async function initializeCytoscape() {
-    try {
-      // Load Cytoscape and extensions from CDN
-      if (typeof cytoscape === 'undefined') {
-        await Promise.all([
-          loadScript('https://cdn.jsdelivr.net/npm/cytoscape@3.27.0/dist/cytoscape.min.js'),
-          loadScript('https://cdn.jsdelivr.net/npm/dagre@0.8.5/dist/dagre.min.js'),
-          loadScript('https://cdn.jsdelivr.net/npm/cytoscape-dagre@2.5.0/cytoscape-dagre.min.js')
-        ]);
-      }
-      
-      // Register cytoscape-dagre extension
-      if (typeof cytoscape !== 'undefined' && typeof cytoscapeDagre !== 'undefined') {
-        cytoscape.use(cytoscapeDagre);
-      }
+    <div
+      id={containerId}
+      class:list={[
+        'cy-canvas w-full',
+        isHero
+          ? 'min-h-[420px] h-[min(52vh,560px)] md:min-h-[480px] md:h-[min(58vh,640px)] lg:h-[min(62vh,720px)]'
+          : 'min-h-[360px] h-[min(50vh,480px)] sm:min-h-[400px] sm:h-[min(55vh,520px)]',
+      ]}
+      role="img"
+      aria-label="Attack path flow diagram"
+    />
 
-      const data = JSON.parse(jsonData);
-      const container = document.getElementById(containerId);
-      
-      if (!container) {
-        console.warn(`Cytoscape container ${containerId} not found`);
-        return;
-      }
-      
-      if (!data || !data.nodes || !Array.isArray(data.nodes)) {
-        console.error('Invalid Cytoscape data structure');
-        return;
-      }
+    <div
+      class="pointer-events-none absolute inset-x-0 top-0 z-[5] flex justify-end p-3 sm:p-4"
+      aria-hidden="false"
+    >
+      <div
+        class="pointer-events-auto flex items-center gap-1 rounded-xl border border-app-border/80 bg-app-surface/90 p-1 shadow-lg backdrop-blur-md dark:bg-zinc-900/90"
+        role="toolbar"
+        aria-label="Diagram controls"
+      >
+        <button type="button" class="cy-control-btn cy-control-btn-icon" data-cy-action="zoom-out" aria-label="Zoom out" title="Zoom out">
+          <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 12H4" />
+          </svg>
+        </button>
+        <button type="button" class="cy-control-btn cy-control-btn-icon" data-cy-action="zoom-in" aria-label="Zoom in" title="Zoom in">
+          <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+          </svg>
+        </button>
+        <span class="mx-0.5 h-6 w-px bg-app-border" aria-hidden="true" />
+        <button type="button" class="cy-control-btn cy-control-btn-icon" data-cy-action="fit" aria-label="Fit diagram to view" title="Fit to view">
+          <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4" />
+          </svg>
+        </button>
+        <button type="button" class="cy-control-btn cy-control-btn-icon" data-cy-action="layout-toggle" aria-label="Toggle flow direction" title="Toggle vertical / horizontal flow">
+          <svg class="h-4 w-4 cy-icon-layout-tb" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m0-16l-3 3m3-3l3 3M8 20h8" />
+          </svg>
+          <svg class="h-4 w-4 cy-icon-layout-lr hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 12h16M20 12l-3-3m3 3l-3 3M4 12l3-3m-3 3l3 3" />
+          </svg>
+        </button>
+        <button type="button" class="cy-control-btn cy-control-btn-icon" data-cy-action="fullscreen" aria-label="Toggle fullscreen" title="Fullscreen">
+          <svg class="h-4 w-4 cy-icon-expand" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4" />
+          </svg>
+          <svg class="h-4 w-4 cy-icon-collapse hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
+      </div>
+    </div>
 
-    const cy = cytoscape({
-      container: container,
-      elements: {
-        nodes: data.nodes,
-        edges: data.edges
-      },
-      style: [
-        {
-          selector: 'node',
-          style: {
-            'label': 'data(label)',
-            'width': 'label',
-            'height': 'label',
-            'shape': 'roundrectangle',
-            'background-color': '#f3f4f6',
-            'border-width': 2,
-            'border-color': '#9ca3af',
-            'color': '#1f2937',
-            'text-valign': 'center',
-            'text-halign': 'center',
-            'text-wrap': 'wrap',
-            'text-max-width': '200px',
-            'font-size': '14px',
-            'font-weight': '600',
-            'padding': '12px',
-            'text-outline-width': 0,
-            'text-outline-color': '#fff',
-            'text-outline-opacity': 1
-          }
-        },
-        {
-          selector: 'node[type = "initial"]',
-          style: {
-            'background-color': '#fee2e2',
-            'border-color': '#dc2626'
-          }
-        },
-        {
-          selector: 'node[type = "lateral"]',
-          style: {
-            'background-color': '#fef3c7',
-            'border-color': '#d97706'
-          }
-        },
-        {
-          selector: 'node[type = "privilege"]',
-          style: {
-            'background-color': '#ede9fe',
-            'border-color': '#7c3aed'
-          }
-        },
-        {
-          selector: 'node[type = "persistence"]',
-          style: {
-            'background-color': '#cffafe',
-            'border-color': '#0891b2'
-          }
-        },
-        {
-          selector: 'node[type = "exfiltration"]',
-          style: {
-            'background-color': '#d1fae5',
-            'border-color': '#059669'
-          }
-        },
-        {
-          selector: 'edge',
-          style: {
-            'width': 2,
-            'line-color': '#9ca3af',
-            'target-arrow-color': '#9ca3af',
-            'target-arrow-shape': 'triangle',
-            'curve-style': 'bezier',
-            'arrow-scale': 1.2
-          }
-        },
-        {
-          selector: 'node:selected',
-          style: {
-            'border-width': 3,
-            'border-color': '#3b82f6',
-            'background-color': '#dbeafe'
-          }
-        },
-        {
-          selector: 'node.highlighted',
-          style: {
-            'border-width': 4,
-            'border-color': '#3b82f6',
-            'background-color': '#dbeafe',
-            'transition-property': 'border-width, border-color, background-color',
-            'transition-duration': '0.3s'
-          }
+    <div
+      id={tooltipId}
+      class="cy-tooltip pointer-events-none absolute z-20 hidden max-w-sm sm:max-w-md rounded-xl border border-app-border bg-app-surface/95 px-3.5 py-2.5 shadow-xl backdrop-blur-sm"
+      role="tooltip"
+    >
+      <p class="cy-tooltip-step text-[10px] font-bold uppercase tracking-wider text-app-text-muted"></p>
+      <p class="cy-tooltip-title text-sm font-semibold text-app-text-primary leading-snug"></p>
+      <p class="cy-tooltip-body mt-1.5 text-xs leading-relaxed text-pretty text-app-text-secondary"></p>
+    </div>
+  </div>
+
+  <div class="border-t border-app-border bg-app-surface-muted/50 px-3 py-3 sm:px-5 sm:py-3.5">
+    <div class="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between lg:gap-4">
+      <ul class="flex flex-wrap gap-1.5" role="list" aria-label="Attack step type legend">
+        {ATTACK_STEP_LEGEND.map((item) => {
+          const light = cytoscapeThemes.light.stepTypes[item.type];
+          const dark = cytoscapeThemes.dark.stepTypes[item.type];
+          return (
+            <li>
+              <span
+                class="attack-legend-swatch inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[11px] font-medium"
+                style={`--legend-bg: ${light.bg}; --legend-border: ${light.border}; --legend-text: ${light.text}; --legend-bg-dark: ${dark.bg}; --legend-border-dark: ${dark.border}; --legend-text-dark: ${dark.text};`}
+              >
+                <span class="h-2 w-2 shrink-0 rounded-full border" aria-hidden="true" />
+                {item.label}
+              </span>
+            </li>
+          );
+        })}
+      </ul>
+      <p class="text-xs text-app-text-muted shrink-0 text-center lg:text-right">
+        <span class="font-semibold text-app-text-secondary">{data.nodes.length}</span> steps
+        <span class="mx-1.5 text-app-border">·</span>
+        pan & zoom
+        <span class="mx-1.5 text-app-border">·</span>
+        click to jump
+      </p>
+    </div>
+  </div>
+  <script type="application/json" data-cy-payload set:html={JSON.stringify({ elements: data, themes: cytoscapeThemes })} />
+</div>
+
+<script>
+  import { buildCytoscapeStyles, resolveThemeMode } from './attack-path-cytoscape-theme';
+
+  declare const cytoscape: any;
+  declare const cytoscapeDagre: any;
+
+  function loadScript(src: string) {
+    return new Promise<void>((resolve, reject) => {
+      const existing = document.querySelector<HTMLScriptElement>(`script[src="${src}"]`);
+      if (existing) {
+        if (existing.dataset.loaded === 'true' || existing.getAttribute('data-loaded') === 'true') {
+          resolve();
+          return;
         }
-      ],
-      layout: {
-        name: 'dagre',
-        rankDir: 'TB',
-        spacingFactor: 1.2,
-        nodeSep: 50,
-        edgeSep: 20,
-        rankSep: 80
-      },
-      minZoom: 0.2,
-      maxZoom: 2,
-      wheelSensitivity: 0.2
-    });
-
-    // Add hover effects
-    cy.on('mouseover', 'node', function(evt) {
-      evt.target.style('border-width', 3);
-      evt.target.style('border-color', '#3b82f6');
-    });
-
-    cy.on('mouseout', 'node', function(evt) {
-      if (!evt.target.selected()) {
-        evt.target.style('border-width', 2);
-        const type = evt.target.data('type');
-        const borderColors = {
-          'initial': '#dc2626',
-          'lateral': '#d97706',
-          'privilege': '#7c3aed',
-          'persistence': '#0891b2',
-          'exfiltration': '#059669'
-        };
-        evt.target.style('border-color', borderColors[type] || '#9ca3af');
+        existing.addEventListener('load', () => resolve(), { once: true });
+        existing.addEventListener('error', () => reject(new Error(`Failed to load ${src}`)), { once: true });
+        return;
       }
-    });
-
-    // Handle node click - scroll to corresponding step in breakdown
-    cy.on('tap', 'node', function(evt) {
-      const node = evt.target;
-      const stepId = node.data('id');
-      
-      // Dispatch custom event to scroll to step
-      const event = new CustomEvent('scrollToStep', { 
-        detail: { stepId: stepId } 
-      });
-      document.dispatchEvent(event);
-      
-      // Visual feedback on the clicked node
-      cy.elements().removeClass('highlighted');
-      node.addClass('highlighted');
-      setTimeout(() => {
-        node.removeClass('highlighted');
-      }, 2000);
-    });
-
-      // Fit the graph to the container
-      cy.fit(undefined, 50);
-    } catch (error) {
-      console.error('Failed to initialize Cytoscape diagram:', error);
-      const container = document.getElementById(containerId);
-      if (container) {
-        container.innerHTML = '<div class="p-4 text-center text-gray-500 dark:text-zinc-500">Failed to load diagram. Please refresh the page.</div>';
-      }
-    }
-  }
-
-  function loadScript(src) {
-    return new Promise((resolve, reject) => {
       const script = document.createElement('script');
       script.src = src;
-      script.onload = resolve;
-      script.onerror = reject;
+      script.onload = () => {
+        script.dataset.loaded = 'true';
+        resolve();
+      };
+      script.onerror = () => reject(new Error(`Failed to load ${src}`));
       document.head.appendChild(script);
     });
   }
 
+  function hideLoading(wrapper: Element) {
+    const el = wrapper.querySelector('.cy-loading');
+    if (el) {
+      el.classList.add('cy-loading-done');
+      el.setAttribute('aria-busy', 'false');
+    }
+  }
+
+  function applyCanvasBackground(container: HTMLElement, themes: any, mode: 'light' | 'dark') {
+    container.style.backgroundColor = themes[mode].canvas;
+  }
+
+  function applyTheme(cy: any, container: HTMLElement, themes: any, mode: 'light' | 'dark') {
+    const theme = themes[mode];
+    applyCanvasBackground(container, themes, mode);
+    cy.style(buildCytoscapeStyles(theme));
+    cy.edges().style('line-color', theme.edge);
+    cy.edges().style('target-arrow-color', theme.edge);
+  }
+
+  function getLayoutOptions(rankDir: string) {
+    const horizontal = rankDir === 'LR';
+    return {
+      name: 'dagre',
+      rankDir,
+      spacingFactor: horizontal ? 1.25 : 1.35,
+      nodeSep: horizontal ? 48 : 56,
+      edgeSep: 24,
+      rankSep: horizontal ? 90 : 100,
+      padding: horizontal ? 56 : 48,
+    };
+  }
+
+  function preferHorizontalLayout(wrapper: HTMLElement) {
+    if (wrapper.dataset.cyVariant !== 'hero') return false;
+    return window.matchMedia('(min-width: 1024px)').matches;
+  }
+
+  function updateLayoutToggleIcon(wrapper: Element, rankDir: string) {
+    wrapper.querySelector('.cy-icon-layout-tb')?.classList.toggle('hidden', rankDir === 'LR');
+    wrapper.querySelector('.cy-icon-layout-lr')?.classList.toggle('hidden', rankDir !== 'LR');
+  }
+
+  function runLayout(cy: any, wrapper: HTMLElement, rankDir: string) {
+    const layout = cy.layout(getLayoutOptions(rankDir));
+    layout.run();
+    wrapper.dataset.cyRankDir = rankDir;
+    updateLayoutToggleIcon(wrapper, rankDir);
+    layout.one('layoutstop', () => cy.fit(undefined, 56));
+  }
+
+  function bindControls(wrapper: HTMLElement, cy: any, container: HTMLElement, tooltipId: string) {
+    const tooltip = document.getElementById(tooltipId);
+    let rankDir = preferHorizontalLayout(wrapper) ? 'LR' : 'TB';
+
+    wrapper.querySelectorAll('[data-cy-action]').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        const action = btn.getAttribute('data-cy-action');
+        if (action === 'zoom-in') cy.zoom(cy.zoom() * 1.2);
+        if (action === 'zoom-out') cy.zoom(cy.zoom() / 1.2);
+        if (action === 'fit') cy.fit(undefined, 56);
+        if (action === 'layout-toggle') {
+          rankDir = rankDir === 'TB' ? 'LR' : 'TB';
+          runLayout(cy, wrapper, rankDir);
+        }
+        if (action === 'fullscreen') {
+          const on = wrapper.classList.toggle('cy-fullscreen');
+          document.body.classList.toggle('cy-fullscreen-open', on);
+          wrapper.querySelector('.cy-icon-expand')?.classList.toggle('hidden', on);
+          wrapper.querySelector('.cy-icon-collapse')?.classList.toggle('hidden', !on);
+          btn.setAttribute('aria-label', on ? 'Exit fullscreen' : 'Toggle fullscreen');
+          setTimeout(() => {
+            cy.resize();
+            cy.fit(undefined, 56);
+          }, 80);
+        }
+      });
+    });
+
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && wrapper.classList.contains('cy-fullscreen')) {
+        wrapper.classList.remove('cy-fullscreen');
+        document.body.classList.remove('cy-fullscreen-open');
+        wrapper.querySelector('.cy-icon-expand')?.classList.remove('hidden');
+        wrapper.querySelector('.cy-icon-collapse')?.classList.add('hidden');
+        cy.resize();
+        cy.fit(undefined, 56);
+      }
+    });
+
+    function hideTooltip() {
+      tooltip?.classList.add('hidden');
+    }
+
+    function showTooltip(node: any, evt: any) {
+      if (!tooltip) return;
+      const stepNum = node.data('stepNumber');
+      const title = node.data('title') || node.data('label') || '';
+      const desc = node.data('description') || '';
+      const stepEl = tooltip.querySelector('.cy-tooltip-step');
+      const titleEl = tooltip.querySelector('.cy-tooltip-title');
+      const bodyEl = tooltip.querySelector('.cy-tooltip-body');
+      if (stepEl) stepEl.textContent = stepNum ? `Step ${stepNum}` : '';
+      if (titleEl) titleEl.textContent = String(title).replace(/^\d+\n/, '').replace(/^\d+\.\s*/, '');
+      if (bodyEl) bodyEl.textContent = desc;
+      tooltip.classList.remove('hidden');
+
+      const rect = container.getBoundingClientRect();
+      const x = Math.min(evt.renderedPosition.x + 14, rect.width - 290);
+      const y = Math.max(evt.renderedPosition.y + 14, 12);
+      tooltip.style.left = `${Math.max(12, x)}px`;
+      tooltip.style.top = `${y}px`;
+    }
+
+    cy.on('mouseover', 'node', (evt: any) => {
+      evt.target.addClass('hover');
+      showTooltip(evt.target, evt);
+    });
+
+    cy.on('mouseout', 'node', (evt: any) => {
+      evt.target.removeClass('hover');
+      hideTooltip();
+    });
+
+    cy.on('pan zoom', hideTooltip);
+
+    return {
+      getRankDir: () => rankDir,
+      setRankDir: (d: string) => {
+        rankDir = d;
+      },
+    };
+  }
+
+  function watchTheme(cy: any, container: HTMLElement, themes: any) {
+    const observer = new MutationObserver(() => {
+      applyTheme(cy, container, themes, resolveThemeMode());
+    });
+    observer.observe(document.documentElement, {
+      attributes: true,
+      attributeFilter: ['class'],
+    });
+    return observer;
+  }
+
+  async function initializeCytoscape(wrapper: HTMLElement) {
+    if (wrapper.dataset.cyReady === 'true') return;
+    wrapper.dataset.cyReady = 'true';
+
+    const containerId = wrapper.dataset.cyContainer;
+    const tooltipId = wrapper.dataset.cyTooltip ?? '';
+    const container = containerId ? document.getElementById(containerId) : null;
+    const payloadEl = wrapper.querySelector('[data-cy-payload]');
+
+    try {
+      const payload = JSON.parse(payloadEl?.textContent || '{}');
+      const themes = payload.themes;
+      const data = payload.elements;
+
+      if (typeof cytoscape === 'undefined') {
+        await Promise.all([
+          loadScript('https://cdn.jsdelivr.net/npm/cytoscape@3.27.0/dist/cytoscape.min.js'),
+          loadScript('https://cdn.jsdelivr.net/npm/dagre@0.8.5/dist/dagre.min.js'),
+          loadScript('https://cdn.jsdelivr.net/npm/cytoscape-dagre@2.5.0/cytoscape-dagre.min.js'),
+        ]);
+      }
+
+      if (typeof cytoscape !== 'undefined' && typeof cytoscapeDagre !== 'undefined') {
+        cytoscape.use(cytoscapeDagre);
+      }
+
+      if (!container || !data?.nodes?.length) {
+        hideLoading(wrapper);
+        return;
+      }
+
+      const mode = resolveThemeMode();
+      applyCanvasBackground(container, themes, mode);
+
+      const initialRankDir = preferHorizontalLayout(wrapper) ? 'LR' : 'TB';
+
+      const cy = cytoscape({
+        container,
+        elements: { nodes: data.nodes, edges: data.edges },
+        style: buildCytoscapeStyles(themes[mode]),
+        layout: getLayoutOptions(initialRankDir),
+        minZoom: 0.1,
+        maxZoom: 2.5,
+        wheelSensitivity: 0.1,
+        boxSelectionEnabled: false,
+      });
+
+      wrapper.__cy = cy;
+      wrapper.dataset.cyRankDir = initialRankDir;
+      updateLayoutToggleIcon(wrapper, initialRankDir);
+
+      cy.on('tap', 'node', (evt: any) => {
+        document.dispatchEvent(
+          new CustomEvent('scrollToStep', { detail: { stepId: evt.target.data('id') } })
+        );
+      });
+
+      const controls = bindControls(wrapper, cy, container, tooltipId);
+      watchTheme(cy, container, themes);
+
+      const finish = () => {
+        hideLoading(wrapper);
+        document.dispatchEvent(new CustomEvent('attackPathDiagramReady'));
+      };
+
+      cy.ready(() => {
+        runLayout(cy, wrapper, initialRankDir);
+        finish();
+      });
+      window.setTimeout(finish, 2500);
+
+      let resizeTimer: number | undefined;
+      window.addEventListener('resize', () => {
+        window.clearTimeout(resizeTimer);
+        resizeTimer = window.setTimeout(() => {
+          cy.resize();
+          if (wrapper.classList.contains('cy-fullscreen')) {
+            cy.fit(undefined, 56);
+            return;
+          }
+          const autoDir = preferHorizontalLayout(wrapper) ? 'LR' : 'TB';
+          if (!wrapper.dataset.cyRankDir || wrapper.dataset.cyRankDir === autoDir) {
+            controls.setRankDir(autoDir);
+            runLayout(cy, wrapper, autoDir);
+          } else {
+            cy.fit(undefined, 56);
+          }
+        }, 150);
+      });
+    } catch (error) {
+      console.error('Failed to initialize Cytoscape diagram:', error);
+      hideLoading(wrapper);
+      if (container) {
+        container.innerHTML =
+          '<div class="flex h-full min-h-[200px] items-center justify-center p-8 text-center text-sm text-app-text-muted">Failed to load diagram. Please refresh the page.</div>';
+      }
+    }
+  }
+
+  function initAll() {
+    document.querySelectorAll<HTMLElement>('[data-cy-wrapper]').forEach((wrapper) => {
+      void initializeCytoscape(wrapper);
+    });
+  }
+
   if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', initializeCytoscape);
+    document.addEventListener('DOMContentLoaded', initAll);
   } else {
-    initializeCytoscape();
+    initAll();
   }
 </script>
+
+<style>
+  .attack-path-diagram-hero {
+    box-shadow:
+      0 1px 2px rgb(0 0 0 / 0.04),
+      0 8px 32px -8px rgb(0 0 0 / 0.08);
+  }
+
+  :global(.dark) .attack-path-diagram-hero {
+    box-shadow:
+      0 1px 2px rgb(0 0 0 / 0.2),
+      0 12px 40px -12px rgb(0 0 0 / 0.45);
+  }
+
+  .attack-legend-swatch {
+    background-color: var(--legend-bg);
+    border-color: var(--legend-border);
+    color: var(--legend-text);
+  }
+
+  :global(.dark) .attack-legend-swatch {
+    background-color: var(--legend-bg-dark);
+    border-color: var(--legend-border-dark);
+    color: var(--legend-text-dark);
+  }
+
+  .attack-legend-swatch span:first-child {
+    background-color: var(--legend-bg);
+    border-color: var(--legend-border);
+  }
+
+  :global(.dark) .attack-legend-swatch span:first-child {
+    background-color: var(--legend-bg-dark);
+    border-color: var(--legend-border-dark);
+  }
+
+  .cy-control-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 0.5rem;
+    border: 1px solid transparent;
+    background: transparent;
+    color: rgb(var(--ks-text-secondary, 75 85 99));
+    transition: background-color 0.15s, color 0.15s, transform 0.1s;
+  }
+
+  .cy-control-btn-icon {
+    min-height: 2rem;
+    min-width: 2rem;
+  }
+
+  .cy-control-btn:hover {
+    background: rgb(var(--ks-surface-muted, 249 250 251));
+    color: rgb(var(--ks-text-primary, 17 24 39));
+  }
+
+  .cy-control-btn:active {
+    transform: scale(0.96);
+  }
+
+  .cy-control-btn:focus-visible {
+    outline: 2px solid rgb(14 165 233 / 0.45);
+    outline-offset: 1px;
+  }
+
+  :global(.dark) .cy-control-btn:hover {
+    background: rgb(var(--ks-surface-muted, 39 39 42));
+    color: rgb(var(--ks-text-primary, 244 244 245));
+  }
+
+  .cy-canvas {
+    touch-action: none;
+    background-color: rgb(var(--ks-surface, 255 255 255));
+    background-image:
+      linear-gradient(rgb(var(--ks-border, 229 231 235) / 0.12) 1px, transparent 1px),
+      linear-gradient(90deg, rgb(var(--ks-border, 229 231 235) / 0.12) 1px, transparent 1px);
+    background-size: 24px 24px;
+  }
+
+  :global(.dark) .cy-canvas {
+    background-color: rgb(24 24 27);
+    background-image:
+      linear-gradient(rgb(var(--ks-border, 63 63 70) / 0.35) 1px, transparent 1px),
+      linear-gradient(90deg, rgb(var(--ks-border, 63 63 70) / 0.35) 1px, transparent 1px);
+  }
+
+  .cy-loading {
+    transition: opacity 0.35s ease, visibility 0.35s;
+  }
+
+  .cy-loading.cy-loading-done {
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+  }
+
+  .cy-loading-spinner {
+    animation: cy-spin 0.65s linear infinite;
+  }
+
+  @keyframes cy-spin {
+    to {
+      transform: rotate(360deg);
+    }
+  }
+
+  .attack-path-diagram.cy-fullscreen {
+    position: fixed;
+    inset: 0;
+    z-index: 60;
+    margin: 0;
+    border-radius: 0;
+    border: none;
+  }
+
+  .attack-path-diagram.cy-fullscreen .cy-canvas {
+    height: calc(100vh - 72px) !important;
+    min-height: 0;
+  }
+
+  :global(body.cy-fullscreen-open) {
+    overflow: hidden;
+  }
+</style>

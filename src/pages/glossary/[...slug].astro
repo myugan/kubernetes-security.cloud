@@ -2,40 +2,57 @@
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import { getCollection } from 'astro:content';
 import MitreTechniquesList from '../../components/MitreTechniquesList.astro';
-import Card from '../../components/ui/Card.astro';
-import CardContent from '../../components/ui/CardContent.astro';
-import CategoryIcon from '../../components/CategoryIcon.astro';
-import { getCategoryColors } from '../../components/CategoryColors.astro';
+import TypeDot from '../../components/TypeDot.astro';
+import MetaPanel from '../../components/MetaPanel.astro';
+import StanceBadge from '../../components/StanceBadge.astro';
 import { getTools, getToolTypes } from '../../data/tools';
 import { getToolTypeColors } from '../../utils/colors';
+import { glossaryTypeLabel, formatPhaseUpper } from '../../lib/taxonomy';
+import { topicsForGlossaryTerm } from '../../lib/related';
 
 export async function getStaticPaths() {
   const glossaryEntries = await getCollection('glossary');
-  return glossaryEntries.map((entry) => ({
+  const sorted = glossaryEntries.sort((a, b) => a.data.title.localeCompare(b.data.title));
+  return sorted.map((entry, index) => ({
     params: { slug: entry.slug },
-    props: { entry },
+    props: {
+      entry,
+      prev: index > 0 ? sorted[index - 1] : null,
+      next: index < sorted.length - 1 ? sorted[index + 1] : null,
+    },
   }));
 }
 
-const { entry } = Astro.props;
+const { entry, prev, next } = Astro.props;
 const { Content } = await entry.render();
-
-// Get tool details from central config
 const toolsList = entry.data.tools ? getTools(entry.data.tools) : [];
-
-// Get all glossary entries to check if related terms exist
 const allGlossaryEntries = await getCollection('glossary');
-const glossarySlugMap = new Map(
-  allGlossaryEntries.map((e) => [e.slug, e])
-);
+const allTopics = await getCollection('topics');
+const relatedTopics = topicsForGlossaryTerm(entry, allTopics);
 
-// Helper function to find glossary entry by title (case-insensitive)
 function findGlossaryEntryByTitle(title: string) {
   const normalizedTitle = title.toLowerCase().trim();
-  return allGlossaryEntries.find(
-    (e) => e.data.title.toLowerCase().trim() === normalizedTitle
-  );
+  return allGlossaryEntries.find((item) => item.data.title.toLowerCase().trim() === normalizedTitle);
 }
+
+const relatedTerms = (entry.data.relatedTerms ?? [])
+  .map((term) => {
+    const related = findGlossaryEntryByTitle(term);
+    return related
+      ? { title: term, description: related.data.description, category: related.data.category, href: `/glossary/${related.slug}` }
+      : { title: term, description: '', category: '', href: '' };
+  });
+
+const typeLabel = glossaryTypeLabel(entry.data.category);
+const metaRows = [
+  { label: 'Kind', value: entry.data.title, mono: true },
+  { label: 'Type', value: typeLabel },
+  { label: 'Referenced by', value: `${relatedTopics.length} topic${relatedTopics.length === 1 ? '' : 's'}` },
+].concat(
+  entry.data.kubernetesVersion
+    ? [{ label: 'Kubernetes', value: Array.isArray(entry.data.kubernetesVersion) ? entry.data.kubernetesVersion.join(', ') : entry.data.kubernetesVersion, mono: true }]
+    : []
+);
 ---
 
 <BaseLayout
@@ -44,136 +61,116 @@ function findGlossaryEntryByTitle(title: string) {
   ogType="article"
   section={entry.data.category}
 >
-  <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-    <div class="mb-8">
-      <a href="/glossary" class="text-gray-600 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-zinc-100 mb-6 inline-flex items-center gap-2 text-sm font-medium">
-        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
-        </svg>
-        Back to Glossary
-      </a>
-      
-      <div class="mb-6">
-        {(() => {
-          const colors = getCategoryColors(entry.data.category);
-          return (
-            <span class={`inline-flex items-center gap-2 px-3 py-1.5 text-xs font-medium rounded-full ${colors.bg} ${colors.text} border ${colors.border}`}>
-              <CategoryIcon category={entry.data.category} class={`w-4 h-4 ${colors.icon}`} />
-              {entry.data.category}
-            </span>
-          );
-        })()}
+  <div class="border-b border-app-border bg-app-surface-muted/60">
+    <div class="max-w-7xl mx-auto px-7 lg:px-12 py-2.5 flex items-center justify-between gap-4">
+      <nav class="ks-crumb" aria-label="Breadcrumb">
+        <a href="/glossary">Glossary</a>
+        <span class="ks-crumb-sep">/</span>
+        <span>{typeLabel.charAt(0) + typeLabel.slice(1).toLowerCase()}</span>
+        <span class="ks-crumb-sep">/</span>
+        <span class="ds-text-primary">{entry.data.title}</span>
+      </nav>
+      <div class="hidden sm:flex items-center gap-3.5 text-xs ds-text-muted">
+        {prev ? <a href={`/glossary/${prev.slug}`} class="hover:text-app-text-primary">← {prev.data.title}</a> : <span />}
+        <span class="text-app-border-strong">|</span>
+        {next ? <a href={`/glossary/${next.slug}`} class="hover:text-app-text-primary">{next.data.title} →</a> : <span />}
       </div>
-      
-      <h1 class="text-3xl md:text-4xl font-bold text-gray-900 dark:text-zinc-100 mb-4">{entry.data.title}</h1>
-      <p class="text-xl text-gray-600 dark:text-zinc-400 leading-relaxed">{entry.data.description}</p>
     </div>
+  </div>
 
-    <div class="bg-app-surface border border-app-border rounded-lg shadow-sm p-8 md:p-10 lg:p-12">
-      <div class="prose prose-slate dark:prose-invert max-w-none 
-        prose-headings:font-bold prose-headings:text-gray-900 dark:prose-headings:text-zinc-100
-        prose-h1:text-xl prose-h1:mt-0 prose-h1:mb-6
-        prose-h2:text-lg prose-h2:mt-8 prose-h2:mb-4 prose-h2:font-semibold
-        prose-h3:text-base prose-h3:mt-6 prose-h3:mb-3 prose-h3:font-semibold
-        prose-p:text-gray-700 dark:prose-p:text-zinc-300 prose-p:leading-relaxed prose-p:mb-4 prose-p:text-[0.9375rem]
-        prose-ul:list-disc prose-ul:ml-6 prose-ul:space-y-2
-        prose-ol:list-decimal prose-ol:ml-6 prose-ol:space-y-2
-        prose-li:text-gray-700 dark:prose-li:text-zinc-300 prose-li:leading-relaxed prose-li:text-[0.9375rem]
-        prose-strong:text-gray-900 dark:prose-strong:text-zinc-100 prose-strong:font-semibold
-        prose-code:text-xs prose-code:bg-gray-100 prose-code:text-gray-900 dark:prose-code:bg-zinc-800 dark:prose-code:text-zinc-200 prose-code:px-1.5 prose-code:py-0.5 prose-code:rounded prose-code:font-mono
-        prose-pre:text-xs prose-pre:bg-gray-900 prose-pre:text-gray-100 dark:prose-pre:bg-zinc-950 dark:prose-pre:text-zinc-100 prose-pre:rounded-lg prose-pre:p-4
-        prose-blockquote:border-l-4 prose-blockquote:border-gray-300 dark:prose-blockquote:border-zinc-600 prose-blockquote:pl-4 prose-blockquote:italic prose-blockquote:text-gray-600 dark:prose-blockquote:text-zinc-500
-        prose-a:text-primary-600 prose-a:no-underline hover:prose-a:text-primary-700 dark:hover:prose-a:text-primary-400 hover:prose-a:underline
-        prose-hr:border-gray-200 dark:prose-hr:border-zinc-800">
-        <Content />
-      </div>
-        
-      {entry.data.relatedTerms && entry.data.relatedTerms.length > 0 && (
-        <div class="mt-10 pt-8 border-t border-app-border">
-          <h2 class="text-xl font-semibold text-gray-900 dark:text-zinc-100 mb-4">Related Terms</h2>
-          <div class="flex flex-wrap gap-2">
-            {entry.data.relatedTerms.map((term) => {
-              const relatedEntry = findGlossaryEntryByTitle(term);
-              if (relatedEntry) {
-                return (
-                  <a 
-                    href={`/glossary/${relatedEntry.slug}`} 
-                    class="inline-flex items-center px-3 py-1.5 text-sm font-medium text-app-text-secondary bg-app-surface-muted/70 border border-app-border rounded-lg hover:bg-app-surface-muted transition-colors"
-                  >
-                    {term}
-                  </a>
-                );
-              } else {
-                return (
-                  <span 
-                    class="inline-flex items-center px-3 py-1.5 text-sm font-medium text-app-text-muted bg-app-surface-muted/70 border border-app-border rounded-lg"
-                    title="Glossary entry not yet available"
-                  >
-                    {term}
-                  </span>
-                );
-              }
-            })}
-          </div>
+  <div class="max-w-7xl mx-auto px-7 lg:px-12">
+    <header class="grid gap-10 py-8 lg:grid-cols-[1fr_300px] lg:items-start border-b border-app-border">
+      <div class="flex flex-col gap-3">
+        <div class="flex items-center gap-2.5">
+          <TypeDot category={entry.data.category} />
+          <h1 class="text-[32px] leading-none font-semibold tracking-tight ds-text-primary">{entry.data.title}</h1>
+          <span class="font-mono text-[9.5px] tracking-widest ds-text-muted pt-1">{typeLabel}</span>
         </div>
-      )}
+        <p class="text-[17px] leading-relaxed ds-text-secondary max-w-[60ch]">{entry.data.description}</p>
+      </div>
+      <MetaPanel rows={metaRows} />
+    </header>
 
-      {toolsList.length > 0 && (
-        <div class="mt-10 pt-8 border-t border-app-border">
-          <div class="flex items-center justify-between mb-4">
-            <h2 class="text-xl font-semibold text-gray-900 dark:text-zinc-100 flex items-center gap-2">
-              <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-              </svg>
-              Tools
-            </h2>
-            <a href="/tools" class="text-sm text-primary-600 hover:text-primary-700 dark:hover:text-primary-400 hover:underline inline-flex items-center gap-1">
-              View all tools
-              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
-              </svg>
-            </a>
-          </div>
-          <ul class="space-y-2">
-            {toolsList.map((tool) => {
-              const types = getToolTypes(tool);
+    <div class="grid lg:grid-cols-[1fr_380px]">
+      <div class="lg:border-r border-app-border py-6 lg:pr-8">
+        <div class="prose prose-slate dark:prose-invert max-w-none mb-8">
+          <Content />
+        </div>
+
+        <div class="flex items-baseline justify-between mb-3">
+          <p class="ks-kicker">Attacked and defended in</p>
+          <span class="font-mono text-[10.5px] ds-text-muted">{relatedTopics.length}</span>
+        </div>
+        {relatedTopics.length === 0 ? (
+          <p class="text-sm ds-text-muted">No topics reference this term yet.</p>
+        ) : (
+          <div class="ks-card overflow-hidden">
+            {relatedTopics.map((topic) => {
+              const phase = formatPhaseUpper(topic.data.phase ?? topic.data.offensiveType);
               return (
-                <li class="flex items-center gap-3 flex-wrap">
-                  <span class="text-gray-500 dark:text-zinc-500">•</span>
-                  <a 
-                    href={tool.url} 
-                    target="_blank" 
-                    rel="noopener noreferrer"
-                    class="text-primary-600 hover:text-primary-700 dark:hover:text-primary-400 hover:underline inline-flex items-center gap-1"
-                  >
-                    {tool.name}
-                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
-                    </svg>
-                  </a>
-                  <div class="flex gap-1">
-                    {types.map((type) => {
-                      const colors = getToolTypeColors(type);
-                      return (
-                        <span class={`inline-flex items-center px-2 py-0.5 text-xs font-medium rounded border ${colors.bg} ${colors.text} ${colors.border}`}>
-                          {type}
-                        </span>
-                      );
-                    })}
-                  </div>
-                </li>
+                <a href={`/topics/${topic.slug}`} class="flex items-center gap-3 px-3.5 py-2.5 border-b border-app-border last:border-0 hover:bg-app-surface-muted/70">
+                  <StanceBadge stance={topic.data.category} />
+                  <span class="text-[13.5px] font-medium leading-snug ds-text-primary">{topic.data.title}</span>
+                  {phase && <span class="ml-auto font-mono text-[10px] tracking-wider ds-text-muted whitespace-nowrap">{phase}</span>}
+                </a>
               );
             })}
-          </ul>
-        </div>
-      )}
+          </div>
+        )}
 
-      {entry.data.mitreTechniques && entry.data.mitreTechniques.length > 0 && (
-        <div class="mt-10 pt-8 border-t border-app-border">
-          <MitreTechniquesList techniqueIds={entry.data.mitreTechniques} />
+        {toolsList.length > 0 && (
+          <div class="mt-8">
+            <div class="flex items-baseline justify-between mb-3">
+              <p class="ks-kicker">Tools</p>
+              <a href="/tools" class="text-sm ds-link">View all tools</a>
+            </div>
+            <ul class="space-y-2">
+              {toolsList.map((tool) => (
+                <li class="flex items-center gap-2 flex-wrap">
+                  <a href={tool.url} target="_blank" rel="noopener noreferrer" class="ds-link text-sm">{tool.name}</a>
+                  {getToolTypes(tool).map((type) => {
+                    const colors = getToolTypeColors(type);
+                    return <span class={`px-2 py-0.5 text-xs font-medium rounded border ${colors.bg} ${colors.text} ${colors.border}`}>{type}</span>;
+                  })}
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
+
+        {entry.data.mitreTechniques && entry.data.mitreTechniques.length > 0 && (
+          <div class="mt-8">
+            <MitreTechniquesList techniqueIds={entry.data.mitreTechniques} />
+          </div>
+        )}
+      </div>
+
+      <aside class="py-6 lg:pl-8">
+        <div class="flex items-baseline justify-between mb-3">
+          <p class="ks-kicker">Related terms</p>
+          <span class="font-mono text-[10.5px] ds-text-muted">{relatedTerms.length}</span>
         </div>
-      )}
+        {relatedTerms.length === 0 ? (
+          <p class="text-sm ds-text-muted">No related terms listed.</p>
+        ) : (
+          <div class="flex flex-col gap-2">
+            {relatedTerms.map((term) =>
+              term.href ? (
+                <a href={term.href} class="ks-card p-3 flex flex-col gap-1">
+                  <div class="flex items-center gap-1.5">
+                    <TypeDot category={term.category} size="sm" />
+                    <span class="text-[13.5px] font-semibold tracking-tight">{term.title}</span>
+                    <span class="font-mono text-[9px] tracking-widest ds-text-muted">{glossaryTypeLabel(term.category)}</span>
+                  </div>
+                  <span class="text-xs leading-snug ds-text-secondary">{term.description}</span>
+                </a>
+              ) : (
+                <div class="ks-card p-3 text-[13.5px] ds-text-muted">{term.title}</div>
+              )
+            )}
+          </div>
+        )}
+      </aside>
     </div>
   </div>
 </BaseLayout>

@@ -1,0 +1,23 @@
+---
+interface Row {
+  label: string;
+  value: string;
+  mono?: boolean;
+}
+
+interface Props {
+  rows: Row[];
+  class?: string;
+}
+
+const { rows, class: className = '' } = Astro.props;
+---
+
+<dl class:list={['ks-meta-panel', className]}>
+  {rows.map((row) => (
+    <div class="ks-meta-row">
+      <dt>{row.label}</dt>
+      <dd class={row.mono ? 'font-mono' : undefined}>{row.value}</dd>
+    </div>
+  ))}
+</dl>

@@ -17,6 +17,12 @@ const categoryColorMap: Record<string, CategoryColors> = {
     border: 'border-purple-200 dark:border-purple-800',
     icon: 'text-purple-600 dark:text-purple-400',
   },
+  resource: {
+    bg: 'bg-indigo-50 dark:bg-indigo-950/50',
+    text: 'text-indigo-700 dark:text-indigo-300',
+    border: 'border-indigo-200 dark:border-indigo-800',
+    icon: 'text-indigo-600 dark:text-indigo-400',
+  },
   security: {
     bg: 'bg-emerald-50 dark:bg-emerald-950/50',
     text: 'text-emerald-700 dark:text-emerald-300',

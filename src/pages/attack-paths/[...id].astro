@@ -5,10 +5,14 @@ import { generateCytoscapeData } from '../../components/AttackPathVisualization'
 import CytoscapeDiagram from '../../components/CytoscapeDiagram.astro';
 import MitreTechniquesList from '../../components/MitreTechniquesList.astro';
 import MitreTechnique from '../../components/MitreTechnique.astro';
-import Card from '../../components/ui/Card.astro';
-import CardContent from '../../components/ui/CardContent.astro';
+import StanceBadge from '../../components/StanceBadge.astro';
+import MetaPanel from '../../components/MetaPanel.astro';
 import CategoryIcon from '../../components/CategoryIcon.astro';
 import { getCategoryColors } from '../../components/CategoryColors.astro';
+import {
+  STEP_TYPE_BORDER,
+  type AttackStepType,
+} from '../../components/attack-path-cytoscape-theme';
 import { features } from '../../config/features';
 
 export async function getStaticPaths() {
@@ -19,224 +23,299 @@ export async function getStaticPaths() {
   }));
 }
 
-// Redirect to glossary if feature is disabled
 if (!features.attackPaths) {
   return Astro.redirect('/glossary');
 }
 
 const { path } = Astro.props;
 const cytoscapeData = generateCytoscapeData(path.data);
+const stepCount = path.data.steps.length;
+const k8sVersion = Array.isArray(path.data.kubernetesVersion)
+  ? path.data.kubernetesVersion.join(', ')
+  : path.data.kubernetesVersion;
+const metaRows = [
+  { label: 'Steps', value: String(stepCount), mono: true },
+  ...(k8sVersion ? [{ label: 'Kubernetes', value: k8sVersion, mono: true }] : []),
+  ...(path.data.mitreTechniques?.length
+    ? [{ label: 'ATT&CK', value: `${path.data.mitreTechniques.length} mapped`, mono: true }]
+    : []),
+];
 ---
 
 <BaseLayout title={`${path.data.title} - Attack Paths`} description={path.data.description}>
-  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-    <div class="mb-8">
-      <a href="/attack-paths" class="ds-text-secondary hover:text-app-text-primary mb-4 inline-block font-medium">
-        ← Back to Attack Paths
-      </a>
-      <div class="flex gap-2 mb-4 flex-wrap">
-        <span class="inline-block px-3 py-1 text-sm font-medium rounded bg-app-surface-muted/70 text-app-text-secondary border border-app-border">
-          {path.data.category}
-        </span>
-        {typeof path.data.kubernetesVersion === 'string' ? (
-          <span class="inline-block px-3 py-1 text-sm font-medium rounded bg-app-surface-muted/70 text-app-text-secondary border border-app-border">
-            {path.data.kubernetesVersion}
-          </span>
-        ) : path.data.kubernetesVersion && path.data.kubernetesVersion.length > 0 ? (
-          path.data.kubernetesVersion.map((version: string) => (
-            <span class="inline-block px-3 py-1 text-sm font-medium rounded bg-app-surface-muted/70 text-app-text-secondary border border-app-border">
-              {version}
-            </span>
-          ))
-        ) : null}
+  <div class="attack-path-page" data-attack-path-page>
+    <div class="ks-banner-offensive">
+      <div class="max-w-7xl mx-auto px-7 lg:px-12 py-8 lg:py-[30px] flex flex-col gap-5">
+        <nav class="ks-crumb" aria-label="Breadcrumb">
+          <a href="/attack-paths">Attack Paths</a>
+          <span class="ks-crumb-sep">/</span>
+          <span class="ds-text-primary">{path.data.title}</span>
+        </nav>
+        <div class="grid gap-10 lg:grid-cols-[1fr_300px] lg:items-end">
+          <div class="flex flex-col gap-3.5">
+            <StanceBadge stance={path.data.category} />
+            <h1 class="ks-display max-w-[20ch]">{path.data.title}</h1>
+            <p class="ks-lede max-w-[62ch]">{path.data.description}</p>
+          </div>
+          <MetaPanel rows={metaRows} />
+        </div>
       </div>
-      <h1 class="text-3xl md:text-4xl font-bold ds-text-primary mb-4">{path.data.title}</h1>
-      <p class="text-xl ds-text-secondary">{path.data.description}</p>
     </div>
 
-    <Card class="mb-8">
-      <CardContent class="p-6 md:p-8 lg:p-10">
-        <h2 class="text-2xl font-bold ds-text-primary mb-6">Attack Path Visualization</h2>
-        <p class="text-sm md:text-base ds-text-secondary mb-4">Interactive diagram showing the attack path. Click on nodes to see details. Use mouse wheel to zoom, drag to pan.</p>
-        <CytoscapeDiagram data={cytoscapeData} id={path.id} />
-      </CardContent>
-    </Card>
+    <section class="attack-path-map-section border-b border-app-border bg-app-surface-muted/40" aria-labelledby="attack-map-heading">
+      <div class="max-w-7xl mx-auto px-7 lg:px-12 py-6 sm:py-8">
+        <div class="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-2 mb-5">
+          <div>
+            <p class="ks-kicker mb-1">Map</p>
+            <h2 id="attack-map-heading" class="text-[19px] font-semibold tracking-tight ds-text-primary">
+              Attack path map
+            </h2>
+            <p class="mt-1 text-sm text-app-text-muted max-w-xl">
+              Flow moves top-to-bottom on mobile and left-to-right on desktop. Toggle layout, zoom, or open fullscreen from the map controls.
+            </p>
+          </div>
+        </div>
+        <CytoscapeDiagram data={cytoscapeData} id={path.id} variant="hero" />
+      </div>
+    </section>
 
-    <Card>
-      <CardContent class="p-6 md:p-8 lg:p-10">
-        <h2 class="text-2xl font-bold ds-text-primary mb-8">Step-by-Step Breakdown</h2>
-        <div class="space-y-4">
+    <nav
+      class="attack-path-timeline sticky top-16 z-40 border-b border-app-border bg-app-surface/90 backdrop-blur-lg supports-[backdrop-filter]:bg-app-surface/80"
+      aria-label="Attack path steps"
+    >
+      <div class="max-w-7xl mx-auto px-7 lg:px-12">
+        <ol class="step-timeline flex items-stretch gap-0 overflow-x-auto py-3 sm:py-3.5 -mx-1 px-1 scroll-smooth snap-x snap-mandatory">
           {path.data.steps.map((step, index) => {
+            const stepType = step.type as AttackStepType;
+            const accent = STEP_TYPE_BORDER[stepType] ?? STEP_TYPE_BORDER.lateral;
+            const isFirst = index === 0;
             const isLast = index === path.data.steps.length - 1;
-            const borderColor = 'border-app-border';
-            const bgColor = 'bg-app-surface hover:bg-app-surface-muted/70';
-            const stepNumberBg = 'bg-app-surface-muted text-app-text-secondary border-app-border group-hover:bg-app-surface-muted';
             return (
-            <div id={`step-${step.id}`} class="relative group step-breakdown-item" data-step-id={step.id}>
-              <div class={`relative border-l-4 ${borderColor} ${bgColor} rounded-r p-6 md:p-8 transition-colors duration-200 ease-in-out hover:border-app-border-strong`}>
-                {/* Step number and header */}
-                <div class="flex items-start gap-4 mb-4">
-                  <div class="flex-shrink-0">
-                    <span class={`flex items-center justify-center w-10 h-10 rounded-full font-semibold text-sm border transition-all duration-200 ${stepNumberBg}`}>
-                      {index + 1}
-                    </span>
-                  </div>
-                  <div class="flex-1 min-w-0">
-                    <div class="flex items-center gap-3 flex-wrap mb-2">
-                      <h3 class="text-xl font-semibold ds-text-primary">{step.title}</h3>
-                      {(() => {
-                        const stepColors = getCategoryColors(step.type);
-                        return (
-                          <span class={`inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium rounded border ${stepColors.bg} ${stepColors.text} ${stepColors.border}`}>
-                            <CategoryIcon category={step.type} class={`w-3.5 h-3.5 ${stepColors.icon}`} />
-                            {step.type}
-                          </span>
-                        );
-                      })()}
-                    </div>
-                    <p class="ds-text-secondary text-base md:text-lg leading-relaxed">{step.description}</p>
-                  </div>
-                </div>
-
-                {/* Command section */}
-                {step.command && (
-                  <div class="mt-4 ml-14">
-                    <div class="mb-2">
-                      <span class="text-xs font-semibold ds-text-muted uppercase tracking-wider">Command</span>
-                    </div>
-                    <div class="relative rounded-lg p-4 overflow-x-auto border border-zinc-800 bg-zinc-950 group/command">
-                      <button
-                        type="button"
-                        class="copy-command-btn absolute top-3 right-3 px-2.5 py-1.5 text-xs font-medium rounded border transition-all duration-200 active:scale-95 opacity-0 group-hover/command:opacity-100 bg-zinc-800 text-zinc-200 border-zinc-600 hover:bg-zinc-700 hover:text-white"
-                        data-command={typeof step.command === 'string' ? step.command : step.command.join('\n')}
-                      >
-                        Copy
-                      </button>
-                      <pre class="text-xs text-zinc-200 font-mono leading-relaxed"><code>{typeof step.command === 'string' ? step.command : step.command.map((cmd: string) => cmd).join('\n')}</code></pre>
-                    </div>
-                  </div>
+              <li class="flex items-center shrink-0 snap-start">
+                <button
+                  type="button"
+                  class:list={[
+                    'step-jump-btn group/timeline relative flex flex-col items-center min-w-[4.5rem] sm:min-w-[5.5rem] max-w-[7rem] px-2 py-1 rounded-lg transition-all duration-150',
+                    isFirst && 'step-jump-btn-active',
+                  ]}
+                  data-step-id={step.id}
+                  data-step-index={index}
+                  aria-current={isFirst ? 'step' : undefined}
+                  aria-label={`Step ${index + 1}: ${step.title}`}
+                  style={`--jump-accent: ${accent.light}; --jump-accent-dark: ${accent.dark};`}
+                >
+                  <span
+                    class="step-timeline-dot flex h-9 w-9 sm:h-10 sm:w-10 items-center justify-center rounded-full text-xs sm:text-sm font-bold border-2 bg-app-surface transition-all duration-150 group-hover/timeline:scale-105"
+                  >
+                    {index + 1}
+                  </span>
+                  <span class="mt-1.5 w-full text-center text-[10px] sm:text-[11px] font-medium text-app-text-secondary leading-tight line-clamp-2 group-hover/timeline:text-app-text-primary">
+                    {step.title}
+                  </span>
+                </button>
+                {!isLast && (
+                  <span class="step-timeline-connector hidden sm:block w-6 lg:w-10 h-0.5 shrink-0 mx-0.5 rounded-full bg-app-border" aria-hidden="true" />
                 )}
-
-                {/* MITRE technique badge if present */}
-                {step.mitreTechnique && (
-                  <div class="mt-4 ml-14">
-                    <div class="flex items-center gap-2">
-                      <span class="text-xs font-semibold ds-text-muted uppercase tracking-wider">MITRE ATT&CK:</span>
-                      <MitreTechnique techniqueId={step.mitreTechnique} />
-                    </div>
-                  </div>
-                )}
-              </div>
-
-              {/* Connector line to next step */}
-              {!isLast && (
-                <div class="flex justify-center my-2">
-                  <div class="w-0.5 h-6 bg-app-border"></div>
-                </div>
-              )}
-            </div>
+              </li>
             );
           })}
-        </div>
-      </CardContent>
-    </Card>
+        </ol>
+      </div>
+    </nav>
 
-    {path.data.mitreTechniques && path.data.mitreTechniques.length > 0 && (
-      <Card class="mt-8">
-        <CardContent class="p-6 md:p-8 lg:p-10">
+    <div class="max-w-7xl mx-auto px-7 lg:px-12 py-10 sm:py-12">
+      <div class="mb-8 max-w-2xl">
+        <p class="ks-kicker mb-2">Breakdown</p>
+        <h2 class="text-[22px] font-semibold tracking-tight ds-text-primary">Step by step</h2>
+        <p class="mt-2 text-sm ds-text-secondary">
+          Select a step in the timeline or on the map. Use arrow keys ↑↓ to move between steps when focus is not inside a code block.
+        </p>
+      </div>
+
+      <div class="space-y-6 lg:space-y-8 max-w-4xl">
+        {path.data.steps.map((step, index) => {
+          const stepType = step.type as AttackStepType;
+          const accent = STEP_TYPE_BORDER[stepType] ?? STEP_TYPE_BORDER.lateral;
+          const stepColors = getCategoryColors(step.type);
+          const isFirst = index === 0;
+          return (
+            <article
+              id={`step-${step.id}`}
+              class:list={[
+                'step-breakdown-item',
+                'ks-card overflow-hidden',
+                'transition-colors hover:border-app-border-strong',
+                'focus-within:ring-2 focus-within:ring-primary-500/25',
+                isFirst && 'step-breakdown-active',
+              ]}
+              data-step-id={step.id}
+              tabindex="0"
+              role="button"
+              aria-label={`Step ${index + 1}: ${step.title}`}
+              style={`--step-accent: ${accent.light}; --step-accent-dark: ${accent.dark};`}
+            >
+              <div class="step-card-accent border-l-[5px]">
+                <div class="flex flex-col sm:flex-row sm:items-start gap-4 p-5 sm:p-6 lg:p-7">
+                  <div class="flex sm:flex-col items-center sm:items-start gap-3 sm:gap-2 shrink-0">
+                    <span
+                      class={`flex h-12 w-12 items-center justify-center rounded-xl text-base font-bold border ${stepColors.bg} ${stepColors.text} ${stepColors.border}`}
+                    >
+                      {index + 1}
+                    </span>
+                    <span
+                      class={`inline-flex items-center gap-1 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide rounded-md border ${stepColors.bg} ${stepColors.text} ${stepColors.border}`}
+                    >
+                      <CategoryIcon category={step.type} class={`w-3 h-3 ${stepColors.icon}`} />
+                      {step.type}
+                    </span>
+                  </div>
+                  <div class="min-w-0 flex-1">
+                    <h3 class="text-xl sm:text-2xl font-semibold text-app-text-primary leading-snug mb-3">
+                      {step.title}
+                    </h3>
+                    <p class="text-app-text-secondary text-base leading-relaxed">{step.description}</p>
+
+                    {step.command && (
+                      <div class="mt-6">
+                        <span class="text-xs font-semibold text-app-text-muted uppercase tracking-wider">
+                          Command
+                        </span>
+                        <div class="relative mt-2 rounded-xl p-4 overflow-x-auto border border-zinc-800 bg-zinc-950 group/command">
+                          <button
+                            type="button"
+                            class="copy-command-btn absolute top-3 right-3 px-2.5 py-1.5 text-xs font-medium rounded-md border transition-all bg-zinc-800 text-zinc-200 border-zinc-600 hover:bg-zinc-700 opacity-100 sm:opacity-0 sm:group-hover/command:opacity-100 focus:opacity-100"
+                            data-command={typeof step.command === 'string' ? step.command : step.command.join('\n')}
+                          >
+                            Copy
+                          </button>
+                          <pre class="text-xs text-zinc-200 font-mono leading-relaxed pr-14"><code>{typeof step.command === 'string' ? step.command : step.command.join('\n')}</code></pre>
+                        </div>
+                      </div>
+                    )}
+
+                    {step.mitreTechnique && (
+                      <div class="mt-5 flex flex-wrap items-center gap-2 pt-4 border-t border-app-border">
+                        <span class="text-xs font-semibold text-app-text-muted uppercase tracking-wider">
+                          MITRE ATT&CK
+                        </span>
+                        <MitreTechnique techniqueId={step.mitreTechnique} />
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </article>
+          );
+        })}
+      </div>
+
+      {path.data.mitreTechniques && path.data.mitreTechniques.length > 0 && (
+        <div class="mt-12 max-w-4xl ks-card p-6 sm:p-8">
           <MitreTechniquesList techniqueIds={path.data.mitreTechniques} />
-        </CardContent>
-      </Card>
-    )}
+        </div>
+      )}
+    </div>
   </div>
 
   <script>
-    // Handle copy command buttons
-    document.querySelectorAll('.copy-command-btn').forEach(button => {
-      button.addEventListener('click', async () => {
+    import '../../scripts/attack-path-page';
+
+    document.querySelectorAll('.copy-command-btn').forEach((button) => {
+      button.addEventListener('click', async (e) => {
+        e.stopPropagation();
         const command = button.getAttribute('data-command');
-        if (command) {
-          try {
-            if (navigator.clipboard && navigator.clipboard.writeText) {
-              await navigator.clipboard.writeText(command);
-              const originalText = button.textContent || 'Copy';
-              button.textContent = 'Copied!';
-              setTimeout(() => {
-                button.textContent = originalText;
-              }, 2000);
-            } else {
-              // Fallback for browsers without clipboard API
-              const textArea = document.createElement('textarea');
-              textArea.value = command;
-              textArea.style.position = 'fixed';
-              textArea.style.opacity = '0';
-              document.body.appendChild(textArea);
-              textArea.select();
-              try {
-                document.execCommand('copy');
-                const originalText = button.textContent || 'Copy';
-                button.textContent = 'Copied!';
-                setTimeout(() => {
-                  button.textContent = originalText;
-                }, 2000);
-              } catch (err) {
-                console.warn('Fallback copy failed:', err);
-              }
-              document.body.removeChild(textArea);
-            }
-          } catch (err) {
-            console.warn('Failed to copy command:', err);
-          }
+        if (!command) return;
+        try {
+          await navigator.clipboard.writeText(command);
+          const original = button.textContent || 'Copy';
+          button.textContent = 'Copied!';
+          setTimeout(() => {
+            button.textContent = original;
+          }, 2000);
+        } catch {
+          /* ignore */
         }
       });
-    });
-
-    // Handle scroll to step when clicked in diagram
-    document.addEventListener('scrollToStep', (event) => {
-      const stepId = event.detail.stepId;
-      const stepElement = document.getElementById(`step-${stepId}`);
-      
-      if (stepElement) {
-        // Remove highlight from all steps
-        document.querySelectorAll('.step-breakdown-item').forEach(item => {
-          item.classList.remove('highlighted-step');
-        });
-        
-        // Add highlight to target step
-        stepElement.classList.add('highlighted-step');
-        
-        // Scroll to step with smooth behavior
-        stepElement.scrollIntoView({ 
-          behavior: 'smooth', 
-          block: 'center' 
-        });
-        
-        // Remove highlight after animation
-        setTimeout(() => {
-          stepElement.classList.remove('highlighted-step');
-        }, 2000);
-      }
     });
   </script>
 
   <style>
-    .step-breakdown-item.highlighted-step {
-      animation: highlightStep 2s ease-in-out;
+    .attack-path-page {
+      --attack-header-offset: 4rem;
+      --attack-timeline-offset: 5.25rem;
     }
 
-    @keyframes highlightStep {
-      0% {
-        background-color: rgba(59, 130, 246, 0.1);
-        box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.4);
-      }
-      50% {
-        background-color: rgba(59, 130, 246, 0.15);
-        box-shadow: 0 0 0 8px rgba(59, 130, 246, 0);
-      }
-      100% {
-        background-color: transparent;
-        box-shadow: 0 0 0 0 rgba(59, 130, 246, 0);
-      }
+    .step-breakdown-item {
+      scroll-margin-top: calc(var(--attack-header-offset) + var(--attack-timeline-offset) + 0.75rem);
+    }
+
+    .attack-path-map-section {
+      position: relative;
+    }
+
+    .step-timeline {
+      scrollbar-width: thin;
+      scrollbar-color: rgb(var(--ks-border, 209 213 219)) transparent;
+    }
+
+    .step-timeline::-webkit-scrollbar {
+      height: 4px;
+    }
+
+    .step-timeline::-webkit-scrollbar-thumb {
+      border-radius: 2px;
+      background: rgb(var(--ks-border, 209 213 219));
+    }
+
+    .step-timeline-dot {
+      border-color: var(--jump-accent);
+      color: var(--jump-accent);
+    }
+
+    .step-jump-btn:hover .step-timeline-dot,
+    .step-jump-btn-active .step-timeline-dot {
+      background: var(--jump-accent);
+      color: white;
+      box-shadow: 0 0 0 3px color-mix(in srgb, var(--jump-accent) 28%, transparent);
+    }
+
+    .step-jump-btn-active .step-timeline-dot {
+      transform: scale(1.05);
+    }
+
+    :global(.dark) .step-jump-btn:hover .step-timeline-dot,
+    :global(.dark) .step-jump-btn-active .step-timeline-dot {
+      background: var(--jump-accent-dark);
+      border-color: var(--jump-accent-dark);
+      color: rgb(24 24 27);
+      box-shadow: 0 0 0 3px color-mix(in srgb, var(--jump-accent-dark) 35%, transparent);
+    }
+
+    .step-jump-btn-active span:last-child {
+      color: rgb(var(--ks-text-primary, 17 24 39));
+      font-weight: 600;
+    }
+
+    .step-card-accent {
+      border-left-color: var(--step-accent);
+    }
+
+    :global(.dark) .step-card-accent {
+      border-left-color: var(--step-accent-dark);
+    }
+
+    .step-breakdown-active {
+      border-color: var(--step-accent) !important;
+      box-shadow:
+        0 0 0 1px var(--step-accent),
+        0 12px 32px -12px rgb(0 0 0 / 0.15);
+    }
+
+    :global(.dark) .step-breakdown-active {
+      border-color: var(--step-accent-dark) !important;
+      box-shadow:
+        0 0 0 1px var(--step-accent-dark),
+        0 16px 40px -16px rgb(0 0 0 / 0.5);
     }
   </style>
 </BaseLayout>

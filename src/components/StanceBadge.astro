@@ -1,0 +1,13 @@
+---
+interface Props {
+  stance: string;
+  phase?: string;
+  class?: string;
+}
+
+const { stance, phase, class: className = '' } = Astro.props;
+const label = [stance.toUpperCase(), phase?.toUpperCase()].filter(Boolean).join(' · ');
+const kind = stance.toLowerCase() === 'offensive' ? 'offensive' : stance.toLowerCase() === 'defensive' ? 'defensive' : 'neutral';
+---
+
+<span class:list={['ks-stance', `ks-stance-${kind}`, className]}>{label}</span>

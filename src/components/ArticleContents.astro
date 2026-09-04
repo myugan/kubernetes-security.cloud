@@ -1,0 +1,37 @@
+---
+import { pad2 } from '../lib/taxonomy';
+
+interface Item {
+  slug: string;
+  text: string;
+}
+
+interface Props {
+  items: Item[];
+  accent?: 'offensive' | 'defensive' | 'neutral';
+  readMinutes?: number;
+}
+
+const { items, accent = 'neutral', readMinutes } = Astro.props;
+---
+
+{items.length > 0 && (
+  <nav class="ks-contents" aria-labelledby="article-contents-label">
+    <div class="ks-contents-head">
+      <p id="article-contents-label" class="ks-kicker">Contents</p>
+      {typeof readMinutes === 'number' && (
+        <p class="ks-kicker">{readMinutes} min read</p>
+      )}
+    </div>
+    <ol class="ks-contents-grid">
+      {items.map((item, index) => (
+        <li>
+          <a href={`#${item.slug}`} class:list={['ks-contents-link', `is-${accent}`]}>
+            <span class="ks-contents-idx font-mono">{pad2(index + 1)}</span>
+            <span class="ks-contents-text" title={item.text}>{item.text.replace(/\s+/g, ' ').trim()}</span>
+          </a>
+        </li>
+      ))}
+    </ol>
+  </nav>
+)}

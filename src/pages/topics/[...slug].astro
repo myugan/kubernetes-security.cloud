@@ -1,14 +1,14 @@
 ---
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import { getCollection } from 'astro:content';
-import MitreTechniquesList from '../../components/MitreTechniquesList.astro';
-import TopicToc from '../../components/TopicToc.astro';
-import Card from '../../components/ui/Card.astro';
-import CardContent from '../../components/ui/CardContent.astro';
-import CategoryIcon from '../../components/CategoryIcon.astro';
-import { getCategoryColors } from '../../components/CategoryColors.astro';
+import ArticleContents from '../../components/ArticleContents.astro';
+import MetaPanel from '../../components/MetaPanel.astro';
+import MitreTechnique from '../../components/MitreTechnique.astro';
+import { getMitreTechnique } from '../../data/mitre-attack';
 import { getTools, getToolTypes } from '../../data/tools';
 import { getToolTypeColors } from '../../utils/colors';
+import { formatPhase, pad2 } from '../../lib/taxonomy';
+import { glossaryTermsForTopic, relatedTopics } from '../../lib/related';
 import { TOPIC_OG_HEIGHT, TOPIC_OG_WIDTH } from '../../config/topic-og';
 
 export async function getStaticPaths() {
@@ -21,29 +21,8 @@ export async function getStaticPaths() {
 
 const { topic } = Astro.props;
 const { Content, headings } = await topic.render();
-const tocHeadings = (headings ?? []).filter((heading) => heading.depth >= 2 && heading.depth <= 4);
+const tocHeadings = (headings ?? []).filter((heading) => heading.depth === 2);
 
-type TocNode = { slug: string; text: string; depth: number; children: TocNode[] };
-
-function buildTocTree(items: { depth: number; slug: string; text: string }[]): TocNode[] {
-  const root: TocNode[] = [];
-  const stack: TocNode[] = [];
-  for (const h of items) {
-    const node: TocNode = { slug: h.slug, text: h.text, depth: h.depth, children: [] };
-    while (stack.length > 0 && stack[stack.length - 1].depth >= h.depth) {
-      stack.pop();
-    }
-    if (stack.length === 0) {
-      root.push(node);
-    } else {
-      stack[stack.length - 1].children.push(node);
-    }
-    stack.push(node);
-  }
-  return root;
-}
-
-const tocTree = buildTocTree(tocHeadings);
 const wordsPerMinute = 220;
 const markdownWordCount = topic.body.trim().split(/\s+/).filter(Boolean).length;
 const estimatedReadMinutes = Math.max(1, Math.ceil(markdownWordCount / wordsPerMinute));
@@ -52,72 +31,70 @@ const createdAtLabel = topic.data.createdAt
   ? new Intl.DateTimeFormat('en-US', { year: 'numeric', month: 'short', day: 'numeric' }).format(topic.data.createdAt)
   : 'Not specified';
 
-// Get tool details from central config
 const toolsList = topic.data.tools ? getTools(topic.data.tools) : [];
+const [allTopics, allTerms] = await Promise.all([getCollection('topics'), getCollection('glossary')]);
+const nextTopics = relatedTopics(topic, allTopics, 2);
+const usedTerms = glossaryTermsForTopic(topic, allTerms).slice(0, 8);
 
-// Render references markdown if it exists
-// Simple markdown to HTML conversion
-let referencesHtml = '';
-if (topic.data.references) {
-  let html = topic.data.references;
-  
-  // Convert markdown links [text](url) to HTML (handle links with descriptions)
-  html = html.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" class="text-primary-600 dark:text-primary-400 hover:text-primary-700 dark:hover:text-primary-300 hover:underline inline-flex items-center gap-1" target="_blank" rel="noopener noreferrer">$1<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" /></svg></a>');
-  
-  // Convert markdown lists (- item) to HTML
-  const lines = html.split('\n');
-  const processedLines: string[] = [];
-  let inList = false;
-  
-  for (let i = 0; i < lines.length; i++) {
-    const line = lines[i].trim();
-    const listMatch = line.match(/^[-*+]\s+(.+)$/);
-    
-    if (listMatch) {
-      if (!inList) {
-        processedLines.push('<ul class="list-disc ml-6 space-y-2">');
-        inList = true;
-      }
-        processedLines.push(`<li class="text-gray-700 dark:text-zinc-300 break-words text-pretty hyphens-auto">${listMatch[1]}</li>`);
-    } else {
-      if (inList) {
-        processedLines.push('</ul>');
-        inList = false;
-      }
-      if (line) {
-        processedLines.push(`<p class="text-gray-700 dark:text-zinc-300 mb-2 break-words text-pretty hyphens-auto">${line}</p>`);
-      }
-    }
+const phase = topic.data.phase ?? topic.data.offensiveType;
+const phaseLabel = formatPhase(phase);
+const category = topic.data.category;
+const stance = category === 'offensive' || category === 'defensive' ? category : 'neutral';
+const stanceLabel = category.charAt(0).toUpperCase() + category.slice(1);
+
+const mitreIds = topic.data.mitreTechniques ?? [];
+const mitreChips = mitreIds.map((id) => {
+  const known = getMitreTechnique(id);
+  return {
+    id,
+    name: known?.name ?? id,
+    url: known?.url ?? `https://attack.mitre.org/techniques/${id}`,
+  };
+});
+
+const metaRows = [
+  { label: 'Last updated', value: createdAtLabel, mono: true },
+];
+
+const contents = [
+  ...tocHeadings.map((heading) => ({ slug: heading.slug, text: heading.text })),
+  { slug: 'impact-and-mitigation', text: 'Impact and Mitigation' },
+  ...((nextTopics.length > 0 || usedTerms.length > 0) ? [{ slug: 'where-to-go-next', text: 'Where to go next' }] : []),
+];
+
+function nextKicker(otherCategory: string): { label: string; kind: 'offensive' | 'defensive' | 'neutral' } {
+  if (stance === 'defensive' && otherCategory === 'offensive') {
+    return { label: 'Detects · Offensive', kind: 'offensive' };
   }
-  
-  if (inList) {
-    processedLines.push('</ul>');
+  if (stance === 'offensive' && otherCategory === 'defensive') {
+    return { label: 'Detected by · Defensive', kind: 'defensive' };
   }
-  
-  html = processedLines.join('\n');
-  
-  // Convert markdown bold **text** to HTML
-  html = html.replace(/\*\*([^*]+)\*\*/g, '<strong class="font-semibold text-gray-900 dark:text-zinc-100">$1</strong>');
-  
-  // Convert markdown italic *text* to HTML (but not if it's part of bold)
-  html = html.replace(/(?<!\*)\*([^*]+)\*(?!\*)/g, '<em>$1</em>');
-  
-  // Convert code blocks `code` to HTML
-  html = html.replace(/`([^`]+)`/g, '<code class="text-xs bg-gray-100 border border-gray-200 text-gray-900 px-1.5 py-0.5 rounded font-mono break-words dark:bg-zinc-950 dark:border-zinc-800 dark:text-zinc-200">$1</code>');
-  
-  referencesHtml = html;
+  if (otherCategory === 'offensive') return { label: 'Related · Offensive', kind: 'offensive' };
+  if (otherCategory === 'defensive') return { label: 'Related · Defensive', kind: 'defensive' };
+  return { label: 'Related', kind: 'neutral' };
 }
 
-/** Minimal markdown for topic cards: links, **bold**, `code` (same rules as mitigation). */
 function inlineMarkdownToHtml(text: string): string {
   return text
-    .replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" class="text-primary-600 dark:text-primary-400 hover:text-primary-700 dark:hover:text-primary-300 hover:underline" target="_blank" rel="noopener noreferrer">$1</a>')
-    .replace(/\*\*([^*]+)\*\*/g, '<strong class="font-semibold text-gray-900 dark:text-zinc-100">$1</strong>')
-    .replace(/`([^`]+)`/g, '<code class="bg-gray-100 border border-gray-200 text-gray-900 px-1 py-0.5 rounded text-xs font-mono break-words dark:bg-zinc-950 dark:border-zinc-800 dark:text-zinc-200">$1</code>');
+    .replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" class="ds-link" target="_blank" rel="noopener noreferrer">$1</a>')
+    .replace(/\*\*([^*]+)\*\*/g, '<strong class="font-semibold ds-text-primary">$1</strong>')
+    .replace(/`([^`]+)`/g, '<code class="bg-app-code-bg border border-app-code-border text-app-code-text px-1 py-0.5 rounded text-xs font-mono break-words">$1</code>');
+}
+
+const impactItems = Array.isArray(topic.data.impact) ? topic.data.impact : [topic.data.impact];
+const mitigationItems = Array.isArray(topic.data.mitigation) ? topic.data.mitigation : [topic.data.mitigation];
+
+const referenceLinks: { text: string; href: string }[] = [];
+if (topic.data.references) {
+  const pattern = /\[([^\]]+)\]\(([^)]+)\)/g;
+  let match: RegExpExecArray | null;
+  while ((match = pattern.exec(topic.data.references)) !== null) {
+    referenceLinks.push({ text: match[1], href: match[2] });
+  }
 }
 
 const impactLinkParentClass =
-  'text-gray-700 dark:text-zinc-300 text-[0.9375rem] leading-relaxed break-words text-pretty hyphens-auto [&_a]:text-primary-600 dark:[&_a]:text-primary-400 [&_a]:no-underline [&_a]:hover:text-primary-700 dark:[&_a]:hover:text-primary-300 [&_a]:hover:underline [&_a]:break-words';
+  'ds-text-secondary text-[0.9375rem] leading-relaxed break-words text-pretty hyphens-auto [&_a]:text-app-link [&_a]:no-underline [&_a]:hover:underline';
 ---
 
 <BaseLayout
@@ -132,206 +109,147 @@ const impactLinkParentClass =
   publishedTime={publishedTime}
   modifiedTime={publishedTime}
 >
-  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 lg:py-16">
-    <header class="mb-10 lg:mb-14">
-      <a href="/topics" class="text-gray-600 hover:text-gray-900 dark:text-zinc-300 dark:hover:text-zinc-100 mb-5 inline-block text-sm font-medium transition-colors sm:text-base">
-        ← Back to Topics
-      </a>
-      <div class="flex gap-2 mb-6 flex-wrap">
-        {(() => {
-          const categoryColors = getCategoryColors(topic.data.category);
-          return (
-            <span class={`inline-flex items-center gap-1.5 px-3 py-1 text-sm font-medium rounded ${categoryColors.bg} ${categoryColors.text} border ${categoryColors.border}`}>
-              <CategoryIcon category={topic.data.category} class={`w-4 h-4 ${categoryColors.icon}`} />
-              {topic.data.category}
-            </span>
-          );
-        })()}
-        <span class="inline-flex items-center gap-1.5 px-3 py-1 text-sm font-medium rounded border border-gray-200 bg-white text-gray-700 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-300">
-          <svg class="w-4 h-4 text-gray-500 dark:text-zinc-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-          </svg>
-          {estimatedReadMinutes} min read
-        </span>
-        <span class="inline-flex items-center gap-1.5 px-3 py-1 text-sm font-medium rounded border border-gray-200 bg-white text-gray-700 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-300">
-          <svg class="w-4 h-4 text-gray-500 dark:text-zinc-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10m-12 9h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v11a2 2 0 002 2z" />
-          </svg>
-          Created: {createdAtLabel}
-        </span>
-      </div>
-      <h1 class="text-3xl font-bold tracking-tight text-gray-900 dark:text-zinc-100 sm:text-4xl lg:text-5xl lg:leading-[1.1] mb-5 max-w-4xl">
-        {topic.data.title}
-      </h1>
-      <p class="text-lg leading-relaxed text-gray-600 dark:text-zinc-300 sm:text-xl sm:leading-relaxed max-w-3xl">
-        {topic.data.description}
-      </p>
-    </header>
+  <div class:list={[stance === 'offensive' ? 'ks-banner-offensive' : stance === 'defensive' ? 'ks-banner-defensive' : 'bg-app-surface-muted/60 border-b border-app-border']}>
+    <div class="max-w-7xl mx-auto px-7 lg:px-12 py-8 lg:py-[30px] flex flex-col gap-5">
+      <nav class="ks-crumb" aria-label="Breadcrumb">
+        <a href="/topics">Topics</a>
+        <span class="ks-crumb-sep">/</span>
+        <a href={`/topics?category=${encodeURIComponent(category)}`}>{stanceLabel}</a>
+        {phaseLabel && typeof phase === 'string' && (
+          <>
+            <span class="ks-crumb-sep">/</span>
+            <a href={`/topics?category=${encodeURIComponent(category)}&phase=${encodeURIComponent(phase)}`}>{phaseLabel}</a>
+          </>
+        )}
+        <span class="ks-crumb-sep">/</span>
+        <span class="ds-text-primary">{topic.data.title}</span>
+      </nav>
 
-    <div class:list={[tocHeadings.length > 0 && 'flex flex-col gap-8 lg:flex-row lg:items-start lg:gap-10 xl:gap-12']}>
-      {tocHeadings.length > 0 && (
-        <aside
-          class="shrink-0 lg:order-last lg:sticky lg:top-24 lg:w-56 xl:w-64"
-          aria-label="Table of Contents"
-        >
-          <nav
-            class="rounded-lg border border-gray-200 bg-gray-50/80 dark:border-zinc-600 dark:bg-zinc-900/80 dark:ring-1 dark:ring-app-border/40"
-            aria-labelledby="topic-toc-label"
-          >
-            <p
-              id="topic-toc-label"
-              class="border-b border-gray-200 px-3 py-2.5 text-sm font-medium text-gray-600 dark:border-zinc-700 dark:text-zinc-400"
-            >
-              Table of Contents
-            </p>
-            <div class="max-h-52 overflow-y-auto overscroll-contain px-3 py-2.5 [-webkit-overflow-scrolling:touch] sm:max-h-56 lg:max-h-[min(70vh,28rem)] lg:px-3.5 lg:py-3">
-              <TopicToc items={tocTree} />
-            </div>
-          </nav>
-        </aside>
-      )}
-
-      <div class:list={['space-y-8', tocHeadings.length > 0 && 'min-w-0 flex-1 lg:order-first']}>
-    <Card class="mb-0 overflow-hidden shadow-md bg-app-surface/95 border-app-border dark:shadow-black/40 dark:ring-zinc-700/60">
-      <CardContent
-        class:list={[
-          'topic-article-prose prose prose-slate dark:prose-invert max-w-none p-6 sm:p-8 lg:p-10 xl:p-12 lg:prose-lg prose-headings:font-bold prose-headings:text-gray-900 dark:prose-headings:text-zinc-100 prose-h1:hidden prose-h2:mt-10 prose-h2:mb-4 prose-h2:text-xl prose-h2:lg:text-2xl prose-h2:scroll-mt-24 prose-h3:mt-8 prose-h3:mb-3 prose-h3:text-lg prose-h3:lg:text-xl prose-h3:scroll-mt-24 prose-h4:scroll-mt-24 prose-p:text-gray-700 dark:prose-p:text-zinc-300 prose-p:leading-[1.7] prose-ul:list-disc prose-ol:list-decimal prose-li:text-gray-700 dark:prose-li:text-zinc-300 prose-strong:text-gray-900 dark:prose-strong:text-zinc-100 prose-strong:font-semibold prose-code:text-[0.9em] prose-code:font-medium prose-code:bg-transparent dark:prose-code:bg-transparent prose-code:text-gray-900 dark:prose-code:text-zinc-200 prose-code:px-0 prose-code:py-0 prose-code:rounded-none prose-code:border-0 prose-pre:text-sm prose-pre:leading-relaxed prose-pre:bg-gray-900 prose-pre:text-gray-100 dark:prose-pre:bg-zinc-950 dark:prose-pre:text-zinc-100 prose-blockquote:border-l-4 prose-blockquote:border-primary-500 prose-blockquote:pl-4 prose-blockquote:italic prose-blockquote:text-gray-600 dark:prose-blockquote:text-zinc-500 prose-a:text-primary-600 prose-a:font-medium hover:prose-a:underline',
-          tocHeadings.length > 0 ? 'max-w-3xl' : 'max-w-3xl mx-auto',
-        ]}
-      >
-        <Content />
-      </CardContent>
-    </Card>
-
-    <div class="space-y-6">
-      <Card class="bg-app-surface/95 border-app-border dark:ring-zinc-700/60">
-        <CardContent class="p-6 md:p-8 lg:p-10">
-          <h2 class="text-xl font-semibold text-gray-900 dark:text-zinc-100 mb-4 flex items-center gap-2">
-            <svg class="w-6 h-6 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-            </svg>
-            Impact
-          </h2>
-          {Array.isArray(topic.data.impact) ? (
-            <ul class="list-disc ml-6 space-y-2">
-              {topic.data.impact.map((item: string) => (
-                <li class={impactLinkParentClass} set:html={inlineMarkdownToHtml(item)} />
+      <div class="grid gap-10 lg:grid-cols-[1fr_300px] lg:items-end">
+        <div class="flex flex-col gap-3.5">
+          <h1 class="ks-display max-w-[20ch]">{topic.data.title}</h1>
+          <p class="ks-lede max-w-[62ch]">{topic.data.description}</p>
+          {mitreChips.length > 0 && (
+            <div class="flex items-center gap-1.5 flex-wrap pt-1">
+              <span class="ks-kicker mr-1">ATT&amp;CK</span>
+              {mitreChips.map((chip) => (
+                <MitreTechnique techniqueId={chip.id} />
               ))}
-            </ul>
-          ) : (
-            <p class={impactLinkParentClass} set:html={inlineMarkdownToHtml(topic.data.impact)} />
-          )}
-        </CardContent>
-      </Card>
-      <Card class="bg-app-surface/95 border-app-border dark:ring-zinc-700/60">
-        <CardContent class="p-6 md:p-8 lg:p-10">
-          <h2 class="text-xl font-semibold text-gray-900 dark:text-zinc-100 mb-4 flex items-center gap-2">
-            <svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
-            </svg>
-            Mitigation
-          </h2>
-          {Array.isArray(topic.data.mitigation) ? (
-            <ul class="list-disc ml-6 space-y-2">
-              {topic.data.mitigation.map((item: string) => (
-                <li class={impactLinkParentClass} set:html={inlineMarkdownToHtml(item)} />
-              ))}
-            </ul>
-          ) : (
-            <p class={impactLinkParentClass} set:html={inlineMarkdownToHtml(topic.data.mitigation)} />
-          )}
-        </CardContent>
-      </Card>
-      {toolsList.length > 0 && (
-        <Card class="bg-app-surface/95 border-app-border dark:ring-zinc-700/60">
-          <CardContent class="p-6 md:p-8 lg:p-10">
-            <div class="flex items-center justify-between mb-4">
-              <h2 class="text-xl font-semibold text-gray-900 dark:text-zinc-100 flex items-center gap-2">
-                <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                </svg>
-                Tools
-              </h2>
-              <a href="/tools" class="text-sm text-primary-600 dark:text-primary-400 hover:text-primary-700 dark:hover:text-primary-300 hover:underline inline-flex items-center gap-1">
-                View all tools
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
-                </svg>
-              </a>
             </div>
-            <ul class="space-y-2">
-              {toolsList.map((tool) => {
-                const types = getToolTypes(tool);
-                return (
-                  <li class="flex items-center gap-3 flex-wrap">
-                    <span class="text-gray-500 dark:text-zinc-500">•</span>
-                    <a 
-                      href={tool.url} 
-                      target="_blank" 
-                      rel="noopener noreferrer"
-                      class="text-primary-600 dark:text-primary-400 hover:text-primary-700 dark:hover:text-primary-300 hover:underline inline-flex items-center gap-1"
-                    >
-                      {tool.name}
-                      <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
-                      </svg>
-                    </a>
-                    <div class="flex gap-1">
-                      {types.map((type) => {
-                        const colors = getToolTypeColors(type);
-                        return (
-                          <span class={`inline-flex items-center px-2 py-0.5 text-xs font-medium rounded border ${colors.bg} ${colors.text} ${colors.border}`}>
-                            {type}
-                          </span>
-                        );
-                      })}
-                    </div>
-                  </li>
-                );
-              })}
-            </ul>
-          </CardContent>
-        </Card>
-      )}
-      {topic.data.references && (
-        <Card class="bg-app-surface/95 border-app-border dark:ring-zinc-700/60">
-          <CardContent class="p-6 md:p-8 lg:p-10">
-            <h2 class="text-xl font-semibold text-gray-900 dark:text-zinc-100 mb-4 flex items-center gap-2">
-              <svg class="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
-              </svg>
-              References
-            </h2>
-            <div class="prose prose-slate dark:prose-invert max-w-none 
-              prose-headings:font-bold prose-headings:text-gray-900 dark:prose-headings:text-zinc-100
-              prose-h2:text-xl prose-h2:mt-6 prose-h2:mb-4 prose-h2:font-semibold
-              prose-h3:text-lg prose-h3:mt-4 prose-h3:mb-3 prose-h3:font-semibold
-              prose-p:text-gray-700 dark:prose-p:text-zinc-300 prose-p:leading-relaxed prose-p:mb-4 prose-p:text-[0.9375rem]
-              prose-ul:list-disc prose-ul:ml-6 prose-ul:space-y-2
-              prose-ol:list-decimal prose-ol:ml-6 prose-ol:space-y-2
-              prose-li:text-gray-700 dark:prose-li:text-zinc-300 prose-li:leading-relaxed prose-li:text-[0.9375rem]
-              prose-strong:text-gray-900 dark:prose-strong:text-zinc-100 prose-strong:font-semibold
-              prose-code:text-xs prose-code:bg-gray-100 prose-code:text-gray-900 dark:prose-code:bg-zinc-800 dark:prose-code:text-zinc-200 prose-code:px-1.5 prose-code:py-0.5 prose-code:rounded prose-code:font-mono
-              prose-pre:text-xs prose-pre:bg-gray-900 prose-pre:text-gray-100 dark:prose-pre:bg-zinc-950 dark:prose-pre:text-zinc-100 prose-pre:rounded-lg prose-pre:p-4
-              prose-blockquote:border-l-4 prose-blockquote:border-gray-300 dark:prose-blockquote:border-zinc-600 prose-blockquote:pl-4 prose-blockquote:italic prose-blockquote:text-gray-600 dark:prose-blockquote:text-zinc-500
-              prose-a:text-primary-600 dark:prose-a:text-primary-400 prose-a:no-underline hover:prose-a:text-primary-700 dark:hover:prose-a:text-primary-300 hover:prose-a:underline
-              prose-hr:border-gray-200 dark:prose-hr:border-zinc-800">
-              <Fragment set:html={referencesHtml} />
-            </div>
-          </CardContent>
-        </Card>
-      )}
-    </div>
-
-    {topic.data.mitreTechniques && topic.data.mitreTechniques.length > 0 && (
-      <Card class="shadow-md bg-app-surface/95 border-app-border dark:ring-zinc-700/60 dark:shadow-black/30">
-        <CardContent class="p-6 md:p-8 lg:p-10">
-          <MitreTechniquesList techniqueIds={topic.data.mitreTechniques} />
-        </CardContent>
-      </Card>
-    )}
+          )}
+        </div>
+        <MetaPanel rows={metaRows} />
       </div>
     </div>
   </div>
+
+  <div class="max-w-7xl mx-auto px-7 lg:px-12">
+    <ArticleContents items={contents} accent={stance} readMinutes={estimatedReadMinutes} />
+  </div>
+
+  <article class="max-w-7xl mx-auto px-7 lg:px-12">
+    <div class="topic-article-prose prose prose-slate dark:prose-invert max-w-[860px] py-8 lg:py-9
+      prose-h1:hidden
+      prose-p:text-[16px] prose-p:leading-[1.7]
+      prose-li:leading-relaxed
+      prose-strong:font-semibold
+      prose-a:text-app-link prose-a:font-medium hover:prose-a:underline
+      prose-blockquote:border-l-4 prose-blockquote:border-app-link prose-blockquote:pl-4 prose-blockquote:italic">
+      <Content />
+    </div>
+  </article>
+
+  <section
+    id="impact-and-mitigation"
+    class:list={['ks-verdict scroll-mt-24', stance === 'offensive' ? 'ks-verdict-offensive' : stance === 'defensive' ? 'ks-verdict-defensive' : 'bg-app-surface-muted/50']}
+  >
+    <div class="max-w-7xl mx-auto px-7 lg:px-12 grid gap-10 lg:grid-cols-[1fr_1.25fr] lg:gap-14 items-start">
+      <div class="flex flex-col gap-3">
+        <p class="ks-kicker">Impact</p>
+        <div class="flex flex-col gap-3">
+          {impactItems.map((item) => (
+            <p class="m-0 text-[17px] leading-relaxed ds-text-secondary text-pretty" set:html={inlineMarkdownToHtml(item)} />
+          ))}
+        </div>
+      </div>
+      <div class="flex flex-col gap-3.5">
+        <p class="ks-kicker">Mitigation</p>
+        {mitigationItems.length === 1 ? (
+          <p class={impactLinkParentClass} set:html={inlineMarkdownToHtml(mitigationItems[0])} />
+        ) : (
+          <ol class="ks-mitigation-list">
+            {mitigationItems.map((item, index) => (
+              <li class="ks-mitigation-item">
+                <span class="ks-mitigation-idx font-mono">{pad2(index + 1)}</span>
+                <span class="ks-mitigation-text" set:html={inlineMarkdownToHtml(item)} />
+              </li>
+            ))}
+          </ol>
+        )}
+      </div>
+    </div>
+  </section>
+
+  {(nextTopics.length > 0 || usedTerms.length > 0 || toolsList.length > 0 || referenceLinks.length > 0) && (
+    <div id="where-to-go-next" class="max-w-7xl mx-auto px-7 lg:px-12 py-9 lg:py-11 flex flex-col gap-4 scroll-mt-24">
+      {(nextTopics.length > 0 || usedTerms.length > 0) && (
+        <>
+          <p class="ks-kicker">Where to go next</p>
+          <div class="ks-next-grid">
+            {nextTopics.map((other) => {
+              const kicker = nextKicker(other.data.category);
+              return (
+                <a href={`/topics/${other.slug}`} class:list={['ks-next-card', `ks-next-card-${kicker.kind}`]}>
+                  <span class="ks-next-kicker">{kicker.label}</span>
+                  <span class="text-[14.5px] font-semibold leading-snug tracking-tight ds-text-primary">{other.data.title}</span>
+                  <span class="text-[12.5px] leading-snug ds-text-muted">{other.data.description}</span>
+                </a>
+              );
+            })}
+            {usedTerms.length > 0 && (
+              <div class="ks-next-card ks-next-card-neutral">
+                <span class="ks-next-kicker">Terms used here</span>
+                <div class="flex flex-wrap gap-1.5 pt-1">
+                  {usedTerms.map((term) => (
+                    <a href={`/glossary/${term.slug}`} class="ks-term-pill">{term.data.title}</a>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+        </>
+      )}
+
+      {toolsList.length > 0 && (
+        <div class="flex flex-col gap-2.5 pt-2">
+          <div class="flex items-baseline justify-between">
+            <p class="ks-kicker">Tools</p>
+            <a href="/tools" class="text-sm ds-link">View all tools</a>
+          </div>
+          <ul class="flex flex-wrap gap-x-5 gap-y-2">
+            {toolsList.map((tool) => (
+              <li class="flex items-center gap-2">
+                <a href={tool.url} target="_blank" rel="noopener noreferrer" class="ds-link text-sm">{tool.name}</a>
+                {getToolTypes(tool).map((type) => {
+                  const colors = getToolTypeColors(type);
+                  return <span class={`px-2 py-0.5 text-[10px] font-medium rounded border ${colors.bg} ${colors.text} ${colors.border}`}>{type}</span>;
+                })}
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+
+      {referenceLinks.length > 0 && (
+        <div class="flex flex-col gap-2.5 pt-2">
+          <p class="ks-kicker">References</p>
+          <div class="flex gap-x-5 gap-y-2 flex-wrap">
+            {referenceLinks.map((link) => (
+              <a href={link.href} class="text-[13px] leading-snug ds-link" target="_blank" rel="noopener noreferrer">{link.text}</a>
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
+  )}
 </BaseLayout>

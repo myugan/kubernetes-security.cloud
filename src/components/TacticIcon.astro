@@ -1,0 +1,16 @@
+---
+import { tacticIconPath } from '../lib/taxonomy';
+
+interface Props {
+  tactic?: string;
+  phase?: string;
+  class?: string;
+}
+
+const { tactic, phase, class: className = 'h-4 w-4' } = Astro.props;
+const path = tacticIconPath(tactic ?? phase);
+---
+
+<svg class:list={[className, 'ks-tactic-icon']} fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d={path} />
+</svg>

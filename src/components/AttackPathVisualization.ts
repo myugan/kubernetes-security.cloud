@@ -12,9 +12,18 @@ export interface CytoscapeNode {
   data: {
     id: string;
     label: string;
+    title: string;
     type: string;
     description: string;
+    stepNumber: number;
   };
+}
+
+const LABEL_MAX = 42;
+
+function truncateLabel(text: string, max = LABEL_MAX): string {
+  const line = text.replace(/\s+/g, ' ').trim();
+  return line.length <= max ? line : `${line.slice(0, max - 1)}…`;
 }
 
 export interface CytoscapeEdge {
@@ -46,12 +55,16 @@ export function generateCytoscapeData(attackPath: AttackPath): CytoscapeData {
     const nodeId = step.id || `step${index}`;
 
     // Create node
+    const title = step.title.trim();
+    const shortTitle = truncateLabel(title, 32);
     nodes.push({
       data: {
         id: nodeId,
-        label: step.title,
+        label: `${index + 1}\n${shortTitle}`,
+        title,
         type: step.type,
-        description: step.description,
+        description: step.description.replace(/\s+/g, ' ').trim(),
+        stepNumber: index + 1,
       },
     });
 

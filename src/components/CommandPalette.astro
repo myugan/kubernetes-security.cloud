@@ -1,0 +1,158 @@
+---
+import type { SearchItem } from '../lib/taxonomy';
+
+interface Props {
+  items: SearchItem[];
+}
+
+const { items } = Astro.props;
+const payload = items.map(({ href, title, group, meta, haystack }) => ({
+  href,
+  title,
+  group,
+  meta,
+  haystack,
+}));
+---
+
+<div
+  id="command-palette"
+  class="ks-palette"
+  hidden
+  role="dialog"
+  aria-modal="true"
+  aria-labelledby="command-palette-label"
+>
+  <div class="ks-palette-backdrop" data-palette-dismiss></div>
+  <div class="ks-palette-panel">
+    <p id="command-palette-label" class="sr-only">Search the encyclopedia</p>
+    <div class="ks-palette-search">
+      <span class="ks-search-glyph" aria-hidden="true"></span>
+      <input
+        id="command-palette-input"
+        type="search"
+        autocomplete="off"
+        spellcheck="false"
+        placeholder="Search terms and topics…"
+        aria-controls="command-palette-results"
+      />
+      <kbd class="ks-kbd">esc</kbd>
+    </div>
+    <ul id="command-palette-results" class="ks-palette-results" role="listbox"></ul>
+    <p class="ks-palette-empty" id="command-palette-empty" hidden>No matching terms or topics.</p>
+  </div>
+</div>
+
+<script type="application/json" id="search-index" set:html={JSON.stringify(payload)} />
+
+<script>
+  type Item = { href: string; title: string; group: string; meta: string; haystack: string };
+
+  const root = document.getElementById('command-palette');
+  const input = document.getElementById('command-palette-input') as HTMLInputElement | null;
+  const results = document.getElementById('command-palette-results');
+  const empty = document.getElementById('command-palette-empty');
+  const indexEl = document.getElementById('search-index');
+  const items: Item[] = indexEl ? JSON.parse(indexEl.textContent || '[]') : [];
+  let active = 0;
+  let visible: Item[] = [];
+
+  function isOpen() {
+    return Boolean(root && !root.hasAttribute('hidden'));
+  }
+
+  function openPalette(prefill = '') {
+    if (!root || !input) return;
+    root.removeAttribute('hidden');
+    document.body.classList.add('ks-palette-open');
+    input.value = prefill;
+    render(prefill);
+    window.requestAnimationFrame(() => input.focus());
+  }
+
+  function closePalette() {
+    if (!root) return;
+    root.setAttribute('hidden', '');
+    document.body.classList.remove('ks-palette-open');
+  }
+
+  function render(query: string) {
+    if (!results || !empty) return;
+    const q = query.trim().toLowerCase();
+    visible = !q
+      ? items.slice(0, 12)
+      : items.filter((item) => item.haystack.includes(q)).slice(0, 20);
+    active = 0;
+    results.innerHTML = '';
+    if (visible.length === 0) {
+      empty.hidden = false;
+      return;
+    }
+    empty.hidden = true;
+    let lastGroup = '';
+    visible.forEach((item, index) => {
+      if (item.group !== lastGroup) {
+        lastGroup = item.group;
+        const label = document.createElement('li');
+        label.className = 'ks-palette-group';
+        label.textContent = item.group;
+        results.appendChild(label);
+      }
+      const li = document.createElement('li');
+      li.innerHTML = `<a class="ks-palette-item" data-index="${index}" href="${item.href}" role="option"><span class="ks-palette-item-title">${item.title}</span><span class="ks-palette-item-meta">${item.meta}</span></a>`;
+      results.appendChild(li);
+    });
+    markActive();
+  }
+
+  function markActive() {
+    results?.querySelectorAll('.ks-palette-item').forEach((el) => {
+      const idx = Number((el as HTMLElement).dataset.index);
+      el.classList.toggle('is-active', idx === active);
+    });
+    results?.querySelector('.ks-palette-item.is-active')?.scrollIntoView({ block: 'nearest' });
+  }
+
+  function goActive() {
+    const item = visible[active];
+    if (!item) return;
+    closePalette();
+    window.location.href = item.href;
+  }
+
+  document.querySelectorAll('[data-open-palette]').forEach((el) => {
+    el.addEventListener('click', () => openPalette());
+  });
+
+  root?.querySelectorAll('[data-palette-dismiss]').forEach((el) => {
+    el.addEventListener('click', closePalette);
+  });
+
+  input?.addEventListener('input', () => render(input.value));
+
+  document.addEventListener('keydown', (event) => {
+    const meta = event.metaKey || event.ctrlKey;
+    if (meta && event.key.toLowerCase() === 'k') {
+      event.preventDefault();
+      if (isOpen()) closePalette();
+      else openPalette();
+      return;
+    }
+    if (!isOpen()) return;
+    if (event.key === 'Escape') {
+      event.preventDefault();
+      closePalette();
+    } else if (event.key === 'ArrowDown') {
+      event.preventDefault();
+      active = Math.min(active + 1, Math.max(visible.length - 1, 0));
+      markActive();
+    } else if (event.key === 'ArrowUp') {
+      event.preventDefault();
+      active = Math.max(active - 1, 0);
+      markActive();
+    } else if (event.key === 'Enter') {
+      event.preventDefault();
+      goActive();
+    }
+  });
+</script>

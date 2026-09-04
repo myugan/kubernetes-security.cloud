@@ -6,7 +6,7 @@ export default {
     extend: {
       fontFamily: {
         sans: [
-          'DM Sans',
+          'Space Grotesk',
           'ui-sans-serif',
           'system-ui',
           '-apple-system',
@@ -18,7 +18,7 @@ export default {
           'sans-serif',
         ],
         mono: [
-          'JetBrains Mono',
+          'Space Mono',
           'ui-monospace',
           'SFMono-Regular',
           'Menlo',
@@ -40,8 +40,8 @@ export default {
             muted: 'rgb(var(--ks-text-muted, 107 114 128) / <alpha-value>)',
           },
           link: {
-            DEFAULT: 'rgb(var(--ks-link, 2 132 199) / <alpha-value>)',
-            hover: 'rgb(var(--ks-link-hover, 3 105 161) / <alpha-value>)',
+            DEFAULT: 'rgb(var(--ks-link, 59 130 246) / <alpha-value>)',
+            hover: 'rgb(var(--ks-link-hover, 37 99 235) / <alpha-value>)',
           },
           code: {
             bg: 'rgb(var(--ks-inline-code-bg, 243 244 246) / <alpha-value>)',
@@ -55,16 +55,26 @@ export default {
           },
         },
         primary: {
-          50: '#f0f9ff',
-          100: '#e0f2fe',
-          200: '#bae6fd',
-          300: '#7dd3fc',
-          400: '#38bdf8',
-          500: '#0ea5e9',
-          600: '#0284c7',
-          700: '#0369a1',
-          800: '#075985',
-          900: '#0c4a6e',
+          50: '#eff6ff',
+          100: '#dbeafe',
+          200: '#bfdbfe',
+          300: '#93c5fd',
+          400: '#60a5fa',
+          500: '#3b82f6',
+          600: '#2563eb',
+          700: '#1d4ed8',
+          800: '#1e40af',
+          900: '#1e3a8a',
+        },
+        offensive: {
+          DEFAULT: 'rgb(var(--ks-offensive, 185 28 28) / <alpha-value>)',
+          bg: 'rgb(var(--ks-offensive-bg, 254 226 226) / <alpha-value>)',
+          border: 'rgb(var(--ks-offensive-border, 252 165 165) / <alpha-value>)',
+        },
+        defensive: {
+          DEFAULT: 'rgb(var(--ks-defensive, 29 78 216) / <alpha-value>)',
+          bg: 'rgb(var(--ks-defensive-bg, 219 234 254) / <alpha-value>)',
+          border: 'rgb(var(--ks-defensive-border, 147 197 253) / <alpha-value>)',
         },
       },
     },

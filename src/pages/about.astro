@@ -1,0 +1,47 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+---
+
+<BaseLayout title="About - Kubernetes Security Encyclopedia" description="An encyclopedia of Kubernetes security — terminology, attack patterns, defensive strategies, and tools.">
+  <div class="border-b border-app-border">
+    <div class="max-w-7xl mx-auto px-7 lg:px-12 py-12 lg:py-16">
+      <p class="ks-kicker ks-kicker-accent mb-4">About</p>
+      <h1 class="ks-display mb-4 max-w-[18ch]">Kubernetes Security</h1>
+      <p class="ks-lede max-w-[56ch]">
+        An encyclopedia of Kubernetes security — terminology, attack patterns, defensive strategies, and tools.
+      </p>
+    </div>
+  </div>
+
+  <div class="max-w-7xl mx-auto px-7 lg:px-12 py-10 lg:py-12 grid gap-10 lg:grid-cols-[1fr_320px] lg:items-start">
+    <div class="prose prose-slate dark:prose-invert max-w-none">
+      <h2>What is this reference?</h2>
+      <p>
+        This reference provides a comprehensive collection of Kubernetes security knowledge, organized into focused sections.
+      </p>
+      <h2>Purpose</h2>
+      <p>
+        This reference is designed to help security professionals, developers, and DevOps engineers understand Kubernetes security concepts, identify potential vulnerabilities, and implement effective defensive strategies.
+      </p>
+    </div>
+    <aside class="flex flex-col gap-2.5">
+      <p class="ks-kicker">Start here</p>
+      <a href="/glossary" class="ks-card p-4 flex flex-col gap-1">
+        <span class="text-[14.5px] font-semibold tracking-tight">Glossary</span>
+        <span class="text-[12.5px] leading-snug ds-text-muted">Definitions of Kubernetes security terms, concepts, and components.</span>
+      </a>
+      <a href="/topics" class="ks-card p-4 flex flex-col gap-1">
+        <span class="text-[14.5px] font-semibold tracking-tight">Topics</span>
+        <span class="text-[12.5px] leading-snug ds-text-muted">Offensive and defensive techniques with impact and mitigation.</span>
+      </a>
+      <a href="/techniques" class="ks-card p-4 flex flex-col gap-1">
+        <span class="text-[14.5px] font-semibold tracking-tight">ATT&amp;CK Map</span>
+        <span class="text-[12.5px] leading-snug ds-text-muted">Offensive topics mapped to MITRE techniques by tactic.</span>
+      </a>
+      <a href="/tools" class="ks-card p-4 flex flex-col gap-1">
+        <span class="text-[14.5px] font-semibold tracking-tight">Tools</span>
+        <span class="text-[12.5px] leading-snug ds-text-muted">Scanners, policy engines, and runtime agents.</span>
+      </a>
+    </aside>
+  </div>
+</BaseLayout>

@@ -1,789 +1,398 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
 import { getCollection } from 'astro:content';
-import Card from '../components/ui/Card.astro';
-import CardHeader from '../components/ui/CardHeader.astro';
-import CardTitle from '../components/ui/CardTitle.astro';
-import CardDescription from '../components/ui/CardDescription.astro';
+import StanceBadge from '../components/StanceBadge.astro';
+import TacticIcon from '../components/TacticIcon.astro';
+import TypeDot from '../components/TypeDot.astro';
 import CategoryIcon from '../components/CategoryIcon.astro';
-import { getCategoryColors } from '../components/CategoryColors.astro';
 import { formatTopicDate, getRecentTopics } from '../utils/recent-topics';
+import { formatPhase, formatPhaseUpper } from '../lib/taxonomy';
 
 const topics = await getCollection('topics');
 const sortedTopics = topics.sort((a, b) => a.data.title.localeCompare(b.data.title));
 const recentTopics = getRecentTopics(topics, 5);
 
-// Get unique categories from actual content
-const availableCategories = [...new Set(topics.map(t => t.data.category))].sort();
+const availableCategories = [...new Set(topics.map((t) => t.data.category))].sort();
 const totalTopics = sortedTopics.length;
-const mitreMappedTopicsCount = topics.filter((topic) =>
-  Array.isArray(topic.data.mitreTechniques) && topic.data.mitreTechniques.length > 0
+const mitreMappedTopicsCount = topics.filter(
+  (topic) => Array.isArray(topic.data.mitreTechniques) && topic.data.mitreTechniques.length > 0
 ).length;
-const offensiveCount = topics.filter((topic) =>
-  topic.data.category.toLowerCase() === 'offensive'
-).length;
-const defensiveCount = topics.filter((topic) =>
-  topic.data.category.toLowerCase() === 'defensive'
-).length;
-const availableOffensivePhases = [...new Set(
-  topics
-    .filter((topic) => topic.data.category === 'offensive' && (topic.data.phase ?? topic.data.offensiveType))
-    .map((topic) => (topic.data.phase ?? topic.data.offensiveType) as string)
-)].sort();
-
-function formatPhase(phase?: string): string {
-  if (!phase) return '';
-  return phase
-    .split('-')
-    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
-    .join(' ');
-}
-
-function getPhaseBadgeClass(phase?: string): string {
-  const styles: Record<string, string> = {
-    reconnaissance: 'border-violet-200 bg-violet-50 text-violet-700 dark:border-violet-800/70 dark:bg-violet-950/30 dark:text-violet-300',
-    execution: 'border-lime-200 bg-lime-50 text-lime-700 dark:border-lime-800/70 dark:bg-lime-950/30 dark:text-lime-300',
-    'lateral-movement': 'border-indigo-200 bg-indigo-50 text-indigo-700 dark:border-indigo-800/70 dark:bg-indigo-950/30 dark:text-indigo-300',
-    'credential-access': 'border-amber-200 bg-amber-50 text-amber-700 dark:border-amber-800/70 dark:bg-amber-950/30 dark:text-amber-300',
-    'privilege-escalation': 'border-red-200 bg-red-50 text-red-700 dark:border-red-800/70 dark:bg-red-950/30 dark:text-red-300',
-    persistence: 'border-fuchsia-200 bg-fuchsia-50 text-fuchsia-700 dark:border-fuchsia-800/70 dark:bg-fuchsia-950/30 dark:text-fuchsia-300',
-    'defense-evasion': 'border-cyan-200 bg-cyan-50 text-cyan-700 dark:border-cyan-800/70 dark:bg-cyan-950/30 dark:text-cyan-300',
-    exfiltration: 'border-orange-200 bg-orange-50 text-orange-700 dark:border-orange-800/70 dark:bg-orange-950/30 dark:text-orange-300',
-  };
-  return styles[phase ?? ''] ?? 'border-rose-200 bg-rose-50 text-rose-700 dark:border-rose-800/70 dark:bg-rose-950/30 dark:text-rose-300';
-}
-
-function getPhaseIconPath(phase?: string): string {
-  const paths: Record<string, string> = {
-    reconnaissance: 'M15 15l5 5M10.5 16a5.5 5.5 0 110-11 5.5 5.5 0 010 11z',
-    execution: 'M5 12h10M12 5l7 7-7 7',
-    'lateral-movement': 'M8 16l8-8M8 8h8v8',
-    'credential-access': 'M7 11a5 5 0 019.9-1M8 11h8v8H8z',
-    'privilege-escalation': 'M12 19V5m0 0l-4 4m4-4l4 4',
-    persistence: 'M12 8v8m-4-4h8M5 12a7 7 0 1114 0 7 7 0 01-14 0z',
-    'defense-evasion': 'M3 3l18 18M10.7 5.1A9 9 0 0121 12M3 12a9 9 0 003.5 7.1',
-    exfiltration: 'M7 17l10-10M7 7h10v10',
-  };
-  return paths[phase ?? ''] ?? 'M12 5v14M5 12h14';
-}
+const offensiveCount = topics.filter((topic) => topic.data.category.toLowerCase() === 'offensive').length;
+const defensiveCount = topics.filter((topic) => topic.data.category.toLowerCase() === 'defensive').length;
+const availableOffensivePhases = [
+  ...new Set(
+    topics
+      .filter((topic) => topic.data.category === 'offensive' && (topic.data.phase ?? topic.data.offensiveType))
+      .map((topic) => (topic.data.phase ?? topic.data.offensiveType) as string)
+  ),
+].sort();
 ---
 
 <BaseLayout
   title="Topics - Kubernetes Security"
   description="Reference materials covering offensive and defensive Kubernetes security techniques, with impact and mitigation for each topic."
 >
-  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 sm:py-12">
-    <div class="mb-10">
-      <div class="rounded-lg border border-gray-200 bg-gray-50/80 p-6 sm:p-8 dark:border-zinc-700 dark:bg-zinc-900/40">
-        <div class="flex items-center gap-3 mb-4">
-          <div class="text-[rgb(147,197,253)] dark:text-[rgb(29,78,216)]" aria-hidden="true">
-          <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 6h13M8 12h13M8 18h13M3.75 6.75h.01v.01h-.01V6.75zm0 5.25h.01v.01h-.01V12zm0 4.5h.01v.01h-.01v-.01z" />
-          </svg>
-          </div>
-          <h1 class="text-3xl sm:text-4xl font-bold text-gray-900 dark:text-zinc-100">Topics</h1>
-        </div>
-        <p class="text-base sm:text-lg text-gray-600 dark:text-zinc-400 max-w-3xl">
+  <div class="border-b border-app-border">
+    <div class="max-w-7xl mx-auto px-7 lg:px-12 py-12 lg:py-14 grid gap-10 lg:grid-cols-[1fr_400px] lg:items-start">
+      <div class="flex flex-col gap-4">
+        <p class="ks-kicker ks-kicker-accent">Topics</p>
+        <h1 class="ks-display">Topics</h1>
+        <p class="ks-lede max-w-[54ch]">
           Reference materials covering offensive and defensive Kubernetes security techniques
         </p>
-
-        <div class="mt-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
-          <div class="rounded-lg border border-gray-200 bg-white px-4 py-4 dark:border-zinc-700 dark:bg-zinc-900/60">
-            <div class="flex items-start justify-between gap-3">
-              <div>
-                <p class="text-xs font-semibold tracking-wide text-gray-500 dark:text-zinc-500">Total</p>
-                <p class="mt-1 text-2xl font-semibold text-gray-900 dark:text-zinc-100">{totalTopics}</p>
-              </div>
-              <span class="inline-flex h-9 w-9 items-center justify-center rounded-lg bg-gray-100 text-gray-700 dark:bg-zinc-800 dark:text-zinc-300">
-                <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 6h13M8 12h13M8 18h13M3.75 6.75h.01v.01h-.01V6.75zm0 5.25h.01v.01h-.01V12zm0 4.5h.01v.01h-.01v-.01z" />
-                </svg>
-              </span>
-            </div>
+        <div class="ks-stat-grid mt-2" style="grid-template-columns: repeat(4, 1fr);">
+          <div class="ks-stat-cell">
+            <span class="ks-stat-n">{totalTopics}</span>
+            <span class="ks-stat-label">Total</span>
           </div>
-          <div class="rounded-lg border border-gray-200 bg-white px-4 py-4 dark:border-zinc-700 dark:bg-zinc-900/60">
-            <div class="flex items-start justify-between gap-3">
-              <div>
-                <p class="text-xs font-semibold tracking-wide text-gray-500 dark:text-zinc-500">MITRE ATT&CK mapped</p>
-                <p class="mt-1 text-2xl font-semibold text-gray-900 dark:text-zinc-100">{mitreMappedTopicsCount}</p>
-              </div>
-              <span class="inline-flex h-9 w-9 items-center justify-center rounded-lg bg-gray-100 text-gray-700 dark:bg-zinc-800 dark:text-zinc-300" aria-hidden="true">
-                <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
-                </svg>
-              </span>
-            </div>
+          <div class="ks-stat-cell">
+            <span class="ks-stat-n">{mitreMappedTopicsCount}</span>
+            <span class="ks-stat-label">ATT&amp;CK mapped</span>
           </div>
-          <div class="rounded-lg border border-gray-200 bg-white px-4 py-4 dark:border-zinc-700 dark:bg-zinc-900/60">
-            <div class="flex items-start justify-between gap-3">
-              <div>
-                <p class="text-xs font-semibold tracking-wide text-gray-500 dark:text-zinc-500">Offensive</p>
-                <p class="mt-1 text-2xl font-semibold text-gray-900 dark:text-zinc-100">{offensiveCount}</p>
-              </div>
-              <span class="inline-flex h-9 w-9 items-center justify-center rounded-lg bg-rose-50 text-rose-600 dark:bg-rose-500/10 dark:text-rose-300">
-                <CategoryIcon category="offensive" class="h-5 w-5" />
-              </span>
-            </div>
+          <div class="ks-stat-cell">
+            <span class="ks-stat-n inline-flex items-center gap-1.5">
+              <CategoryIcon category="offensive" class="h-4 w-4 text-offensive" />
+              {offensiveCount}
+            </span>
+            <span class="ks-stat-label">Offensive</span>
           </div>
-          <div class="rounded-lg border border-gray-200 bg-white px-4 py-4 dark:border-zinc-700 dark:bg-zinc-900/60">
-            <div class="flex items-start justify-between gap-3">
-              <div>
-                <p class="text-xs font-semibold tracking-wide text-gray-500 dark:text-zinc-500">Defensive</p>
-                <p class="mt-1 text-2xl font-semibold text-gray-900 dark:text-zinc-100">{defensiveCount}</p>
-              </div>
-              <span class="inline-flex h-9 w-9 items-center justify-center rounded-lg bg-sky-50 text-sky-600 dark:bg-sky-500/10 dark:text-sky-300">
-                <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3l7 4v5c0 5-3.5 8-7 9-3.5-1-7-4-7-9V7l7-4z" />
-                </svg>
-              </span>
-            </div>
+          <div class="ks-stat-cell">
+            <span class="ks-stat-n inline-flex items-center gap-1.5">
+              <CategoryIcon category="defensive" class="h-4 w-4 text-defensive" />
+              {defensiveCount}
+            </span>
+            <span class="ks-stat-label">Defensive</span>
           </div>
         </div>
       </div>
-
       {recentTopics.length > 0 && (
-        <div class="mt-6 rounded-lg border border-gray-200 bg-gray-50/80 px-4 py-4 dark:border-zinc-700 dark:bg-zinc-900/40 sm:px-5 sm:py-5">
-          <div class="border-b border-gray-200 pb-3 dark:border-zinc-700">
-            <h2 class="text-sm font-semibold text-gray-900 dark:text-zinc-100">Latest topics</h2>
+        <div class="flex flex-col gap-2.5">
+          <p class="ks-kicker">Latest topics</p>
+          <div class="ks-card overflow-hidden">
+            {recentTopics.map((topic) => (
+              <a href={`/topics/${topic.slug}`} class="flex items-center gap-2.5 px-3.5 py-2.5 border-b border-app-border last:border-0 hover:bg-app-surface-muted/70">
+                <TypeDot category={topic.data.category} size="sm" />
+                <span class="text-[13px] font-medium leading-snug ds-text-primary min-w-0 truncate">{topic.data.title}</span>
+                <time class="ml-auto font-mono text-[11px] ds-text-muted whitespace-nowrap" datetime={topic.data.createdAt!.toISOString().slice(0, 10)}>
+                  {formatTopicDate(topic.data.createdAt!)}
+                </time>
+              </a>
+            ))}
           </div>
-          <ul class="mt-3 space-y-0.5">
-            {recentTopics.map((topic) => {
-              const categoryColors = getCategoryColors(topic.data.category);
-              const recentPhase = topic.data.phase ?? topic.data.offensiveType;
-              const recentPhaseLabel = formatPhase(recentPhase);
-              const recentPhaseClass = getPhaseBadgeClass(recentPhase);
-              return (
-                <li>
-                  <a
-                    href={`/topics/${topic.slug}`}
-                    class="group flex flex-col gap-1.5 rounded-lg px-2 py-2.5 -mx-2 transition-colors hover:bg-white/90 dark:hover:bg-zinc-800/70 sm:flex-row sm:items-center sm:justify-between sm:gap-6 sm:py-2.5"
-                  >
-                    <span
-                      class:list={[
-                        'text-sm font-medium leading-snug text-gray-900 dark:text-zinc-100',
-                        topic.data.category.toLowerCase() === 'offensive' &&
-                          'group-hover:text-red-800 dark:group-hover:!text-[rgb(185,28,28)]',
-                        topic.data.category.toLowerCase() === 'defensive' &&
-                          'group-hover:text-blue-800 dark:group-hover:!text-[rgb(29,78,216)]',
-                        !['offensive', 'defensive'].includes(topic.data.category.toLowerCase()) &&
-                          'group-hover:text-blue-700 dark:group-hover:text-blue-300',
-                      ]}
-                    >
-                      {topic.data.title}
-                    </span>
-                    <span class="flex shrink-0 items-center gap-2.5 text-xs tabular-nums sm:justify-end">
-                      {topic.data.category === 'offensive' && recentPhaseLabel && (
-                        <span class={`inline-flex items-center gap-1 rounded-md border px-2 py-0.5 text-xs font-medium ${recentPhaseClass}`}>
-                          <svg class="w-3 h-3 opacity-90" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d={getPhaseIconPath(recentPhase)} />
-                          </svg>
-                          {recentPhaseLabel}
-                        </span>
-                      )}
-                      <span
-                        class={`rounded-md px-2 py-0.5 capitalize ring-1 ring-inset ring-black/[0.06] dark:ring-app-border/50 ${categoryColors.bg} ${categoryColors.text}`}
-                      >
-                        {topic.data.category}
-                      </span>
-                      <time
-                        class="text-gray-500 dark:text-zinc-500"
-                        datetime={topic.data.createdAt!.toISOString().slice(0, 10)}
-                      >
-                        {formatTopicDate(topic.data.createdAt!)}
-                      </time>
-                    </span>
-                  </a>
-                </li>
-              );
-            })}
-          </ul>
+        </div>
+      )}
+    </div>
+  </div>
+
+  <div class="border-b border-app-border bg-app-surface-muted/45">
+    <div class="max-w-7xl mx-auto px-7 lg:px-12 ks-filter-bar">
+      <label class="flex items-center gap-2 border border-app-border-strong rounded-[5px] px-3 py-2 w-[260px] max-w-full bg-app-surface">
+        <span class="ks-search-glyph" aria-hidden="true"></span>
+        <input
+          id="search-input"
+          type="search"
+          name="q"
+          autocomplete="off"
+          placeholder="Search topics"
+          class="flex-1 min-w-0 bg-transparent outline-none text-[13px] ds-text-primary placeholder:text-app-text-muted"
+        />
+      </label>
+
+      <div class="flex gap-1.5 flex-wrap">
+        {availableCategories.map((category) => (
+          <button
+            type="button"
+            class="ks-facet tag-filter-btn"
+            data-tag-type="category"
+            data-tag-value={category}
+            data-tag-label={category.charAt(0).toUpperCase() + category.slice(1)}
+          >
+            <TypeDot category={category} size="sm" />
+            <span>{category.charAt(0).toUpperCase() + category.slice(1)}</span>
+            <span class="font-mono text-[11px] opacity-70">
+              {topics.filter((topic) => topic.data.category === category).length}
+            </span>
+          </button>
+        ))}
+      </div>
+
+      {availableOffensivePhases.length > 0 && (
+        <div id="phase-filters" class="flex items-center gap-1.5 flex-wrap" style="display: none">
+          <span class="hidden sm:block w-px h-[22px] bg-app-border mx-1.5" aria-hidden="true"></span>
+          {availableOffensivePhases.map((phase) => (
+            <button
+              type="button"
+              class="ks-phase-chip tag-filter-btn"
+              data-tag-type="phase"
+              data-tag-value={phase}
+              data-tag-label={formatPhase(phase)}
+            >
+              <TacticIcon phase={phase} class="h-3.5 w-3.5 text-offensive" />
+              <span>{formatPhase(phase)}</span>
+            </button>
+          ))}
         </div>
       )}
 
-      <!-- Search Bar with Tag Filters -->
-      <div class="mt-6 mb-4">
-        <Card class="p-3 sm:p-4 rounded-lg border-app-border bg-app-surface/95 shadow-sm dark:ring-1 dark:ring-zinc-700/70">
-          <!-- Search Input + reset -->
-          <div class="flex items-center gap-2">
-            <div class="relative min-w-0 flex-1">
-              <label for="search-input" class="sr-only">Search topics by title or description</label>
-              <input
-                type="search"
-                id="search-input"
-                name="q"
-                autocomplete="off"
-                placeholder="Search topics..."
-                aria-describedby="search-hint"
-                class="ds-input w-full py-2 pl-9 pr-3 border rounded-md focus:ring-2 focus:ring-app-border-strong/60 focus:border-app-border-strong outline-none text-[13px] leading-tight"
-              />
-              <span id="search-hint" class="sr-only">Filters the topic cards below as you type.</span>
-              <svg class="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-500 dark:text-zinc-500 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-              </svg>
-            </div>
-            <button
-              type="button"
-              id="reset-filters-btn"
-              class="hidden shrink-0 rounded-md border border-app-border bg-app-surface px-2.5 py-2 text-[13px] font-medium text-app-text-secondary shadow-sm transition-colors hover:bg-app-surface-muted/80"
-              title="Clear search and category filters"
-              aria-label="Reset search and filters"
-            >
-              Reset
-            </button>
-          </div>
-
-          <!-- Filter by Tags (Collapsible) -->
-          <div class="mt-2.5">
-            <button
-              type="button"
-              id="filter-toggle-btn"
-              class="group inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-md border border-app-border bg-app-surface-muted/70 text-xs font-medium text-app-text-secondary hover:bg-app-surface hover:border-app-border-strong transition-colors"
-              aria-expanded="false"
-              aria-controls="filter-tags-content"
-            >
-              <svg class="w-3.5 h-3.5 text-gray-500 dark:text-zinc-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
-              </svg>
-              <span>Filters</span>
-              <span id="filter-selected-count" class="hidden items-center justify-center min-w-5 h-5 px-1.5 rounded-full bg-blue-100 text-blue-800 text-[11px] font-semibold dark:bg-blue-950/70 dark:text-blue-200 border border-blue-300 dark:border-blue-700"></span>
-              <svg id="filter-toggle-icon" class="w-3.5 h-3.5 text-gray-500 dark:text-zinc-500 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
-              </svg>
-            </button>
-            <div id="filter-tags-content" class="hidden pt-2">
-              <div class="rounded-lg border border-app-border/80 bg-app-surface-muted/60 p-2.5">
-                <p class="text-[11px] text-gray-500 dark:text-zinc-400 mb-1.5">Choose one or more categories and phases</p>
-                <div class="flex flex-wrap gap-1.5">
-                {availableCategories.map(category => {
-                  const categoryColors = getCategoryColors(category);
-                  return (
-                    <button
-                      type="button"
-                      class={`tag-filter-btn inline-flex items-center gap-1.5 px-2.5 py-1 text-[11px] font-medium rounded-md border transition-colors ${categoryColors.bg} ${categoryColors.text} ${categoryColors.border} hover:opacity-90`}
-                      data-tag-type="category"
-                      data-tag-value={category}
-                      data-tag-label={category.charAt(0).toUpperCase() + category.slice(1)}
-                    >
-                      <CategoryIcon category={category} class={`w-3 h-3 ${categoryColors.icon}`} />
-                      {category.charAt(0).toUpperCase() + category.slice(1)}
-                    </button>
-                  );
-                })}
-                </div>
-                {availableOffensivePhases.length > 0 && (
-                  <div class="mt-2.5">
-                    <p class="text-[11px] text-gray-500 dark:text-zinc-400 mb-1.5">Offensive phases</p>
-                    <p class="text-[10px] leading-snug text-gray-500/90 dark:text-zinc-500 mb-1.5 max-w-xl">
-                      Each phase narrows to offensive topics with that MITRE-style phase. Selecting several phases matches{' '}
-                      <span class="font-medium text-gray-600 dark:text-zinc-400">any</span> of them (not all at once).
-                    </p>
-                    <div class="flex flex-wrap gap-1.5">
-                      {availableOffensivePhases.map((phase) => {
-                        const phaseClass = getPhaseBadgeClass(phase);
-                        return (
-                          <button
-                            type="button"
-                            class={`tag-filter-btn inline-flex items-center gap-1 rounded-md border px-2 py-1 text-[10px] font-semibold uppercase tracking-[0.06em] transition-colors ${phaseClass}`}
-                            data-tag-type="phase"
-                            data-tag-value={phase}
-                            data-tag-label={formatPhase(phase)}
-                          >
-                            <svg class="h-3 w-3 opacity-90" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d={getPhaseIconPath(phase)} />
-                            </svg>
-                            {formatPhase(phase)}
-                          </button>
-                        );
-                      })}
-                    </div>
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
-
-          <!-- Active Filter Tags -->
-          <div id="active-filters" class="mt-2 hidden">
-            <div class="flex items-center gap-1.5 flex-wrap">
-              <span class="text-[11px] text-gray-500 dark:text-zinc-500">Active:</span>
-              <div id="active-filter-tags" class="flex flex-wrap gap-2">
-              </div>
-              <button
-                type="button"
-                id="clear-all-filters"
-                class="text-xs font-medium text-blue-700 hover:text-blue-800 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/40 focus-visible:ring-offset-2 dark:text-blue-300 dark:hover:text-blue-200 dark:focus-visible:ring-offset-zinc-900 ml-2 rounded-sm"
-              >
-                Clear all
-              </button>
-            </div>
-          </div>
-        </Card>
-      </div>
-
-      <!-- View Toggle -->
-      <div class="mb-5 flex flex-col items-start justify-between gap-3 rounded-lg border border-app-border bg-app-surface px-3 py-2 shadow-sm sm:flex-row sm:items-center sm:px-4 sm:py-2.5 lg:sticky lg:top-20 lg:z-20 lg:bg-app-surface/95 lg:backdrop-blur lg:supports-[backdrop-filter]:bg-app-surface/80 dark:shadow-[0_8px_24px_-12px_rgba(0,0,0,0.65)]">
-        <p class="text-base text-gray-600 dark:text-zinc-400" aria-live="polite" aria-atomic="true">
-          Showing <span id="results-count-inline" class="font-semibold text-gray-700 dark:text-zinc-300">{totalTopics}</span> topic{totalTopics === 1 ? '' : 's'}
+      <div class="flex items-center gap-2.5 ml-auto">
+        <p class="text-[12.5px] ds-text-muted" aria-live="polite">
+          Showing <span id="results-count-inline">{totalTopics}</span> topics
         </p>
-        <div class="flex items-center gap-2 self-end sm:self-auto">
-          <span class="text-sm text-gray-500 dark:text-zinc-500">View:</span>
-          <div class="flex border border-app-border rounded-lg overflow-hidden">
-          <button
-            type="button"
-            id="view-grid"
-            class="view-toggle-btn inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium bg-gray-200 dark:bg-zinc-700 text-gray-900 dark:text-zinc-100 border-r border-app-border"
-            title="Grid view"
-            aria-pressed="true"
-          >
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
-            </svg>
-            <span class="hidden sm:inline">Grid</span>
-          </button>
-          <button
-            type="button"
-            id="view-list"
-            class="view-toggle-btn inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium bg-white dark:bg-zinc-900 text-gray-600 dark:text-zinc-400 hover:bg-gray-50 dark:hover:bg-zinc-800/60"
-            title="List view"
-            aria-pressed="false"
-          >
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
-            </svg>
-            <span class="hidden sm:inline">List</span>
-          </button>
-          </div>
+        <button type="button" id="reset-filters-btn" class="hidden text-[12.5px] ds-link">Reset</button>
+        <div class="ks-view-toggle">
+          <button type="button" id="view-grid" class="is-active" aria-pressed="true">Grid</button>
+          <button type="button" id="view-list" aria-pressed="false">List</button>
         </div>
       </div>
     </div>
+  </div>
 
-    <section aria-labelledby="topics-browse-heading" class="mb-2">
-      <h2 id="topics-browse-heading" class="sr-only">Browse topics</h2>
-    </section>
-
-    <div id="topics-container" class="grid sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5 lg:gap-6">
+  <div class="max-w-7xl mx-auto px-7 lg:px-12 py-8 lg:py-11">
+    <div id="topics-container" class="ks-topics-grid">
       {sortedTopics.map((topic) => {
-        const categoryColors = getCategoryColors(topic.data.category);
         const phase = topic.data.phase ?? topic.data.offensiveType;
         const phaseSlug = typeof phase === 'string' ? phase : '';
-        const phaseLabel = formatPhase(phase);
-        const phaseClass = getPhaseBadgeClass(phase);
+        const phaseLabel = formatPhaseUpper(phase);
         return (
-          <a 
-            href={`/topics/${topic.slug}`} 
-            class="block topic-card group" 
+          <a
+            href={`/topics/${topic.slug}`}
+            class="topic-card ks-card p-4 flex flex-col gap-2.5 hover:border-app-border-strong"
             data-category={topic.data.category}
             data-phase={phaseSlug}
             data-title={topic.data.title.toLowerCase()}
             data-description={topic.data.description.toLowerCase()}
           >
-            <Card class="topic-card-surface h-full bg-app-surface/95 border-app-border/85 shadow-sm dark:ring-1 dark:ring-zinc-700/60 transition-all duration-200 hover:-translate-y-1 hover:shadow-md hover:border-app-border-strong dark:hover:border-zinc-600/90 dark:hover:ring-zinc-600/75">
-              <CardHeader class="topic-card-header">
-                <div class="topic-card-content">
-                  <div class="topic-card-meta flex items-center justify-between gap-3 mb-2">
-                    <div class="flex flex-wrap items-center gap-1.5">
-                      <span class={`inline-flex items-center gap-1 px-2 py-0.5 text-xs font-medium rounded border ${categoryColors.bg} ${categoryColors.text} ${categoryColors.border}`}>
-                        <CategoryIcon category={topic.data.category} class={`w-3 h-3 ${categoryColors.icon}`} />
-                        {topic.data.category}
-                      </span>
-                      {topic.data.category === 'offensive' && phaseLabel && (
-                        <span class={`inline-flex items-center gap-1 px-2 py-0.5 text-xs font-medium rounded border ${phaseClass}`}>
-                          <svg class="w-3 h-3 opacity-90" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d={getPhaseIconPath(phase)} />
-                          </svg>
-                          {phaseLabel}
-                        </span>
-                      )}
-                    </div>
-                    <svg class="topic-card-corner-arrow w-4 h-4 text-gray-400 dark:text-zinc-600 transition-colors shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
-                    </svg>
-                  </div>
-                  <CardTitle class="topic-card-title mb-3 line-clamp-2 break-words leading-snug dark:text-zinc-100">{topic.data.title}</CardTitle>
-                  <CardDescription class="topic-card-description line-clamp-3 dark:text-zinc-200">{topic.data.description}</CardDescription>
-                </div>
-                <div class="topic-card-cta hidden mt-4">
-                  <span class="inline-flex items-center gap-1.5 rounded-md border border-gray-200 bg-gray-50 px-3 py-1.5 text-sm font-medium text-gray-700 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-200">
-                    Read more
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
-                    </svg>
-                  </span>
-                </div>
-              </CardHeader>
-            </Card>
+            <div class="flex items-center gap-2">
+              <StanceBadge stance={topic.data.category} />
+              {topic.data.category === 'offensive' && phaseLabel && (
+                <span class="inline-flex items-center gap-1.5">
+                  <TacticIcon phase={phase} class="h-3.5 w-3.5 text-offensive" />
+                  <span class="font-mono text-[10px] tracking-wider ds-text-muted uppercase">{phaseLabel}</span>
+                </span>
+              )}
+            </div>
+            <span class="text-[14.5px] font-semibold leading-snug tracking-tight ds-text-primary">{topic.data.title}</span>
+            <span class="text-[12.5px] leading-snug ds-text-muted line-clamp-3">{topic.data.description}</span>
           </a>
         );
       })}
     </div>
 
-    <div id="no-results" class="hidden rounded-lg border border-gray-200 bg-gray-50/80 dark:border-zinc-700 dark:bg-zinc-900/40 text-center py-10 px-4">
-      <p class="text-gray-700 dark:text-zinc-300 text-lg font-medium">No topics found matching your filters.</p>
-      <p class="mt-1 text-sm text-gray-500 dark:text-zinc-500">Try another keyword, or clear filters to see everything again.</p>
-      <button
-        type="button"
-        id="no-results-reset-btn"
-        class="mt-4 inline-flex items-center rounded-md border border-gray-200 bg-white px-3 py-1.5 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-100 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-300 dark:hover:bg-zinc-800"
-      >
-        Reset filters
-      </button>
+    <div id="no-results" class="hidden ks-card text-center py-10 px-4">
+      <p class="ds-text-primary font-medium">No topics found matching your filters.</p>
+      <p class="mt-1 text-sm ds-text-muted">Try another keyword, or clear filters to see everything again.</p>
+      <button type="button" id="no-results-reset-btn" class="mt-4 ds-link text-sm">Reset filters</button>
     </div>
+  </div>
 
-    <script>
-      (function() {
-        let searchInput: HTMLInputElement | null = null;
-        let topicsContainer: HTMLElement | null = null;
-        let noResults: HTMLElement | null = null;
-        let topicCards: NodeListOf<Element> | null = null;
-        let activeFilters: HTMLElement | null = null;
-        let activeFilterTags: HTMLElement | null = null;
-        let clearAllBtn: HTMLButtonElement | null = null;
-        let tagFilterButtons: NodeListOf<Element> | null = null;
-        let viewGridBtn: HTMLButtonElement | null = null;
-        let viewListBtn: HTMLButtonElement | null = null;
-        let filterToggleBtn: HTMLButtonElement | null = null;
-        let filterTagsContent: HTMLElement | null = null;
-        let filterToggleIcon: HTMLElement | null = null;
-        let filterSelectedCount: HTMLElement | null = null;
-        let resultsCountInline: HTMLElement | null = null;
-        let resetFiltersBtn: HTMLButtonElement | null = null;
-        let noResultsResetBtn: HTMLButtonElement | null = null;
+  <script>
+    (function () {
+      let searchInput: HTMLInputElement | null = null;
+      let topicsContainer: HTMLElement | null = null;
+      let noResults: HTMLElement | null = null;
+      let topicCards: NodeListOf<Element> | null = null;
+      let tagFilterButtons: NodeListOf<Element> | null = null;
+      let viewGridBtn: HTMLButtonElement | null = null;
+      let viewListBtn: HTMLButtonElement | null = null;
+      let resultsCountInline: HTMLElement | null = null;
+      let resetFiltersBtn: HTMLButtonElement | null = null;
+      let noResultsResetBtn: HTMLButtonElement | null = null;
+      let phaseFilters: HTMLElement | null = null;
 
-        const activeFiltersSet = new Set<string>();
+      const activeFiltersSet = new Set<string>();
 
-        /** Parse `type:value:label` where `label` may contain `:`. */
-        function parseFilterTagKey(tagKey: string): { type: string; value: string; label: string } | null {
-          const firstColon = tagKey.indexOf(':');
-          if (firstColon === -1) return null;
-          const type = tagKey.slice(0, firstColon);
-          const rest = tagKey.slice(firstColon + 1);
-          const secondColon = rest.indexOf(':');
-          if (secondColon === -1) return { type, value: rest, label: '' };
-          return {
-            type,
-            value: rest.slice(0, secondColon),
-            label: rest.slice(secondColon + 1),
-          };
+      function hasCategory(value: string) {
+        return Array.from(activeFiltersSet).some((key) => key.startsWith(`category:${value}:`));
+      }
+
+      function syncPhaseFilters() {
+        const show = hasCategory('offensive');
+        if (phaseFilters) phaseFilters.style.display = show ? 'flex' : 'none';
+        if (show) return;
+        Array.from(activeFiltersSet)
+          .filter((key) => key.startsWith('phase:'))
+          .forEach((key) => activeFiltersSet.delete(key));
+      }
+
+      function parseFilterTagKey(tagKey: string): { type: string; value: string; label: string } | null {
+        const firstColon = tagKey.indexOf(':');
+        if (firstColon === -1) return null;
+        const type = tagKey.slice(0, firstColon);
+        const rest = tagKey.slice(firstColon + 1);
+        const secondColon = rest.indexOf(':');
+        if (secondColon === -1) return { type, value: rest, label: '' };
+        return { type, value: rest.slice(0, secondColon), label: rest.slice(secondColon + 1) };
+      }
+
+      function updateResetButtonVisibility() {
+        if (!resetFiltersBtn || !searchInput) return;
+        const hasSearch = searchInput.value.trim().length > 0;
+        resetFiltersBtn.classList.toggle('hidden', !(hasSearch || activeFiltersSet.size > 0));
+      }
+
+      function resetFilters() {
+        if (searchInput) searchInput.value = '';
+        activeFiltersSet.clear();
+        updateTagButtons();
+        performFilter();
+      }
+
+      function setGridView() {
+        if (!topicsContainer) return;
+        topicsContainer.classList.remove('ks-topics-list');
+        topicsContainer.classList.add('ks-topics-grid');
+        viewGridBtn?.classList.add('is-active');
+        viewListBtn?.classList.remove('is-active');
+        viewGridBtn?.setAttribute('aria-pressed', 'true');
+        viewListBtn?.setAttribute('aria-pressed', 'false');
+        localStorage.setItem('topics-view', 'grid');
+      }
+
+      function setListView() {
+        if (!topicsContainer) return;
+        topicsContainer.classList.remove('ks-topics-grid');
+        topicsContainer.classList.add('ks-topics-list');
+        viewListBtn?.classList.add('is-active');
+        viewGridBtn?.classList.remove('is-active');
+        viewListBtn?.setAttribute('aria-pressed', 'true');
+        viewGridBtn?.setAttribute('aria-pressed', 'false');
+        localStorage.setItem('topics-view', 'list');
+      }
+
+      function addFilter(type: string, value: string, label: string) {
+        if (type === 'category') {
+          Array.from(activeFiltersSet)
+            .filter((key) => key.startsWith('category:'))
+            .forEach((key) => activeFiltersSet.delete(key));
         }
+        activeFiltersSet.add(`${type}:${value}:${label}`);
+        updateTagButtons();
+        performFilter();
+      }
 
-        function updateResetButtonVisibility() {
-          if (!resetFiltersBtn || !searchInput) return;
-          const hasSearch = searchInput.value.trim().length > 0;
-          const hasCategories = activeFiltersSet.size > 0;
-          if (hasSearch || hasCategories) {
-            resetFiltersBtn.classList.remove('hidden');
+      function removeFilter(type: string, value: string) {
+        const tagKey = Array.from(activeFiltersSet).find((key) => key.startsWith(`${type}:${value}:`));
+        if (tagKey) activeFiltersSet.delete(tagKey);
+        updateTagButtons();
+        performFilter();
+      }
+
+      function updateTagButtons() {
+        tagFilterButtons?.forEach((btn) => {
+          const type = (btn as HTMLElement).dataset.tagType || '';
+          const value = (btn as HTMLElement).dataset.tagValue || '';
+          const active = Array.from(activeFiltersSet).some((key) => key.startsWith(`${type}:${value}:`));
+          btn.classList.toggle('is-active', active);
+        });
+      }
+
+      function performFilter() {
+        if (!topicsContainer || !noResults || !topicCards || topicCards.length === 0) return;
+
+        syncPhaseFilters();
+        updateTagButtons();
+
+        const searchQuery = searchInput?.value.toLowerCase().trim() || '';
+        const activeCategories = new Set<string>();
+        const activePhases = new Set<string>();
+
+        activeFiltersSet.forEach((tagKey) => {
+          const parsed = parseFilterTagKey(tagKey);
+          if (!parsed) return;
+          if (parsed.type === 'category') activeCategories.add(parsed.value);
+          if (parsed.type === 'phase') activePhases.add(parsed.value);
+        });
+
+        let visibleCount = 0;
+        topicCards.forEach((card) => {
+          const cardElement = card as HTMLElement;
+          const category = cardElement.dataset.category || '';
+          const cardPhase = cardElement.dataset.phase || '';
+          const title = cardElement.dataset.title || '';
+          const description = cardElement.dataset.description || '';
+          const matchesSearch = !searchQuery || title.includes(searchQuery) || description.includes(searchQuery);
+          const matchesCategory = activeCategories.size === 0 || activeCategories.has(category);
+          const matchesPhase =
+            activePhases.size === 0 ||
+            (category === 'offensive' && cardPhase.length > 0 && activePhases.has(cardPhase));
+
+          if (matchesSearch && matchesCategory && matchesPhase) {
+            cardElement.style.display = '';
+            visibleCount++;
           } else {
-            resetFiltersBtn.classList.add('hidden');
+            cardElement.style.display = 'none';
           }
+        });
+
+        topicsContainer.classList.toggle('hidden', visibleCount === 0);
+        noResults.classList.toggle('hidden', visibleCount !== 0);
+        if (resultsCountInline) resultsCountInline.textContent = String(visibleCount);
+        updateResetButtonVisibility();
+      }
+
+      function initSearch() {
+        searchInput = document.getElementById('search-input') as HTMLInputElement;
+        topicsContainer = document.getElementById('topics-container');
+        noResults = document.getElementById('no-results');
+        topicCards = document.querySelectorAll('.topic-card');
+        tagFilterButtons = document.querySelectorAll('.tag-filter-btn');
+        viewGridBtn = document.getElementById('view-grid') as HTMLButtonElement;
+        viewListBtn = document.getElementById('view-list') as HTMLButtonElement;
+        resultsCountInline = document.getElementById('results-count-inline');
+        resetFiltersBtn = document.getElementById('reset-filters-btn') as HTMLButtonElement;
+        noResultsResetBtn = document.getElementById('no-results-reset-btn') as HTMLButtonElement;
+        phaseFilters = document.getElementById('phase-filters');
+
+        if (!searchInput || !topicsContainer || !noResults || !topicCards || topicCards.length === 0) {
+          setTimeout(initSearch, 100);
+          return;
         }
 
-        function resetFilters() {
-          if (searchInput) searchInput.value = '';
-          clearAllFilters();
-        }
-
-        function toggleFilterTags() {
-          if (!filterTagsContent || !filterToggleIcon || !filterToggleBtn) return;
-          
-          const isHidden = filterTagsContent.classList.contains('hidden');
-          if (isHidden) {
-            filterTagsContent.classList.remove('hidden');
-            filterToggleIcon.classList.add('rotate-180');
-            filterToggleBtn.setAttribute('aria-expanded', 'true');
-          } else {
-            filterTagsContent.classList.add('hidden');
-            filterToggleIcon.classList.remove('rotate-180');
-            filterToggleBtn.setAttribute('aria-expanded', 'false');
-          }
-        }
-
-        function setGridView() {
-          if (!topicsContainer) return;
-          topicsContainer.classList.remove('flex', 'flex-col', 'gap-3');
-          topicsContainer.classList.add('grid', 'sm:grid-cols-2', 'lg:grid-cols-3', 'gap-4', 'sm:gap-5');
-          
-          viewGridBtn?.classList.remove('bg-white', 'dark:bg-zinc-900', 'text-gray-600', 'dark:text-zinc-400', 'hover:bg-gray-50', 'dark:hover:bg-zinc-800/60');
-          viewGridBtn?.classList.add('bg-gray-200', 'dark:bg-zinc-700', 'text-gray-900', 'dark:text-zinc-100');
-          viewListBtn?.classList.remove('bg-gray-200', 'dark:bg-zinc-700', 'text-gray-900', 'dark:text-zinc-100');
-          viewListBtn?.classList.add('bg-white', 'dark:bg-zinc-900', 'text-gray-600', 'dark:text-zinc-400', 'hover:bg-gray-50', 'dark:hover:bg-zinc-800/60');
-          viewGridBtn?.setAttribute('aria-pressed', 'true');
-          viewListBtn?.setAttribute('aria-pressed', 'false');
-
-          topicCards?.forEach((card) => {
-            card.classList.remove('w-full');
-            const cardElement = card as HTMLElement;
-            const surface = cardElement.querySelector('.topic-card-surface');
-            const header = cardElement.querySelector('.topic-card-header');
-            const content = cardElement.querySelector('.topic-card-content');
-            const titleEl = cardElement.querySelector('.topic-card-title');
-            const description = cardElement.querySelector('.topic-card-description');
-            const cta = cardElement.querySelector('.topic-card-cta');
-            const meta = cardElement.querySelector('.topic-card-meta');
-            const cornerArrow = cardElement.querySelector('.topic-card-corner-arrow');
-
-            surface?.classList.remove('sm:border-l-4', 'sm:border-l-gray-300', 'dark:sm:border-l-zinc-700', 'sm:hover:border-l-gray-400', 'dark:sm:hover:border-l-zinc-600', 'sm:bg-gray-50/40', 'dark:sm:bg-zinc-900/95');
-            header?.classList.remove('sm:flex', 'sm:flex-row', 'sm:items-center', 'sm:justify-between', 'sm:gap-6');
-            content?.classList.remove('sm:flex-1', 'sm:min-w-0');
-            titleEl?.classList.remove('sm:mb-2');
-            description?.classList.remove('sm:line-clamp-2', 'sm:max-w-3xl');
-            meta?.classList.remove('sm:mb-1');
-            cta?.classList.remove('sm:shrink-0', 'sm:ml-6', 'sm:mt-0', 'sm:self-center', 'sm:block');
-            cta?.classList.add('hidden');
-            cornerArrow?.classList.remove('hidden', 'sm:hidden');
-          });
-          
-          localStorage.setItem('topics-view', 'grid');
-        }
-
-        function setListView() {
-          if (!topicsContainer) return;
-          topicsContainer.classList.remove('grid', 'sm:grid-cols-2', 'lg:grid-cols-3', 'gap-4');
-          topicsContainer.classList.remove('sm:gap-5');
-          topicsContainer.classList.add('flex', 'flex-col', 'gap-3');
-          
-          viewListBtn?.classList.remove('bg-white', 'dark:bg-zinc-900', 'text-gray-600', 'dark:text-zinc-400', 'hover:bg-gray-50', 'dark:hover:bg-zinc-800/60');
-          viewListBtn?.classList.add('bg-gray-200', 'dark:bg-zinc-700', 'text-gray-900', 'dark:text-zinc-100');
-          viewGridBtn?.classList.remove('bg-gray-200', 'dark:bg-zinc-700', 'text-gray-900', 'dark:text-zinc-100');
-          viewGridBtn?.classList.add('bg-white', 'dark:bg-zinc-900', 'text-gray-600', 'dark:text-zinc-400', 'hover:bg-gray-50', 'dark:hover:bg-zinc-800/60');
-          viewListBtn?.setAttribute('aria-pressed', 'true');
-          viewGridBtn?.setAttribute('aria-pressed', 'false');
-
-          topicCards?.forEach((card) => {
-            card.classList.add('w-full');
-            const cardElement = card as HTMLElement;
-            const surface = cardElement.querySelector('.topic-card-surface');
-            const header = cardElement.querySelector('.topic-card-header');
-            const content = cardElement.querySelector('.topic-card-content');
-            const titleEl = cardElement.querySelector('.topic-card-title');
-            const description = cardElement.querySelector('.topic-card-description');
-            const cta = cardElement.querySelector('.topic-card-cta');
-            const meta = cardElement.querySelector('.topic-card-meta');
-            const cornerArrow = cardElement.querySelector('.topic-card-corner-arrow');
-
-            surface?.classList.add('sm:border-l-4', 'sm:border-l-gray-300', 'dark:sm:border-l-zinc-700', 'sm:hover:border-l-gray-400', 'dark:sm:hover:border-l-zinc-600', 'sm:bg-gray-50/40', 'dark:sm:bg-zinc-900/95');
-            header?.classList.add('sm:flex', 'sm:flex-row', 'sm:items-center', 'sm:justify-between', 'sm:gap-8');
-            content?.classList.add('sm:flex-1', 'sm:min-w-0');
-            titleEl?.classList.add('sm:mb-2');
-            description?.classList.add('sm:line-clamp-2', 'sm:max-w-3xl');
-            meta?.classList.add('sm:mb-1');
-            cta?.classList.add('sm:shrink-0', 'sm:ml-6', 'sm:mt-0', 'sm:self-center', 'sm:block');
-            cta?.classList.remove('hidden');
-            cornerArrow?.classList.add('hidden', 'sm:hidden');
-          });
-          
-          localStorage.setItem('topics-view', 'list');
-        }
-
-        function updateActiveFiltersDisplay() {
-          if (!activeFilters || !activeFilterTags) return;
-
-          if (activeFiltersSet.size === 0) {
-            activeFilters.classList.add('hidden');
-          } else {
-            activeFilters.classList.remove('hidden');
-            activeFilterTags.innerHTML = '';
-
-            activeFiltersSet.forEach((tagKey) => {
-              const parsed = parseFilterTagKey(tagKey);
-              if (!parsed) return;
-              const { type, value, label } = parsed;
-              const tag = document.createElement('button');
-              tag.type = 'button';
-              tag.className = 'inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium border transition-colors bg-blue-100 text-blue-800 border-blue-300 hover:bg-blue-200 dark:bg-blue-950/70 dark:text-blue-200 dark:border-blue-700 dark:hover:bg-blue-950/80';
-              tag.innerHTML = `
-                <span>${label}</span>
-                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              `;
-              tag.addEventListener('click', () => {
-                removeFilter(type, value);
-              });
-              activeFilterTags.appendChild(tag);
-            });
-          }
-
-          if (filterSelectedCount) {
-            const count = activeFiltersSet.size;
-            if (count > 0) {
-              filterSelectedCount.textContent = String(count);
-              filterSelectedCount.classList.remove('hidden');
-              filterSelectedCount.classList.add('inline-flex');
-            } else {
-              filterSelectedCount.textContent = '';
-              filterSelectedCount.classList.add('hidden');
-              filterSelectedCount.classList.remove('inline-flex');
-            }
-          }
-        }
-
-        function addFilter(type: string, value: string, label: string) {
-          const tagKey = `${type}:${value}:${label}`;
-          activeFiltersSet.add(tagKey);
-          updateActiveFiltersDisplay();
-          updateTagButtons();
-          performFilter();
-        }
-
-        function removeFilter(type: string, value: string) {
-          const tagKey = Array.from(activeFiltersSet).find(key => key.startsWith(`${type}:${value}:`));
-          if (tagKey) {
-            activeFiltersSet.delete(tagKey);
-            updateActiveFiltersDisplay();
-            updateTagButtons();
-            performFilter();
-          }
-        }
-
-        function clearAllFilters() {
-          activeFiltersSet.clear();
-          updateActiveFiltersDisplay();
-          updateTagButtons();
-          performFilter();
-        }
-
-        function updateTagButtons() {
-          if (!tagFilterButtons) return;
-          tagFilterButtons.forEach(btn => {
+        searchInput.addEventListener('input', performFilter);
+        tagFilterButtons.forEach((btn) => {
+          btn.addEventListener('click', () => {
             const type = (btn as HTMLElement).dataset.tagType || '';
             const value = (btn as HTMLElement).dataset.tagValue || '';
-            const tagKey = Array.from(activeFiltersSet).find(key => key.startsWith(`${type}:${value}:`));
-            
-            if (tagKey) {
-              btn.classList.add('ring-2', 'ring-blue-500', 'ring-offset-2', 'dark:ring-offset-zinc-900');
-            } else {
-              btn.classList.remove('ring-2', 'ring-blue-500', 'ring-offset-2', 'dark:ring-offset-zinc-900');
-            }
+            const label = (btn as HTMLElement).dataset.tagLabel || '';
+            const tagKey = Array.from(activeFiltersSet).find((key) => key.startsWith(`${type}:${value}:`));
+            if (tagKey) removeFilter(type, value);
+            else addFilter(type, value, label);
           });
+        });
+        resetFiltersBtn?.addEventListener('click', resetFilters);
+        noResultsResetBtn?.addEventListener('click', resetFilters);
+        viewGridBtn?.addEventListener('click', setGridView);
+        viewListBtn?.addEventListener('click', setListView);
+        if (localStorage.getItem('topics-view') === 'list') setListView();
+        applyFiltersFromUrl();
+        performFilter();
+      }
+
+      function applyFiltersFromUrl() {
+        const params = new URLSearchParams(window.location.search);
+        const category = params.get('category')?.toLowerCase().trim() || '';
+        const phase = params.get('phase')?.trim() || '';
+        const query = params.get('q');
+        if (query && searchInput) searchInput.value = query;
+
+        const buttons = Array.from(tagFilterButtons ?? []) as HTMLElement[];
+        function labelFor(type: string, value: string) {
+          return buttons.find((btn) => btn.dataset.tagType === type && btn.dataset.tagValue === value)?.dataset.tagLabel || value;
         }
 
-        function performFilter() {
-          if (!topicsContainer || !noResults || !topicCards || topicCards.length === 0) {
-            return;
-          }
-
-          const searchQuery = searchInput?.value.toLowerCase().trim() || '';
-          const activeCategories = new Set<string>();
-          const activePhases = new Set<string>();
-
-          activeFiltersSet.forEach((tagKey) => {
-            const parsed = parseFilterTagKey(tagKey);
-            if (!parsed) return;
-            const { type, value } = parsed;
-            if (type === 'category') activeCategories.add(value);
-            if (type === 'phase') activePhases.add(value);
-          });
-
-          let visibleCount = 0;
-
-          topicCards.forEach(card => {
-            const cardElement = card as HTMLElement;
-            const category = cardElement.dataset.category || '';
-            const cardPhase = cardElement.dataset.phase || '';
-            const title = cardElement.dataset.title || '';
-            const description = cardElement.dataset.description || '';
-
-            const matchesSearch = !searchQuery || 
-              title.includes(searchQuery) || 
-              description.includes(searchQuery);
-
-            const matchesCategory = activeCategories.size === 0 || activeCategories.has(category);
-
-            // Phases are defined for offensive content; ignore phase slugs on non-offensive rows.
-            const matchesPhase =
-              activePhases.size === 0 ||
-              (category === 'offensive' && cardPhase.length > 0 && activePhases.has(cardPhase));
-
-            if (matchesSearch && matchesCategory && matchesPhase) {
-              cardElement.style.display = 'block';
-              visibleCount++;
-            } else {
-              cardElement.style.display = 'none';
-            }
-          });
-
-          if (visibleCount === 0) {
-            topicsContainer.classList.add('hidden');
-            noResults.classList.remove('hidden');
-          } else {
-            topicsContainer.classList.remove('hidden');
-            noResults.classList.add('hidden');
-          }
-
-          if (resultsCountInline) {
-            resultsCountInline.textContent = String(visibleCount);
-          }
-
-          updateResetButtonVisibility();
+        if (category && ['offensive', 'defensive'].includes(category)) {
+          activeFiltersSet.add(`category:${category}:${labelFor('category', category)}`);
         }
-
-        function initSearch() {
-          searchInput = document.getElementById('search-input') as HTMLInputElement;
-          topicsContainer = document.getElementById('topics-container');
-          noResults = document.getElementById('no-results');
-          topicCards = document.querySelectorAll('.topic-card');
-          activeFilters = document.getElementById('active-filters');
-          activeFilterTags = document.getElementById('active-filter-tags');
-          clearAllBtn = document.getElementById('clear-all-filters') as HTMLButtonElement;
-          tagFilterButtons = document.querySelectorAll('.tag-filter-btn');
-          viewGridBtn = document.getElementById('view-grid') as HTMLButtonElement;
-          viewListBtn = document.getElementById('view-list') as HTMLButtonElement;
-          filterToggleBtn = document.getElementById('filter-toggle-btn') as HTMLButtonElement;
-          filterTagsContent = document.getElementById('filter-tags-content');
-          filterToggleIcon = document.getElementById('filter-toggle-icon');
-          filterSelectedCount = document.getElementById('filter-selected-count');
-          resultsCountInline = document.getElementById('results-count-inline');
-          resetFiltersBtn = document.getElementById('reset-filters-btn') as HTMLButtonElement;
-          noResultsResetBtn = document.getElementById('no-results-reset-btn') as HTMLButtonElement;
-
-          if (!searchInput || !topicsContainer || !noResults || !topicCards || topicCards.length === 0) {
-            setTimeout(initSearch, 100);
-            return;
+        if (phase) {
+          if (!hasCategory('offensive')) {
+            activeFiltersSet.add(`category:offensive:${labelFor('category', 'offensive')}`);
           }
-
-          searchInput.addEventListener('input', performFilter);
-
-          tagFilterButtons.forEach(btn => {
-            btn.addEventListener('click', () => {
-              const type = (btn as HTMLElement).dataset.tagType || '';
-              const value = (btn as HTMLElement).dataset.tagValue || '';
-              const label = (btn as HTMLElement).dataset.tagLabel || '';
-
-              const tagKey = Array.from(activeFiltersSet).find(key => key.startsWith(`${type}:${value}:`));
-              if (tagKey) {
-                removeFilter(type, value);
-              } else {
-                addFilter(type, value, label);
-              }
-            });
-          });
-
-          if (clearAllBtn) {
-            clearAllBtn.addEventListener('click', clearAllFilters);
-          }
-
-          resetFiltersBtn?.addEventListener('click', resetFilters);
-          noResultsResetBtn?.addEventListener('click', resetFilters);
-
-          filterToggleBtn?.addEventListener('click', toggleFilterTags);
-          viewGridBtn?.addEventListener('click', setGridView);
-          viewListBtn?.addEventListener('click', setListView);
-
-          const savedView = localStorage.getItem('topics-view');
-          if (savedView === 'list') {
-            setListView();
-          }
-
-          updateActiveFiltersDisplay();
-          performFilter();
+          activeFiltersSet.add(`phase:${phase}:${labelFor('phase', phase)}`);
         }
+      }
 
-        if (document.readyState === 'loading') {
-          document.addEventListener('DOMContentLoaded', initSearch);
-        } else {
-          initSearch();
-        }
-      })();
-    </script>
-  </div>
+      if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', initSearch);
+      else initSearch();
+    })();
+  </script>
 </BaseLayout>

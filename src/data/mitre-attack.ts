@@ -153,6 +153,38 @@ export const mitreTechniques: Record<string, MitreTechnique> = {
       'Adversaries may execute active reconnaissance scans to gather information that can be used during targeting.',
     url: 'https://attack.mitre.org/techniques/T1595',
   },
+  T1590: {
+    id: 'T1590',
+    name: 'Gather Victim Network Information',
+    tactic: 'Reconnaissance',
+    description:
+      'Adversaries may gather information about the victim\'s networks that can be used during targeting. Information may include IP ranges, DNS names, and control plane endpoints.',
+    url: 'https://attack.mitre.org/techniques/T1590',
+  },
+  T1592: {
+    id: 'T1592',
+    name: 'Gather Victim Host Information',
+    tactic: 'Reconnaissance',
+    description:
+      'Adversaries may gather information about the victim\'s hosts that can be used during targeting. Information may include software versions, patch levels, and platform identifiers.',
+    url: 'https://attack.mitre.org/techniques/T1592',
+  },
+  T1596: {
+    id: 'T1596',
+    name: 'Search Open Technical Databases',
+    tactic: 'Reconnaissance',
+    description:
+      'Adversaries may search freely available technical databases for information about victims that can be used during targeting.',
+    url: 'https://attack.mitre.org/techniques/T1596',
+  },
+  T1526: {
+    id: 'T1526',
+    name: 'Cloud Service Discovery',
+    tactic: 'Discovery',
+    description:
+      'Adversaries may attempt to list the cloud services running in a cloud environment. Information may include installed API groups, addons, and resource types exposed through discovery endpoints.',
+    url: 'https://attack.mitre.org/techniques/T1526',
+  },
   T1105: {
     id: 'T1105',
     name: 'Ingress Tool Transfer',
@@ -176,6 +208,22 @@ export const mitreTechniques: Record<string, MitreTechnique> = {
     description:
       'Adversaries may search compromised systems to find and obtain insecurely stored credentials.',
     url: 'https://attack.mitre.org/techniques/T1552',
+  },
+  T1550: {
+    id: 'T1550',
+    name: 'Use Alternate Authentication Material',
+    tactic: 'Defense Evasion, Lateral Movement, Persistence',
+    description:
+      'Adversaries may use alternate authentication material to authenticate without access to the underlying password or key material.',
+    url: 'https://attack.mitre.org/techniques/T1550',
+  },
+  'T1550.001': {
+    id: 'T1550.001',
+    name: 'Application Access Token',
+    tactic: 'Defense Evasion, Lateral Movement, Persistence',
+    description:
+      'Adversaries may use stolen application access tokens to authenticate to services and APIs, including Kubernetes service account tokens issued via TokenRequest.',
+    url: 'https://attack.mitre.org/techniques/T1550/001',
   },
   T1486: {
     id: 'T1486',
@@ -248,6 +296,14 @@ export const mitreTechniques: Record<string, MitreTechnique> = {
     description:
       'Adversaries may attempt to discover group and permission settings.',
     url: 'https://attack.mitre.org/techniques/T1069',
+  },
+  T1528: {
+    id: 'T1528',
+    name: 'Steal Application Access Token',
+    tactic: 'Credential Access',
+    description:
+      'Adversaries may steal application access tokens as a means of acquiring credentials to access remote resources and APIs.',
+    url: 'https://attack.mitre.org/techniques/T1528',
   },
   T1530: {
     id: 'T1530',

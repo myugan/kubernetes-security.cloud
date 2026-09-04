@@ -4,9 +4,12 @@ import mdx from '@astrojs/mdx';
 import sitemap from '@astrojs/sitemap';
 import yaml from '@rollup/plugin-yaml';
 import rehypeMarkdownCallouts from './scripts/rehype-markdown-callouts.mjs';
+import rehypeTrimTrailingShikiLines from './scripts/rehype-trim-trailing-shiki-lines.mjs';
 import rehypeWrapTables from './scripts/rehype-wrap-tables.mjs';
+import llmIndexIntegration from './integrations/llm-index.mjs';
 
-const markdownRehypePlugins = [rehypeMarkdownCallouts, rehypeWrapTables];
+/** Trim runs after Shiki (Astro appends user rehype plugins after built-in `rehypeShiki`). */
+const markdownRehypePlugins = [rehypeMarkdownCallouts, rehypeWrapTables, rehypeTrimTrailingShikiLines];
 
 /**
  * Public origin for canonical URLs, sitemap, and og:image.
@@ -32,6 +35,7 @@ export default defineConfig({
       rehypePlugins: markdownRehypePlugins,
     }),
     sitemap(),
+    llmIndexIntegration(),
   ],
   markdown: {
     rehypePlugins: markdownRehypePlugins,
