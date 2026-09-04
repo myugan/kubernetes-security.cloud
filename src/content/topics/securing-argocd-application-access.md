@@ -7,11 +7,12 @@ impact: >-
   Without these controls, any user with applications create permission in ArgoCD can deploy privileged workloads cluster-wide using ArgoCD's own service account, bypassing Kubernetes RBAC entirely. With these controls, Application creation is scoped to trusted repositories and namespaces, and the resources those Applications can deploy are limited to an explicit allowlist.
 mitigation:
   - Scope **applications create** in ArgoCD RBAC to specific AppProjects rather than wildcard. Never grant create on the default project without an AppProject that enforces source and destination restrictions.
-  - Use **AppProject** to enforce source repository allowlists, destination namespace and cluster restrictions, and cluster resource whitelists. An Application that references a repository or destination not in the AppProject is rejected by ArgoCD before sync.
-  - Alert on **Application creation events** in the Kubernetes audit log that reference repositories outside the approved list, or that target namespaces where privileged workloads are unexpected.
+  - Use **AppProject** to enforce source repository allowlists, destination namespace and cluster restrictions, and cluster resource whitelists. An Application that references a repository or destination not in the AppProject is rejected by ArgoCD before sync. Ban the `argocd` namespace as a destination on every project a non-admin can use.
+  - Alert on **Application creation events** in the Kubernetes audit log that reference repositories outside the approved list, that target namespaces where privileged workloads are unexpected, or whose destination is the `argocd` namespace.
 references: |
   - [ArgoCD RBAC Configuration](https://argo-cd.readthedocs.io/en/stable/operator-manual/rbac/)
   - [ArgoCD AppProject Documentation](https://argo-cd.readthedocs.io/en/stable/user-guide/projects/)
+  - [Compromising ArgoCD via Application Sync](/topics/compromising-argocd-via-application-sync)
 ---
 
 ArgoCD's application controller service account holds broad cluster permissions to reconcile any resource across the cluster. When a user creates an `Application` object, ArgoCD reads the desired state from a Git repository and applies it using its own credentials, not the user's. The user's Kubernetes RBAC is never checked against the resources inside the manifest. This makes `applications create` in ArgoCD RBAC equivalent to delegated cluster-admin for whatever the manifest contains.

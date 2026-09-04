@@ -33,7 +33,7 @@ rules:
     verbs: ["create"]
 ```
 
-This single Kubernetes RBAC rule is enough to achieve cluster-wide privileged pod deployment.
+This single Kubernetes RBAC rule is enough to achieve cluster-wide privileged pod deployment. A related chain uses the same Application create primitive to target ArgoCD itself. [Compromising ArgoCD via Application Sync](/topics/compromising-argocd-via-application-sync) overwrites `argocd-rbac-cm` by syncing into the `argocd` namespace.
 
 ## Understanding the Attack Surface
 
