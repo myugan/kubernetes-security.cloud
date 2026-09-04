@@ -76,4 +76,4 @@ export const collections = {
 };
 
 // New collection? Add it above, then register formatting in src/lib/llm-content.ts
-// so /llms.txt, /topics.json, and related LLM endpoints update on the next build.
+// so /llms.txt, /llms-full.txt, and related JSON/.md endpoints update on the next build.

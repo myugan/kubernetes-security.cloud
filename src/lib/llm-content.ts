@@ -6,6 +6,10 @@
 
 import { getCollection, type CollectionEntry } from 'astro:content';
 import { features, type FeatureFlags } from '../config/features';
+import { getAllMitreTechniques } from '../data/mitre-attack';
+import { getAllTools, getToolTypes, tools } from '../data/tools';
+import { glossaryToMarkdown, topicToMarkdown } from './llm-markdown';
+import { site as siteConfig } from '../config/site';
 import { toAbsoluteUrl, getSiteUrl } from './site-url';
 
 const ATTACK_STEP_TYPES = ['initial', 'lateral', 'privilege', 'persistence', 'exfiltration'] as const;
@@ -84,7 +88,7 @@ export function buildLlmsTxt(snapshot: LlmContentSnapshot): string {
   const lines: string[] = [
     '# kubernetes-security.cloud',
     '',
-    '> Kubernetes security reference: offensive/defensive topics, glossary, MITRE ATT&CK technique index, and interactive attack-path maps with step-by-step breakdowns.',
+    `> ${siteConfig.description}`,
     '',
     '## Generated',
     `- generatedAt: ${generatedAt}`,
@@ -92,7 +96,13 @@ export function buildLlmsTxt(snapshot: LlmContentSnapshot): string {
     '',
     '## LLM usage notes',
     '- This file is generated automatically on deploy; do not edit by hand.',
-    '- Prefer `topics.json` for structured topic metadata, phases, MITRE IDs, and markdown URLs.',
+    `- Compact catalog: ${toAbsoluteUrl('/llms.txt', site)} (this file).`,
+    `- Full encyclopedia dump: ${toAbsoluteUrl('/llms-full.txt', site)} (every topic, glossary entry, tool, and mapped ATT&CK technique).`,
+    '- Prefer JSON indexes for structured metadata; prefer `.md` URLs or `llms-full.txt` for full prose.',
+    '- Prefer `topics.json` for topic metadata, phases, MITRE IDs, and markdown URLs.',
+    '- Prefer `glossary.json` for glossary metadata and markdown URLs.',
+    '- Prefer `tools.json` for the security tool catalog.',
+    '- Prefer `techniques.json` for MITRE ATT&CK techniques mapped to topics on this site.',
     ...(features.attackPaths
       ? [
           '- Prefer `attack-paths.json` for attack path graphs: steps, types, connections, and per-step MITRE techniques.',
@@ -101,19 +111,24 @@ export function buildLlmsTxt(snapshot: LlmContentSnapshot): string {
         ]
       : []),
     '- For offensive topics, filter `category=offensive` then group/order by `phase`.',
-    '- Use `/topics/<topic-slug>.md` for full markdown plus extracted action headings and commands.',
+    '- Use `/topics/<topic-slug>.md` for full topic markdown plus extracted action headings and commands.',
+    '- Use `/glossary/<term-slug>.md` for full glossary markdown.',
     '- `phase` is the canonical offensive classification field on topics.',
-    '- Glossary entries are HTML only (no `.md` mirror); fetch the page or use the sitemap.',
-    '- `/techniques` lists MITRE ATT&CK techniques mapped to offensive topics on this site.',
     '',
     '## Important URLs',
     `- Site home: ${toAbsoluteUrl('/', site)}`,
+    `- About: ${toAbsoluteUrl('/about', site)}`,
     `- Topics overview: ${toAbsoluteUrl('/topics', site)}`,
     `- Glossary overview: ${toAbsoluteUrl('/glossary', site)}`,
     `- MITRE techniques index: ${toAbsoluteUrl('/techniques', site)}`,
     `- Security tools index: ${toAbsoluteUrl('/tools', site)}`,
     `- Machine-readable topic index (JSON): ${toAbsoluteUrl('/topics.json', site)}`,
+    `- Machine-readable glossary index (JSON): ${toAbsoluteUrl('/glossary.json', site)}`,
+    `- Machine-readable tools index (JSON): ${toAbsoluteUrl('/tools.json', site)}`,
+    `- Machine-readable ATT&CK index (JSON): ${toAbsoluteUrl('/techniques.json', site)}`,
     `- Raw markdown topic endpoint pattern: ${toAbsoluteUrl('/topics/<topic-slug>.md', site)}`,
+    `- Raw markdown glossary endpoint pattern: ${toAbsoluteUrl('/glossary/<term-slug>.md', site)}`,
+    `- Full content dump: ${toAbsoluteUrl('/llms-full.txt', site)}`,
     `- Sitemap: ${toAbsoluteUrl('/sitemap-index.xml', site)}`,
     `- LLM index (this file): ${toAbsoluteUrl('/llms.txt', site)}`,
     ...(features.attackPaths
@@ -146,7 +161,7 @@ export function buildLlmsTxt(snapshot: LlmContentSnapshot): string {
     '## Glossary pages',
     ...sortedGlossary.map((entry) => {
       const mitre = (entry.data.mitreTechniques ?? []).join(', ') || 'none';
-      return `- ${toAbsoluteUrl(`/glossary/${entry.slug}`, site)} | category: ${entry.data.category} | mitre: ${mitre} | ${entry.data.title} | ${oneLine(entry.data.description)}`;
+      return `- ${toAbsoluteUrl(`/glossary/${entry.slug}`, site)} | md: ${toAbsoluteUrl(`/glossary/${entry.slug}.md`, site)} | category: ${entry.data.category} | mitre: ${mitre} | ${entry.data.title} | ${oneLine(entry.data.description)}`;
     }),
   ];
 
@@ -305,7 +320,231 @@ export function buildAttackPathsJsonPayload(snapshot: LlmContentSnapshot) {
   };
 }
 
-export const LLM_INDEX_FILES = ['llms.txt', 'topics.json', 'attack-paths.json'] as const;
+export function buildGlossaryJsonPayload(snapshot: LlmContentSnapshot) {
+  const { site, generatedAt, glossary } = snapshot;
+  const sorted = [...glossary].sort((a, b) => a.data.title.localeCompare(b.data.title));
+
+  return {
+    site,
+    generatedAt,
+    totalGlossary: sorted.length,
+    glossary: sorted.map((entry) => ({
+      slug: entry.slug,
+      url: toAbsoluteUrl(`/glossary/${entry.slug}`, site),
+      markdownUrl: toAbsoluteUrl(`/glossary/${entry.slug}.md`, site),
+      title: entry.data.title,
+      description: entry.data.description,
+      category: entry.data.category,
+      relatedTerms: entry.data.relatedTerms ?? [],
+      tools: entry.data.tools ?? [],
+      mitreTechniques: entry.data.mitreTechniques ?? [],
+      kubernetesVersion: entry.data.kubernetesVersion ?? null,
+    })),
+  };
+}
+
+export function buildToolsJsonPayload(snapshot: LlmContentSnapshot) {
+  const { site, generatedAt } = snapshot;
+  const catalog = Object.entries(tools)
+    .map(([key, tool]) => ({
+      key,
+      name: tool.name,
+      url: tool.url,
+      types: getToolTypes(tool),
+      description: tool.description ?? '',
+    }))
+    .sort((a, b) => a.name.localeCompare(b.name));
+
+  return {
+    site,
+    generatedAt,
+    htmlUrl: toAbsoluteUrl('/tools', site),
+    totalTools: catalog.length,
+    tools: catalog,
+  };
+}
+
+export function buildTechniquesJsonPayload(snapshot: LlmContentSnapshot) {
+  const { site, generatedAt, topics } = snapshot;
+  const catalog = getAllMitreTechniques().slice().sort((a, b) => a.id.localeCompare(b.id));
+  const offensiveTopics = topics.filter((topic) => topic.data.category === 'offensive');
+
+  const topicsByTechnique = new Map<string, Array<{ slug: string; title: string; url: string }>>();
+  for (const topic of offensiveTopics) {
+    for (const id of topic.data.mitreTechniques ?? []) {
+      const list = topicsByTechnique.get(id) ?? [];
+      list.push({
+        slug: topic.slug,
+        title: topic.data.title,
+        url: toAbsoluteUrl(`/topics/${topic.slug}`, site),
+      });
+      topicsByTechnique.set(id, list);
+    }
+  }
+
+  const techniques = catalog.map((technique) => ({
+    id: technique.id,
+    name: technique.name,
+    tactic: technique.tactic,
+    description: technique.description,
+    url: technique.url,
+    htmlAnchor: toAbsoluteUrl(`/techniques#${technique.id}`, site),
+    topics: topicsByTechnique.get(technique.id) ?? [],
+  }));
+
+  const mapped = techniques.filter((technique) => technique.topics.length > 0);
+
+  return {
+    site,
+    generatedAt,
+    htmlUrl: toAbsoluteUrl('/techniques', site),
+    totalTechniques: techniques.length,
+    mappedTechniques: mapped.length,
+    techniques,
+  };
+}
+
+export function buildLlmsFullTxt(snapshot: LlmContentSnapshot): string {
+  const { site: origin, generatedAt, topics, glossary } = snapshot;
+  const sortedTopics = [...topics].sort((a, b) => a.data.title.localeCompare(b.data.title));
+  const sortedGlossary = [...glossary].sort((a, b) => a.data.title.localeCompare(b.data.title));
+  const toolCatalog = getAllTools().slice().sort((a, b) => a.name.localeCompare(b.name));
+  const techniquesPayload = buildTechniquesJsonPayload(snapshot);
+  const mappedTechniques = techniquesPayload.techniques.filter((technique) => technique.topics.length > 0);
+
+  const parts: string[] = [
+    '# kubernetes-security.cloud',
+    '',
+    `> ${siteConfig.description}`,
+    '',
+    'This file is the full encyclopedia dump for language models. For a compact catalog of URLs, use /llms.txt.',
+    '',
+    `generatedAt: ${generatedAt}`,
+    `source: ${toAbsoluteUrl('/llms-full.txt', origin)}`,
+    `catalog: ${toAbsoluteUrl('/llms.txt', origin)}`,
+    '',
+    '## About',
+    '',
+    siteConfig.description,
+    '',
+    'This reference covers Kubernetes security terminology, offensive and defensive topics, MITRE ATT&CK mappings, and related tooling.',
+    '',
+    `HTML: ${toAbsoluteUrl('/about', origin)}`,
+    '',
+    '## Glossary',
+    '',
+  ];
+
+  for (const entry of sortedGlossary) {
+    parts.push(
+      `### ${entry.data.title}`,
+      '',
+      `HTML: ${toAbsoluteUrl(`/glossary/${entry.slug}`, origin)}`,
+      `Markdown: ${toAbsoluteUrl(`/glossary/${entry.slug}.md`, origin)}`,
+      '',
+      glossaryToMarkdown(entry).trim(),
+      '',
+    );
+  }
+
+  parts.push('## Topics', '');
+
+  for (const topic of sortedTopics) {
+    parts.push(
+      `### ${topic.data.title}`,
+      '',
+      `HTML: ${toAbsoluteUrl(`/topics/${topic.slug}`, origin)}`,
+      `Markdown: ${toAbsoluteUrl(`/topics/${topic.slug}.md`, origin)}`,
+      '',
+      topicToMarkdown(topic).trim(),
+      '',
+    );
+  }
+
+  parts.push(
+    '## Tools',
+    '',
+    `HTML: ${toAbsoluteUrl('/tools', origin)}`,
+    `JSON: ${toAbsoluteUrl('/tools.json', origin)}`,
+    '',
+  );
+
+  for (const tool of toolCatalog) {
+    const types = getToolTypes(tool).join(', ');
+    parts.push(
+      `### ${tool.name}`,
+      '',
+      `- URL: ${tool.url}`,
+      `- Types: ${types}`,
+      ...(tool.description ? [`- ${tool.description}`] : []),
+      '',
+    );
+  }
+
+  parts.push(
+    '## MITRE ATT&CK techniques mapped on this site',
+    '',
+    `HTML: ${toAbsoluteUrl('/techniques', origin)}`,
+    `JSON: ${toAbsoluteUrl('/techniques.json', origin)}`,
+    '',
+  );
+
+  for (const technique of mappedTechniques) {
+    const topicList = technique.topics.map((topic) => `${topic.title} (${topic.url})`).join('; ') || 'none';
+    parts.push(
+      `### ${technique.id} ${technique.name}`,
+      '',
+      `- Tactic: ${technique.tactic}`,
+      `- ATT&CK: ${technique.url}`,
+      `- Topics: ${topicList}`,
+      '',
+      technique.description,
+      '',
+    );
+  }
+
+  if (features.attackPaths && snapshot.attackPaths.length > 0) {
+    parts.push('## Attack paths', '');
+    for (const path of [...snapshot.attackPaths].sort((a, b) => a.data.title.localeCompare(b.data.title))) {
+      parts.push(
+        `### ${path.data.title}`,
+        '',
+        `HTML: ${toAbsoluteUrl(`/attack-paths/${path.id}`, origin)}`,
+        '',
+        path.data.description,
+        '',
+      );
+      for (const [index, step] of path.data.steps.entries()) {
+        const command = step.command
+          ? (Array.isArray(step.command) ? step.command.join('\n') : step.command)
+          : '';
+        parts.push(
+          `#### Step ${index + 1}. ${step.title}`,
+          '',
+          `- Type: ${step.type}`,
+          `- MITRE: ${step.mitreTechnique ?? 'none'}`,
+          '',
+          step.description.trim(),
+          '',
+          ...(command ? ['```', command, '```', ''] : []),
+        );
+      }
+    }
+  }
+
+  parts.push('');
+  return parts.join('\n');
+}
+
+export const LLM_INDEX_FILES = [
+  'llms.txt',
+  'llms-full.txt',
+  'topics.json',
+  'glossary.json',
+  'tools.json',
+  'techniques.json',
+  'attack-paths.json',
+] as const;
 
 export const LLM_CACHE_HEADERS = {
   'Cache-Control': 'public, max-age=300',

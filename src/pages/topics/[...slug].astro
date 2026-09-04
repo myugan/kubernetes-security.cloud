@@ -108,9 +108,10 @@ const impactLinkParentClass =
   section={topic.data.category}
   publishedTime={publishedTime}
   modifiedTime={publishedTime}
+  markdownUrl={`/topics/${topic.slug}.md`}
 >
   <div class:list={[stance === 'offensive' ? 'ks-banner-offensive' : stance === 'defensive' ? 'ks-banner-defensive' : 'bg-app-surface-muted/60 border-b border-app-border']}>
-    <div class="max-w-7xl mx-auto px-7 lg:px-12 py-8 lg:py-[30px] flex flex-col gap-5">
+    <div class="max-w-7xl mx-auto px-4 sm:px-7 lg:px-12 py-8 lg:py-[30px] flex flex-col gap-5">
       <nav class="ks-crumb" aria-label="Breadcrumb">
         <a href="/topics">Topics</a>
         <span class="ks-crumb-sep">/</span>
@@ -127,8 +128,8 @@ const impactLinkParentClass =
 
       <div class="grid gap-10 lg:grid-cols-[1fr_300px] lg:items-end">
         <div class="flex flex-col gap-3.5">
-          <h1 class="ks-display max-w-[20ch]">{topic.data.title}</h1>
-          <p class="ks-lede max-w-[62ch]">{topic.data.description}</p>
+          <h1 class="ks-display max-w-[min(20ch,calc(100vw-2rem))]">{topic.data.title}</h1>
+          <p class="ks-lede max-w-[min(62ch,calc(100vw-2rem))]">{topic.data.description}</p>
           {mitreChips.length > 0 && (
             <div class="flex items-center gap-1.5 flex-wrap pt-1">
               <span class="ks-kicker mr-1">ATT&amp;CK</span>
@@ -143,12 +144,12 @@ const impactLinkParentClass =
     </div>
   </div>
 
-  <div class="max-w-7xl mx-auto px-7 lg:px-12">
+  <div class="max-w-7xl mx-auto px-4 sm:px-7 lg:px-12">
     <ArticleContents items={contents} accent={stance} readMinutes={estimatedReadMinutes} />
   </div>
 
-  <article class="max-w-7xl mx-auto px-7 lg:px-12">
-    <div class="topic-article-prose prose prose-slate dark:prose-invert max-w-[860px] py-8 lg:py-9
+  <article class="max-w-7xl mx-auto px-4 sm:px-7 lg:px-12 min-w-0">
+    <div class="topic-article-prose prose prose-slate dark:prose-invert max-w-[860px] min-w-0 py-8 lg:py-9
       prose-h1:hidden
       prose-p:text-[16px] prose-p:leading-[1.7]
       prose-li:leading-relaxed
@@ -163,7 +164,7 @@ const impactLinkParentClass =
     id="impact-and-mitigation"
     class:list={['ks-verdict scroll-mt-24', stance === 'offensive' ? 'ks-verdict-offensive' : stance === 'defensive' ? 'ks-verdict-defensive' : 'bg-app-surface-muted/50']}
   >
-    <div class="max-w-7xl mx-auto px-7 lg:px-12 grid gap-10 lg:grid-cols-[1fr_1.25fr] lg:gap-14 items-start">
+    <div class="max-w-7xl mx-auto px-4 sm:px-7 lg:px-12 grid gap-10 lg:grid-cols-[1fr_1.25fr] lg:gap-14 items-start">
       <div class="flex flex-col gap-3">
         <p class="ks-kicker">Impact</p>
         <div class="flex flex-col gap-3">
@@ -191,7 +192,7 @@ const impactLinkParentClass =
   </section>
 
   {(nextTopics.length > 0 || usedTerms.length > 0 || toolsList.length > 0 || referenceLinks.length > 0) && (
-    <div id="where-to-go-next" class="max-w-7xl mx-auto px-7 lg:px-12 py-9 lg:py-11 flex flex-col gap-4 scroll-mt-24">
+    <div id="where-to-go-next" class="max-w-7xl mx-auto px-4 sm:px-7 lg:px-12 py-9 lg:py-11 flex flex-col gap-4 scroll-mt-24">
       {(nextTopics.length > 0 || usedTerms.length > 0) && (
         <>
           <p class="ks-kicker">Where to go next</p>

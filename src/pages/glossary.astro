@@ -42,11 +42,11 @@ const letterGroups = letters.map((letter) => {
   description="Simple definitions and explanations of Kubernetes components, concepts, and security terms."
 >
   <div class="border-b border-app-border">
-    <div class="max-w-7xl mx-auto px-7 lg:px-12 py-12 lg:py-14 grid gap-10 lg:grid-cols-[1fr_420px] lg:items-end">
+    <div class="max-w-7xl mx-auto px-4 sm:px-7 lg:px-12 py-12 lg:py-14 grid gap-10 lg:grid-cols-[1fr_420px] lg:items-end">
       <div class="flex flex-col gap-4">
         <p class="ks-kicker ks-kicker-accent">Glossary</p>
         <h1 class="ks-display">Glossary</h1>
-        <p class="ks-lede max-w-[52ch]">Simple definitions and explanations of Kubernetes components, concepts, and security terms</p>
+        <p class="ks-lede max-w-[min(52ch,calc(100vw-2rem))]">Simple definitions and explanations of Kubernetes components, concepts, and security terms</p>
       </div>
       <div class="flex flex-col gap-3.5">
         <label class="flex items-center gap-3 border border-app-border-strong rounded-md px-4 py-3.5 bg-app-surface">
@@ -83,7 +83,7 @@ const letterGroups = letters.map((letter) => {
         <a href={`#letter-${letter}`}>{letter}</a>
       ))}
     </div>
-    <span class="ml-auto font-mono text-[11.5px] ds-text-muted" id="glossary-count">{sortedEntries.length} TERMS</span>
+    <span class="ml-auto font-mono text-[11.5px] ds-text-muted hidden sm:inline" id="glossary-count">{sortedEntries.length} TERMS</span>
   </div>
 
   <div id="glossary-groups">
@@ -93,7 +93,7 @@ const letterGroups = letters.map((letter) => {
           <span class="font-mono text-[30px] font-semibold leading-none tracking-tight ds-text-primary">{group.letter}</span>
           <span class="font-mono text-[11px] ds-text-muted letter-count">{group.count}</span>
         </div>
-        <div class="px-7 lg:px-12 py-8 grid sm:grid-cols-2 gap-x-12 gap-y-7">
+        <div class="px-4 sm:px-7 lg:px-12 py-8 grid sm:grid-cols-2 gap-x-12 gap-y-7">
           {group.items.map((entry) => (
             <a
               href={`/glossary/${entry.slug}`}
@@ -107,7 +107,7 @@ const letterGroups = letters.map((letter) => {
                 <span class="text-[16.5px] font-semibold tracking-tight leading-tight ds-text-primary truncate">{entry.data.title}</span>
                 <span class="font-mono text-[9.5px] tracking-widest ds-text-muted shrink-0">{glossaryTypeLabel(entry.data.category)}</span>
               </div>
-              <span class="text-sm leading-relaxed ds-text-secondary max-w-[52ch]">{entry.data.description}</span>
+              <span class="text-sm leading-relaxed ds-text-secondary max-w-[min(52ch,calc(100vw-2rem))]">{entry.data.description}</span>
             </a>
           ))}
         </div>

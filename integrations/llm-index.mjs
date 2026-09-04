@@ -6,7 +6,15 @@
 import { access, readFile } from 'node:fs/promises';
 import { join } from 'node:path';
 
-const LLM_FILES = ['llms.txt', 'topics.json', 'attack-paths.json'];
+const LLM_FILES = [
+  'llms.txt',
+  'llms-full.txt',
+  'topics.json',
+  'glossary.json',
+  'tools.json',
+  'techniques.json',
+  'attack-paths.json',
+];
 
 async function fileExists(path) {
   try {
@@ -51,7 +59,7 @@ export default function llmIndexIntegration() {
         if (missing.length > 0) {
           logger.warn(
             `LLM index incomplete — missing after build: ${missing.join(', ')}. ` +
-              'Ensure src/pages/{llms.txt,topics.json,attack-paths.json}.ts export prerender = true.'
+              'Ensure LLM index API routes under src/pages export prerender = true.'
           );
           return;
         }
@@ -62,7 +70,8 @@ export default function llmIndexIntegration() {
 
         logger.info(
           `LLM index synced from content collections → ` +
-            `${counts.topics} topics, ${counts.glossary} glossary, ${counts.attackPaths} attack paths`
+            `${counts.topics} topics, ${counts.glossary} glossary, ${counts.attackPaths} attack paths ` +
+            `(llms.txt + llms-full.txt + JSON indexes)`
         );
       },
     },

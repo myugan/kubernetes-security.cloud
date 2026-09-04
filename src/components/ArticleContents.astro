@@ -13,6 +13,7 @@ interface Props {
 }
 
 const { items, accent = 'neutral', readMinutes } = Astro.props;
+const contentsRows = Math.max(1, Math.ceil(items.length / 2));
 ---
 
 {items.length > 0 && (
@@ -23,7 +24,7 @@ const { items, accent = 'neutral', readMinutes } = Astro.props;
         <p class="ks-kicker">{readMinutes} min read</p>
       )}
     </div>
-    <ol class="ks-contents-grid">
+    <ol class="ks-contents-grid" style={`--ks-contents-rows: ${contentsRows}`}>
       {items.map((item, index) => (
         <li>
           <a href={`#${item.slug}`} class:list={['ks-contents-link', `is-${accent}`]}>

@@ -18,11 +18,11 @@ const sortedPaths = attackPaths.sort((a, b) => a.data.title.localeCompare(b.data
   description="Visual step-by-step attack path diagrams for Kubernetes: how breaches chain from initial access to impact."
 >
   <div class="border-b border-app-border">
-    <div class="max-w-7xl mx-auto px-7 lg:px-12 py-12 lg:py-14 grid gap-10 lg:grid-cols-[1fr_300px] lg:items-end">
+    <div class="max-w-7xl mx-auto px-4 sm:px-7 lg:px-12 py-12 lg:py-14 grid gap-10 lg:grid-cols-[1fr_300px] lg:items-end">
       <div class="flex flex-col gap-3.5">
         <p class="ks-kicker ks-kicker-attack">Attack Paths</p>
         <h1 class="ks-display">Attack paths</h1>
-        <p class="ks-lede max-w-[54ch]">
+        <p class="ks-lede max-w-[min(54ch,calc(100vw-2rem))]">
           Interactive maps that show how attackers chain steps from initial access to cluster-wide impact in Kubernetes.
         </p>
       </div>
@@ -35,7 +35,7 @@ const sortedPaths = attackPaths.sort((a, b) => a.data.title.localeCompare(b.data
     </div>
   </div>
 
-  <div class="max-w-7xl mx-auto px-7 lg:px-12 py-10 lg:py-12">
+  <div class="max-w-7xl mx-auto px-4 sm:px-7 lg:px-12 py-10 lg:py-12">
     <ul class="grid gap-3 sm:grid-cols-2" role="list">
       {sortedPaths.map((path) => {
         const firstType = (path.data.steps[0]?.type ?? 'initial') as AttackStepType;

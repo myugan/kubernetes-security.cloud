@@ -289,6 +289,14 @@ export const mitreTechniques: Record<string, MitreTechnique> = {
       'Adversaries may circumvent mechanisms designed to control elevate privileges to gain higher-level permissions.',
     url: 'https://attack.mitre.org/techniques/T1548',
   },
+  T1098: {
+    id: 'T1098',
+    name: 'Account Manipulation',
+    tactic: 'Persistence, Privilege Escalation',
+    description:
+      'Adversaries may manipulate accounts to maintain and/or elevate access to victim systems.',
+    url: 'https://attack.mitre.org/techniques/T1098',
+  },
   T1069: {
     id: 'T1069',
     name: 'Permission Groups Discovery',

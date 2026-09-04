@@ -136,18 +136,18 @@ const matrixPayload = Object.fromEntries(
   title="ATT&CK Map - Kubernetes Security"
   description="MITRE ATT&CK techniques mapped to offensive Kubernetes security topics, grouped by tactic with topic links."
 >
-  <div class="max-w-7xl mx-auto min-w-0 px-7 lg:px-12 py-12">
+  <div class="max-w-7xl mx-auto min-w-0 px-4 sm:px-7 lg:px-12 py-12">
     <div class="mb-8 grid gap-10 lg:grid-cols-[1fr_420px] lg:items-end border-b border-app-border pb-8">
       <div class="flex flex-col gap-3.5">
         <p class="ks-kicker ks-kicker-attack">ATT&amp;CK Map</p>
         <h1 class="ks-display">ATT&amp;CK Map</h1>
-        <p class="ks-lede max-w-[56ch]">
+        <p class="ks-lede max-w-[min(56ch,calc(100vw-2rem))]">
           One page that visualizes all MITRE ATT&amp;CK techniques and where they are covered across topics.
           See also the
           <a href="https://kubernetes-threat-matrix.redguard.ch/" class="ds-link" target="_blank" rel="noopener noreferrer">Kubernetes Threat Matrix</a>.
         </p>
       </div>
-      <div class="ks-stat-grid" style="grid-template-columns: repeat(3, 1fr);">
+      <div class="ks-stat-grid grid-cols-1 sm:grid-cols-3">
         <div class="ks-stat-cell">
           <span class="ks-stat-n">{allTechniques.length}</span>
           <span class="ks-stat-label">Catalog techniques</span>
@@ -169,7 +169,7 @@ const matrixPayload = Object.fromEntries(
       </div>
     ) : (
       <>
-        <div class="ks-matrix-legend -mx-7 lg:-mx-12 px-7 lg:px-12">
+        <div class="ks-matrix-legend -mx-4 sm:-mx-7 lg:-mx-12 px-4 sm:px-7 lg:px-12">
           <span class="ks-kicker">Tactics</span>
           <span class="font-mono text-[11.5px] ds-text-primary">{matrixColumns.length}</span>
           <span class="w-px h-[18px] bg-app-border" aria-hidden="true"></span>
@@ -219,11 +219,11 @@ const matrixPayload = Object.fromEntries(
   </div>
 
   <div id="matrix-detail" class="ks-matrix-detail">
-    <div id="matrix-placeholder" class="max-w-7xl mx-auto px-7 lg:px-12">
+    <div id="matrix-placeholder" class="max-w-7xl mx-auto px-4 sm:px-7 lg:px-12">
       <p class="ks-kicker mb-2">Selected technique</p>
-      <p class="text-sm ds-text-muted max-w-[52ch]">Select a technique on the map to see its description and the topics that cover it.</p>
+      <p class="text-sm ds-text-muted max-w-[min(52ch,calc(100vw-2rem))]">Select a technique on the map to see its description and the topics that cover it.</p>
     </div>
-    <div id="matrix-detail-body" class="hidden max-w-7xl mx-auto px-7 lg:px-12 grid gap-10 lg:grid-cols-[340px_1fr] lg:gap-11 items-start">
+    <div id="matrix-detail-body" class="hidden max-w-7xl mx-auto px-4 sm:px-7 lg:px-12 grid gap-10 lg:grid-cols-[340px_1fr] lg:gap-11 items-start">
       <div class="flex flex-col gap-3">
         <p class="ks-kicker">Selected technique</p>
         <div class="flex items-baseline gap-2.5 flex-wrap">

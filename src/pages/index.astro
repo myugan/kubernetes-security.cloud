@@ -55,12 +55,12 @@ const tactics = LANDING_TACTICS.map((name, index) => {
   title="Kubernetes Security Encyclopedia"
   description="A comprehensive reference for Kubernetes security concepts, topics, and best practices."
 >
-  <div class="max-w-7xl mx-auto px-7 lg:px-12">
-    <section class="grid gap-14 py-16 lg:grid-cols-[1fr_300px] lg:gap-14 border-b border-app-border">
+  <div class="max-w-7xl mx-auto px-4 sm:px-7 lg:px-12">
+    <section class="grid gap-8 py-10 sm:gap-14 sm:py-16 lg:grid-cols-[1fr_300px] lg:gap-14 border-b border-app-border">
       <div class="flex flex-col gap-5 max-w-3xl">
         <p class="ks-kicker ks-kicker-accent">Encyclopedia</p>
-        <h1 class="ks-display max-w-[22ch]">An encyclopedia of Kubernetes security</h1>
-        <p class="ks-lede max-w-[56ch]">
+        <h1 class="ks-display max-w-[min(22ch,calc(100vw-2rem))]">An encyclopedia of Kubernetes security</h1>
+        <p class="ks-lede max-w-[min(56ch,calc(100vw-2rem))]">
           Terminology, attack patterns, defensive strategies, and tools.
         </p>
         <div class="flex flex-wrap gap-3 pt-1">
@@ -68,7 +68,7 @@ const tactics = LANDING_TACTICS.map((name, index) => {
           <a href="/techniques" class="ks-btn ks-btn-ghost">Open ATT&amp;CK map</a>
         </div>
       </div>
-      <div class="ks-stat-grid self-start">
+      <div class="ks-stat-grid self-start grid-cols-1 sm:grid-cols-3 lg:grid-cols-1">
         <div class="ks-stat-cell">
           <div class="ks-stat-n">{glossary.length}</div>
           <div class="ks-stat-label">Glossary terms</div>
@@ -85,7 +85,7 @@ const tactics = LANDING_TACTICS.map((name, index) => {
     </section>
 
     <section class="py-11 pb-16">
-      <div class="flex items-baseline justify-between gap-4 mb-5">
+      <div class="flex flex-col gap-1 sm:flex-row sm:items-baseline sm:justify-between sm:gap-4 mb-5">
         <h2 class="text-[19px] font-semibold tracking-tight ds-text-primary">The chain, left to right</h2>
         <p class="font-mono text-xs ds-text-muted">
           {mappedTechniqueIds.length} techniques · {totalMappings} topic mappings

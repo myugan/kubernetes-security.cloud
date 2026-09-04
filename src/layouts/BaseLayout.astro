@@ -32,6 +32,8 @@ interface Props {
   publishedTime?: string;
   /** ISO datetime for article updated time */
   modifiedTime?: string;
+  /** Alternate markdown document for LLM crawlers */
+  markdownUrl?: string;
 }
 
 const {
@@ -45,6 +47,7 @@ const {
   imageAlt,
   publishedTime,
   modifiedTime,
+  markdownUrl,
 } = Astro.props;
 
 const metaDescription = toMetaDescription(descriptionProp ?? site.description);
@@ -166,6 +169,11 @@ const navItems = [
     
     <!-- Canonical URL -->
     <link rel="canonical" href={canonicalUrl} />
+    <link rel="alternate" type="text/plain" href={new URL('/llms.txt', baseSite).href} title="LLM index" />
+    <link rel="alternate" type="text/plain" href={new URL('/llms-full.txt', baseSite).href} title="LLM full content" />
+    {markdownUrl && (
+      <link rel="alternate" type="text/markdown" href={new URL(markdownUrl, baseSite).href} title="Markdown" />
+    )}
     
     <!-- Open Graph -->
     <meta property="og:type" content={ogType} />
@@ -260,11 +268,11 @@ const navItems = [
   <body class="ks-theme antialiased flex flex-col min-h-screen font-sans selection:bg-primary-100 selection:text-primary-900 dark:selection:bg-primary-500/25 dark:selection:text-primary-100">
     <header class="ks-header sticky top-0 z-50">
       <nav class="ks-header-inner" aria-label="Primary">
-        <div class="flex items-center gap-8 min-w-0">
+        <div class="flex items-center gap-8 min-w-0 flex-1">
           <a href="/" class="flex items-center shrink-0">
-            <img src="/logo.png" alt="Kubernetes Security" class="h-8" />
+            <img src="/logo.png" alt="Kubernetes Security" class="h-8 w-8 object-contain" width="32" height="32" />
           </a>
-          <div class="hidden md:flex ks-nav">
+          <div class="hidden lg:flex ks-nav">
             {navItems.map((item) => (
               <a href={item.href} class="ks-nav-link" aria-current={isActiveNav(item.href) ? 'page' : undefined}>
                 {item.label}
@@ -279,7 +287,7 @@ const navItems = [
           </div>
         </div>
 
-        <div class="flex items-center gap-2">
+        <div class="ks-header-actions">
           <button type="button" class="ks-search-trigger" data-open-palette aria-label="Search">
             <span class="ks-search-glyph"></span>
             <span>Search</span>
@@ -287,7 +295,7 @@ const navItems = [
           </button>
           <button
             type="button"
-            class="theme-toggle-btn ks-theme-toggle hidden md:inline-flex h-9 w-9 items-center justify-center rounded-full border transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500/40"
+            class="theme-toggle-btn ks-theme-toggle hidden lg:inline-flex h-9 w-9 items-center justify-center rounded-full border transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500/40"
             aria-label="Toggle theme"
             aria-pressed="false"
             title="Toggle theme"
@@ -301,7 +309,7 @@ const navItems = [
           </button>
           <button
             type="button"
-            class="theme-toggle-btn ks-theme-toggle inline-flex md:hidden h-9 w-9 items-center justify-center rounded-full border"
+            class="theme-toggle-btn ks-theme-toggle inline-flex lg:hidden h-9 w-9 items-center justify-center rounded-full border"
             aria-label="Toggle theme"
             aria-pressed="false"
             title="Toggle theme"
@@ -316,7 +324,7 @@ const navItems = [
           <button
             type="button"
             id="mobile-menu-btn"
-            class="p-2 rounded-md ks-nav-link md:hidden"
+            class="inline-flex h-9 w-9 items-center justify-center rounded-md border ks-nav-link lg:hidden"
             aria-label="Open menu"
           >
             <svg id="menu-icon" class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -328,7 +336,7 @@ const navItems = [
           </button>
         </div>
       </nav>
-      <div id="mobile-menu" class="ks-mobile-menu hidden md:hidden border-t">
+      <div id="mobile-menu" class="ks-mobile-menu hidden lg:hidden border-t">
         <div class="px-4 py-3 space-y-0.5">
           {navItems.map((item) => (
             <a href={item.href} class="ks-nav-link block px-3 py-2 rounded-md" aria-current={isActiveNav(item.href) ? 'page' : undefined}>
@@ -343,11 +351,11 @@ const navItems = [
         </div>
       </div>
     </header>
-    <main class="flex-grow">
+    <main class="flex-grow min-w-0">
       <slot />
     </main>
     <footer class="ks-footer mt-auto">
-      <div class="max-w-7xl mx-auto px-7 lg:px-12 py-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+      <div class="max-w-7xl mx-auto px-4 sm:px-7 lg:px-12 py-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <p class="text-[12.5px] ds-text-muted">
           Practical offensive and defensive references to help you learn Kubernetes security faster.
         </p>

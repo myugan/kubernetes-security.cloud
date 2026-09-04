@@ -45,7 +45,7 @@ const metaRows = [
 <BaseLayout title={`${path.data.title} - Attack Paths`} description={path.data.description}>
   <div class="attack-path-page" data-attack-path-page>
     <div class="ks-banner-offensive">
-      <div class="max-w-7xl mx-auto px-7 lg:px-12 py-8 lg:py-[30px] flex flex-col gap-5">
+      <div class="max-w-7xl mx-auto px-4 sm:px-7 lg:px-12 py-8 lg:py-[30px] flex flex-col gap-5">
         <nav class="ks-crumb" aria-label="Breadcrumb">
           <a href="/attack-paths">Attack Paths</a>
           <span class="ks-crumb-sep">/</span>
@@ -54,8 +54,8 @@ const metaRows = [
         <div class="grid gap-10 lg:grid-cols-[1fr_300px] lg:items-end">
           <div class="flex flex-col gap-3.5">
             <StanceBadge stance={path.data.category} />
-            <h1 class="ks-display max-w-[20ch]">{path.data.title}</h1>
-            <p class="ks-lede max-w-[62ch]">{path.data.description}</p>
+            <h1 class="ks-display max-w-[min(20ch,calc(100vw-2rem))]">{path.data.title}</h1>
+            <p class="ks-lede max-w-[min(62ch,calc(100vw-2rem))]">{path.data.description}</p>
           </div>
           <MetaPanel rows={metaRows} />
         </div>
@@ -63,7 +63,7 @@ const metaRows = [
     </div>
 
     <section class="attack-path-map-section border-b border-app-border bg-app-surface-muted/40" aria-labelledby="attack-map-heading">
-      <div class="max-w-7xl mx-auto px-7 lg:px-12 py-6 sm:py-8">
+      <div class="max-w-7xl mx-auto px-4 sm:px-7 lg:px-12 py-6 sm:py-8">
         <div class="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-2 mb-5">
           <div>
             <p class="ks-kicker mb-1">Map</p>
@@ -83,7 +83,7 @@ const metaRows = [
       class="attack-path-timeline sticky top-16 z-40 border-b border-app-border bg-app-surface/90 backdrop-blur-lg supports-[backdrop-filter]:bg-app-surface/80"
       aria-label="Attack path steps"
     >
-      <div class="max-w-7xl mx-auto px-7 lg:px-12">
+      <div class="max-w-7xl mx-auto px-4 sm:px-7 lg:px-12">
         <ol class="step-timeline flex items-stretch gap-0 overflow-x-auto py-3 sm:py-3.5 -mx-1 px-1 scroll-smooth snap-x snap-mandatory">
           {path.data.steps.map((step, index) => {
             const stepType = step.type as AttackStepType;
@@ -123,7 +123,7 @@ const metaRows = [
       </div>
     </nav>
 
-    <div class="max-w-7xl mx-auto px-7 lg:px-12 py-10 sm:py-12">
+    <div class="max-w-7xl mx-auto px-4 sm:px-7 lg:px-12 py-10 sm:py-12">
       <div class="mb-8 max-w-2xl">
         <p class="ks-kicker mb-2">Breakdown</p>
         <h2 class="text-[22px] font-semibold tracking-tight ds-text-primary">Step by step</h2>

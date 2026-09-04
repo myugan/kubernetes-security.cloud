@@ -34,15 +34,15 @@ const categories: { key: ToolType; label: string; description: string }[] = [
   description="Curated Kubernetes security tools for offensive testing, defense, auditing, and compliance, with links and categories."
 >
   <div class="border-b border-app-border">
-    <div class="max-w-7xl mx-auto px-7 lg:px-12 py-12 lg:py-14 grid gap-10 lg:grid-cols-[1fr_420px] lg:items-end">
+    <div class="max-w-7xl mx-auto px-4 sm:px-7 lg:px-12 py-12 lg:py-14 grid gap-10 lg:grid-cols-[1fr_420px] lg:items-end">
       <div class="flex flex-col gap-3.5">
         <p class="ks-kicker ks-kicker-accent">Tools</p>
         <h1 class="ks-display">Tools</h1>
-        <p class="ks-lede max-w-[54ch]">
+        <p class="ks-lede max-w-[min(54ch,calc(100vw-2rem))]">
           Scanners, policy engines and runtime agents, with what each is actually good at.
         </p>
       </div>
-      <div class="ks-stat-grid" style="grid-template-columns: repeat(2, 1fr);">
+      <div class="ks-stat-grid grid-cols-2">
         <div class="ks-stat-cell">
           <span class="ks-stat-n">{allTools.length}</span>
           <span class="ks-stat-label">Tools</span>
@@ -55,7 +55,7 @@ const categories: { key: ToolType; label: string; description: string }[] = [
     </div>
   </div>
 
-  <div class="max-w-7xl mx-auto px-7 lg:px-12 py-10 lg:py-12">
+  <div class="max-w-7xl mx-auto px-4 sm:px-7 lg:px-12 py-10 lg:py-12">
     <div class="flex flex-wrap gap-1.5 mb-10">
       {categories.map((cat) => {
         const count = toolsByType[cat.key]?.length || 0;

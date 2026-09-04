@@ -60,9 +60,10 @@ const metaRows = [
   description={entry.data.description}
   ogType="article"
   section={entry.data.category}
+  markdownUrl={`/glossary/${entry.slug}.md`}
 >
   <div class="border-b border-app-border bg-app-surface-muted/60">
-    <div class="max-w-7xl mx-auto px-7 lg:px-12 py-2.5 flex items-center justify-between gap-4">
+    <div class="max-w-7xl mx-auto px-4 sm:px-7 lg:px-12 py-2.5 flex items-center justify-between gap-4">
       <nav class="ks-crumb" aria-label="Breadcrumb">
         <a href="/glossary">Glossary</a>
         <span class="ks-crumb-sep">/</span>
@@ -78,7 +79,7 @@ const metaRows = [
     </div>
   </div>
 
-  <div class="max-w-7xl mx-auto px-7 lg:px-12">
+  <div class="max-w-7xl mx-auto px-4 sm:px-7 lg:px-12">
     <header class="grid gap-10 py-8 lg:grid-cols-[1fr_300px] lg:items-start border-b border-app-border">
       <div class="flex flex-col gap-3">
         <div class="flex items-center gap-2.5">
@@ -86,7 +87,7 @@ const metaRows = [
           <h1 class="text-[32px] leading-none font-semibold tracking-tight ds-text-primary">{entry.data.title}</h1>
           <span class="font-mono text-[9.5px] tracking-widest ds-text-muted pt-1">{typeLabel}</span>
         </div>
-        <p class="text-[17px] leading-relaxed ds-text-secondary max-w-[60ch]">{entry.data.description}</p>
+        <p class="text-[17px] leading-relaxed ds-text-secondary max-w-[min(60ch,calc(100vw-2rem))]">{entry.data.description}</p>
       </div>
       <MetaPanel rows={metaRows} />
     </header>
