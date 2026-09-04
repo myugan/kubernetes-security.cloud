@@ -1,6 +1,6 @@
 ---
 title: Secret Exfiltration via ApplicationSet Generators
-description: Abusing the pullRequest generator's tokenRef to exfiltrate control-plane Secrets and probe internal services
+description: Abusing tokenRef on a pullRequest generator to make the controller send a Secret from the argocd namespace to a URL you control
 category: offensive
 phase: credential-access
 createdAt: 2026-09-07
