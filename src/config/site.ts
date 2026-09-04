@@ -20,8 +20,8 @@ export const site = {
   /** Open Graph image path (relative to public folder) */
   ogImage: '/og-image.png',
 
-  /** Google Analytics Measurement ID (from environment variable, leave empty to disable) */
-  googleAnalyticsId: import.meta.env.PUBLIC_GOOGLE_ANALYTICS_ID || '',
+  /** Timezone used to decide whether a topic `createdAt` date is live */
+  publishTimeZone: 'Asia/Bangkok',
 
   /** Navigation links (order matters) */
   navigation: [
