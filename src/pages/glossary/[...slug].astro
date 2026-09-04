@@ -9,6 +9,7 @@ import { getTools, getToolTypes } from '../../data/tools';
 import { getToolTypeColors } from '../../utils/colors';
 import { glossaryTypeLabel, formatPhaseUpper } from '../../lib/taxonomy';
 import { topicsForGlossaryTerm } from '../../lib/related';
+import { getPublishedTopics } from '../../utils/published-topics';
 
 export async function getStaticPaths() {
   const glossaryEntries = await getCollection('glossary');
@@ -27,7 +28,7 @@ const { entry, prev, next } = Astro.props;
 const { Content } = await entry.render();
 const toolsList = entry.data.tools ? getTools(entry.data.tools) : [];
 const allGlossaryEntries = await getCollection('glossary');
-const allTopics = await getCollection('topics');
+const allTopics = await getPublishedTopics();
 const relatedTopics = topicsForGlossaryTerm(entry, allTopics);
 
 function findGlossaryEntryByTitle(title: string) {

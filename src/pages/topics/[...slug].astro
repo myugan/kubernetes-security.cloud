@@ -1,6 +1,7 @@
 ---
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import { getCollection } from 'astro:content';
+import { getPublishedTopics } from '../../utils/published-topics';
 import ArticleContents from '../../components/ArticleContents.astro';
 import MetaPanel from '../../components/MetaPanel.astro';
 import MitreTechnique from '../../components/MitreTechnique.astro';
@@ -12,7 +13,7 @@ import { glossaryTermsForTopic, relatedTopics } from '../../lib/related';
 import { TOPIC_OG_HEIGHT, TOPIC_OG_WIDTH } from '../../config/topic-og';
 
 export async function getStaticPaths() {
-  const topics = await getCollection('topics');
+  const topics = await getPublishedTopics();
   return topics.map((topic) => ({
     params: { slug: topic.slug },
     props: { topic },
@@ -32,7 +33,7 @@ const createdAtLabel = topic.data.createdAt
   : 'Not specified';
 
 const toolsList = topic.data.tools ? getTools(topic.data.tools) : [];
-const [allTopics, allTerms] = await Promise.all([getCollection('topics'), getCollection('glossary')]);
+const [allTopics, allTerms] = await Promise.all([getPublishedTopics(), getCollection('glossary')]);
 const nextTopics = relatedTopics(topic, allTopics, 2);
 const usedTerms = glossaryTermsForTopic(topic, allTerms).slice(0, 8);
 

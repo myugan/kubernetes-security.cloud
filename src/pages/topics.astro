@@ -1,6 +1,6 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
-import { getCollection } from 'astro:content';
+import { getPublishedTopics } from '../utils/published-topics';
 import StanceBadge from '../components/StanceBadge.astro';
 import TacticIcon from '../components/TacticIcon.astro';
 import TypeDot from '../components/TypeDot.astro';
@@ -8,7 +8,7 @@ import CategoryIcon from '../components/CategoryIcon.astro';
 import { formatTopicDate, getRecentTopics } from '../utils/recent-topics';
 import { formatPhase, formatPhaseUpper } from '../lib/taxonomy';
 
-const topics = await getCollection('topics');
+const topics = await getPublishedTopics();
 const sortedTopics = topics.sort((a, b) => a.data.title.localeCompare(b.data.title));
 const recentTopics = getRecentTopics(topics, 5);
 

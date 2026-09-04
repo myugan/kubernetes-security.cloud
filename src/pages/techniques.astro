@@ -1,11 +1,11 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
-import { getCollection } from 'astro:content';
+import { getPublishedTopics } from '../utils/published-topics';
 import TacticIcon from '../components/TacticIcon.astro';
 import { getAllMitreTechniques } from '../data/mitre-attack';
 import { LANDING_TACTICS, pad2 } from '../lib/taxonomy';
 
-const topics = await getCollection('topics');
+const topics = await getPublishedTopics();
 const offensiveTopics = topics.filter((t) => t.data.category === 'offensive');
 const allTechniques = getAllMitreTechniques();
 const techniqueById = new Map(allTechniques.map((technique) => [technique.id, technique]));

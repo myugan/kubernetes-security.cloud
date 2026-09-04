@@ -13,6 +13,7 @@ import { features } from '../config/features';
 import { site } from '../config/site';
 import { formatPhaseUpper, glossaryTypeLabel, type SearchItem } from '../lib/taxonomy';
 import { toMetaDescription } from '../utils/meta';
+import { getPublishedTopics } from '../utils/published-topics';
 
 interface Props {
   title: string;
@@ -72,7 +73,7 @@ function isActiveNav(href: string): boolean {
 
 const [glossaryEntries, topicEntries] = await Promise.all([
   getCollection('glossary'),
-  getCollection('topics'),
+  getPublishedTopics(),
 ]);
 
 const searchItems: SearchItem[] = [

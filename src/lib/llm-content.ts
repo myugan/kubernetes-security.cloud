@@ -11,6 +11,7 @@ import { getAllTools, getToolTypes, tools } from '../data/tools';
 import { glossaryToMarkdown, topicToMarkdown } from './llm-markdown';
 import { site as siteConfig } from '../config/site';
 import { toAbsoluteUrl, getSiteUrl } from './site-url';
+import { getPublishedTopics } from '../utils/published-topics';
 
 const ATTACK_STEP_TYPES = ['initial', 'lateral', 'privilege', 'persistence', 'exfiltration'] as const;
 
@@ -52,7 +53,7 @@ function isCollectionEnabled(name: LlmCollectionName): boolean {
 /** Load all content used by LLM endpoints (single source of truth). */
 export async function loadLlmContent(): Promise<LlmContentSnapshot> {
   const [topics, glossary, attackPaths] = await Promise.all([
-    getCollection('topics'),
+    getPublishedTopics(),
     getCollection('glossary'),
     isCollectionEnabled('attack-paths') ? getCollection('attack-paths') : Promise.resolve([]),
   ]);

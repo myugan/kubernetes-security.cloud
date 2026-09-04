@@ -139,10 +139,10 @@ export const mitreTechniques: Record<string, MitreTechnique> = {
   },
   T1046: {
     id: 'T1046',
-    name: 'Network Service Scanning',
+    name: 'Network Service Discovery',
     tactic: 'Discovery',
     description:
-      'Adversaries may scan for network services to identify potential targets or gather information.',
+      'Adversaries may attempt to get a listing of services running on remote hosts and local network infrastructure, including through internal scanning.',
     url: 'https://attack.mitre.org/techniques/T1046',
   },
   T1595: {
@@ -208,6 +208,22 @@ export const mitreTechniques: Record<string, MitreTechnique> = {
     description:
       'Adversaries may search compromised systems to find and obtain insecurely stored credentials.',
     url: 'https://attack.mitre.org/techniques/T1552',
+  },
+  T1606: {
+    id: 'T1606',
+    name: 'Forge Web Credentials',
+    tactic: 'Credential Access',
+    description:
+      'Adversaries may forge web credentials such as cookies or tokens to gain access to web applications and services.',
+    url: 'https://attack.mitre.org/techniques/T1606',
+  },
+  T1567: {
+    id: 'T1567',
+    name: 'Exfiltration Over Web Service',
+    tactic: 'Exfiltration',
+    description:
+      'Adversaries may use an existing, legitimate external Web service to exfiltrate data rather than their primary command and control channel.',
+    url: 'https://attack.mitre.org/techniques/T1567',
   },
   T1550: {
     id: 'T1550',

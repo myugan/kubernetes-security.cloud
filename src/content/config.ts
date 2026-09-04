@@ -43,7 +43,7 @@ const topicsCollection = defineCollection({
     mitigation: z.union([z.string(), z.array(z.string())]),
     tools: z.array(z.string()).optional(), // Tool names (referenced from src/data/tools.ts)
     references: z.string().optional(), // References in markdown format
-    createdAt: z.coerce.date().optional(), // e.g., '2026-04-08'
+    createdAt: z.coerce.date().optional(), // e.g. '2026-04-08'. Future dates stay unpublished until a build on or after that instant.
     mitreTechniques: z.array(z.string()).optional(), // e.g., ['T1610', 'T1059']
     kubernetesVersion: z.union([z.string(), z.array(z.string())]).optional(), // e.g., '1.28+' or ['1.26', '1.27', '1.28+']
   }),

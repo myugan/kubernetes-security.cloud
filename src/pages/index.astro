@@ -2,12 +2,13 @@
 import BaseLayout from '../layouts/BaseLayout.astro';
 import TacticIcon from '../components/TacticIcon.astro';
 import { getCollection } from 'astro:content';
+import { getPublishedTopics } from '../utils/published-topics';
 import { getAllMitreTechniques } from '../data/mitre-attack';
 import { LANDING_TACTICS, pad2 } from '../lib/taxonomy';
 
 const [glossary, topics] = await Promise.all([
   getCollection('glossary'),
-  getCollection('topics'),
+  getPublishedTopics(),
 ]);
 
 const offensiveTopics = topics.filter((topic) => topic.data.category === 'offensive');

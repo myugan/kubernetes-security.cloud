@@ -1,9 +1,9 @@
 import type { APIRoute } from 'astro';
-import { getCollection } from 'astro:content';
 import { topicToMarkdown } from '../../lib/llm-markdown';
+import { getPublishedTopics } from '../../utils/published-topics';
 
 export async function getStaticPaths() {
-  const topics = await getCollection('topics');
+  const topics = await getPublishedTopics();
   return topics.map((topic) => ({
     params: { slug: topic.slug },
     props: { topic },

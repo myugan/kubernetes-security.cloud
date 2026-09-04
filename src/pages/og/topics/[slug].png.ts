@@ -1,11 +1,11 @@
 import type { APIRoute } from 'astro';
-import { getCollection } from 'astro:content';
 import { renderTopicOgPng } from '../../../utils/render-topic-og';
+import { getPublishedTopics } from '../../../utils/published-topics';
 
 export const prerender = true;
 
 export async function getStaticPaths() {
-  const topics = await getCollection('topics');
+  const topics = await getPublishedTopics();
   return topics.map((topic) => ({
     params: { slug: topic.slug },
     props: {
