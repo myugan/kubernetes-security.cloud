@@ -48,7 +48,7 @@ const {
 } = Astro.props;
 
 const metaDescription = toMetaDescription(descriptionProp ?? site.description);
-const resolvedImageAlt = (imageAlt ?? `${title} — ${site.name}`).slice(0, 200);
+const resolvedImageAlt = (imageAlt ?? `${title}, ${site.name}`).slice(0, 200);
 
 const currentYear = new Date().getFullYear();
 const gaId = site.googleAnalyticsId;

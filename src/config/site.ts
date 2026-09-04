@@ -12,7 +12,7 @@ export const site = {
   url: 'https://kubernetes-security.cloud',
 
   /** Default meta description */
-  description: 'Terminology, attack patterns, defensive strategies and tooling for Kubernetes — cross-linked against the MITRE ATT&CK container matrix.',
+  description: 'A comprehensive reference for Kubernetes security concepts, topics, and best practices.',
 
   /** Copyright holder name */
   copyright: 'Kubernetes Security',
